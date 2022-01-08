@@ -201,6 +201,24 @@ class P_control_block: public block{
 
 };
 
+class saturation_block: public block{
+ public:
+  block* input;
+  int input_value;
+  int output;
+  
+  saturation_block(block *in){
+    input = in;
+  }
+
+  int get_output(float t){
+    input_value = input->get_output(t);
+    output = mysat(input_value);
+    return(output);
+  }
+
+};
+
   
 step_input u = step_input(0.5, 150);
 
@@ -219,8 +237,8 @@ void enc_isr_wrapper() {
 plant G = plant(&HB, &enc);
 
 summing_junction sum1 = summing_junction(&u, &G);
-
-P_control_block P = P_control_block(1, &sum1);
+P_control_block P = P_control_block(3, &sum1);
+saturation_block sat_block = saturation_block(&P);
 
 //attachInterrupt(0, isr, FALLING);
 int nISR;
@@ -228,7 +246,7 @@ int nIn;
 int ISR_Happened;
 int mypause = 1;
 int ISRstate = 0;
-int motor_speed,vOut,error;
+int motor_speed, raw_motor_speed, vOut,error;
 bool send_ser;
 
 unsigned long t0;
@@ -309,7 +327,8 @@ void loop(){
     dt = t_sec - prev_t;
 
     error = sum1.get_output(t_sec);
-    motor_speed = P.get_output(t_sec);
+    raw_motor_speed = P.get_output(t_sec);
+    motor_speed = sat_block.get_output(t_sec);
     G.send_command(motor_speed);
     //HB.send_command(motor_speed);
     // print data
@@ -317,6 +336,7 @@ void loop(){
     //print_comma_then_int(u.get_output(t_sec));
     //print_comma_then_int(G.get_output(t_sec));
     print_comma_then_int(motor_speed);
+    print_comma_then_int(raw_motor_speed);
     print_comma_then_int(G.get_reading());
     //print_comma_then_int(enc.get_reading());
     mynewline();
