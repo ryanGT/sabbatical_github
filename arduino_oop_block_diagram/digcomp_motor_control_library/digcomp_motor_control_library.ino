@@ -17,8 +17,15 @@ void enc_isr_wrapper() {
 plant G = plant(&HB, &enc);
 
 summing_junction sum1 = summing_junction(&u, &G);
-PD_control_block PD = PD_control_block(3, 0.1, &sum1);
-saturation_block sat_block = saturation_block(&PD);
+
+float b_vect[2] = {61.57894737, -33.15789474};
+float a_vect[2] = { 1.0, -0.05263158};
+
+digcomp_block Dz = digcomp_block(b_vect, a_vect, 2, 2, &sum1);
+
+//PD_control_block PD = PD_control_block(3, 0.1, &sum1);
+
+saturation_block sat_block = saturation_block(&Dz);
 
 //attachInterrupt(0, isr, FALLING);
 int nISR;
@@ -26,8 +33,10 @@ int nIn;
 int ISR_Happened;
 int mypause = 1;
 int ISRstate = 0;
-int motor_speed, raw_motor_speed, vOut,error;
+int motor_speed, raw_motor_speed, vOut, error, prev_error;
+
 bool send_ser;
+float b0, b1, a1, v_raw, prev_v_raw;
 
 unsigned long t0;
 unsigned long t;
@@ -37,15 +46,14 @@ float t_ms, t_sec, prev_t, dt;
 
 void setup(){
    Serial.begin(115200);
-   Serial.println("OOP for DC motor PD Control v.1.1");
+   Serial.println("OOP for digcomp DC motor Control v.1.1");
    Serial.println("using rtblockdiagram library");
    pinMode(squarewave_pin, OUTPUT);
 
-   Serial.print("kp = ");
-   Serial.println(PD.Kp);
-   Serial.print("kd = ");
-   Serial.println(PD.Kd);
-   
+   b0 = b_vect[0];
+   b1 = b_vect[1];
+   a1 = a_vect[1];
+
    // encoder pin on interrupt 0 (pin 2)
    attachInterrupt(0, enc_isr_wrapper, RISING);
 
@@ -102,19 +110,22 @@ void loop(){
     }
     t_ms = t/1000.0;
 
-    if (t_ms > 5000){
+    if (t_ms > 2000){
       G.send_command(0);
       menu();
     }
     t_sec = t_ms/1000.0;
     dt = t_sec - prev_t;
 
-
     u.find_output(t_sec);
+    G.find_output(t_sec);//read and store encoder value (from previous time step - sort of - where does this go?z)
     error = sum1.find_output(t_sec);
-    raw_motor_speed = PD.get_output(t_sec);
-    motor_speed = sat_block.get_output(t_sec);
+    raw_motor_speed = Dz.find_output(t_sec);
+    motor_speed = sat_block.find_output(t_sec);
+    //motor_speed = mysat_rtbd(raw_motor_speed);
+    //v_raw = b0*error + b1*prev_error - a1*prev_v_raw;
     G.send_command(motor_speed);
+    
     //HB.send_command(motor_speed);
     // print data
     Serial.print(t_ms);
@@ -122,10 +133,12 @@ void loop(){
     //Serial.print(dt,8);
     //print_comma_then_int(u.get_output(t_sec));
     //print_comma_then_int(G.get_output(t_sec));
+    print_comma_then_int(error);
     print_comma_then_int(motor_speed);
     print_comma_then_int(raw_motor_speed);
-    print_comma_then_int(PD.input_value);
-    print_comma_then_float(PD.din_dt);
+    //print_comma_then_int(Dz.input_value);
+    //print_comma_then_float(Dz.output);
+    //print_comma_then_float(v_raw);
     //Serial.print(",");
     //Serial.print(PD.prev_t,8);
     //Serial.print(",");
@@ -135,8 +148,8 @@ void loop(){
     mynewline();
 
     prev_t = t_sec;
-    PD.save_values(t_sec);
-    
+    prev_error = error;
+    prev_v_raw = v_raw;
   }
 }
 
