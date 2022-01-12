@@ -1,31 +1,28 @@
 #include <kraussserial.h>
 #include <rtblockdiagram.h>
+// both the libraries above need to be installed on student computers
+// - what is the most efficient way to accomplish that?
+//     - install from zip using the Arduino IDE?
 
 #define encoderPinA 2
 #define squarewave_pin 12
 byte inByte;
 
+// this is the code I am seeking to autogenerate:
+/* step_input u = step_input(0.5, 150); */
+/* h_bridge_actuator HB = h_bridge_actuator(6, 4, 9);//in1, in2, pwm_pin */
+/* encoder enc = encoder(11); */
 
-step_input u = step_input(0.5, 150);
-h_bridge_actuator HB = h_bridge_actuator(6, 4, 9);//in1, in2, pwm_pin
-encoder enc = encoder(11);
+/* void enc_isr_wrapper() { */
+/*   enc.encoderISR(); */
+/* } */
 
-void enc_isr_wrapper() {
-  enc.encoderISR();
-}
+/* plant G = plant(&HB, &enc); */
+/* summing_junction sum1 = summing_junction(&u, &G); */
+/* PD_control_block PD = PD_control_block(3, 0.1, &sum1); */
+/* saturation_block sat_block = saturation_block(&PD); */
 
-plant G = plant(&HB, &enc);
-
-summing_junction sum1 = summing_junction();//&u, &G);
-
-float b_vect[2] = {61.57894737, -33.15789474};
-float a_vect[2] = { 1.0, -0.05263158};
-
-digcomp_block Dz = digcomp_block(b_vect, a_vect, 2, 2, &sum1);
-
-//PD_control_block PD = PD_control_block(3, 0.1, &sum1);
-
-saturation_block sat_block = saturation_block(&Dz);
+//bdsysinitcode
 
 //attachInterrupt(0, isr, FALLING);
 int nISR;
@@ -33,10 +30,8 @@ int nIn;
 int ISR_Happened;
 int mypause = 1;
 int ISRstate = 0;
-int motor_speed, raw_motor_speed, vOut, error, prev_error;
-
+int motor_speed, raw_motor_speed, vOut,error;
 bool send_ser;
-float b0, b1, a1, v_raw, prev_v_raw;
 
 unsigned long t0;
 unsigned long t;
@@ -46,21 +41,23 @@ float t_ms, t_sec, prev_t, dt;
 
 void setup(){
    Serial.begin(115200);
-   Serial.println("OOP for digcomp DC motor Control v.1.2");
+   Serial.println("auto-generated PD code v.1.0.0");
    Serial.println("using rtblockdiagram library");
    pinMode(squarewave_pin, OUTPUT);
 
-   b0 = b_vect[0];
-   b1 = b_vect[1];
-   a1 = a_vect[1];
-
-   sum1.set_inputs(&u, &G);
-   G.set_input(&Dz);
+   Serial.print("kp = ");
+   Serial.println(PD.Kp);
+   Serial.print("kd = ");
+   Serial.println(PD.Kd);
    
-   // encoder pin on interrupt 0 (pin 2)
-   attachInterrupt(0, enc_isr_wrapper, RISING);
+   //!// encoder pin on interrupt 0 (pin 2)
 
-   HB.setup();
+   // here is the setup code I should autogenerate:
+   //attachInterrupt(0, enc_isr_wrapper, RISING);
+   //HB.setup();
+
+   //bdsyssetupcode
+   
    //=======================================================
    // set up the Timer2 interrupt
    //=======================================================
@@ -95,7 +92,8 @@ void menu(){
   Serial.println("enter any character to start a test");
   char mychar = get_char();
   // reset encoders and t0 at the start of a test
-  enc.encoder_count = 0;
+  //enc.encoder_count = 0;
+  //bdsysmenucode
   t0 = micros();
   ISR_Happened = 0;// clear flag and wait for next time step
   Serial.print("t0 =");
@@ -113,46 +111,61 @@ void loop(){
     }
     t_ms = t/1000.0;
 
-    if (t_ms > 2000){
+    if (t_ms > 3000){
       G.send_command(0);
       menu();
     }
     t_sec = t_ms/1000.0;
     dt = t_sec - prev_t;
 
-    u.find_output(t_sec);
-    G.find_output(t_sec);//read and store encoder value (from previous time step - sort of - where does this go?z)
-    error = sum1.find_output(t_sec);
-    raw_motor_speed = Dz.find_output(t_sec);
-    motor_speed = sat_block.find_output(t_sec);
-    //motor_speed = mysat_rtbd(raw_motor_speed);
-    //v_raw = b0*error + b1*prev_error - a1*prev_v_raw;
-    G.send_command();
-    
+
+
+    // here is the loop code I want to autogenerate:
+    /* u.find_output(t_sec); */
+    /* error = sum1.find_output(t_sec); */
+    /* raw_motor_speed = PD.get_output(t_sec); */
+    /* motor_speed = sat_block.get_output(t_sec); */
+    /* G.send_command(motor_speed); */
+
+    //bdsysloopcode
+
+
     //HB.send_command(motor_speed);
     // print data
     Serial.print(t_ms);
+
+    //bdsysprintcode
+
     //Serial.print(",");
     //Serial.print(dt,8);
     //print_comma_then_int(u.get_output(t_sec));
     //print_comma_then_int(G.get_output(t_sec));
-    print_comma_then_int(error);
-    print_comma_then_int(motor_speed);
-    print_comma_then_int(raw_motor_speed);
-    //print_comma_then_int(Dz.input_value);
-    //print_comma_then_float(Dz.output);
-    //print_comma_then_float(v_raw);
+
+    // how do I decide what to print?
+    // - all blocks or only some?
+    //     - printing all can slow things down
+    //     - printing all might be confusing
+    // - call the get_output method?
+    //     - do I ever need float output?
+
+    /* print_comma_then_int(motor_speed); */
+    /* print_comma_then_int(raw_motor_speed); */
+    /* print_comma_then_int(PD.input_value); */
+    /* print_comma_then_float(PD.din_dt); */
+    /* print_comma_then_int(G.read_output()); */
+
+    
     //Serial.print(",");
     //Serial.print(PD.prev_t,8);
     //Serial.print(",");
     //Serial.print(PD.dt,8);
-    print_comma_then_int(G.get_reading());
+    
     //print_comma_then_int(enc.get_reading());
     mynewline();
 
     prev_t = t_sec;
-    prev_error = error;
-    prev_v_raw = v_raw;
+    //PD.save_values(t_sec);
+    
   }
 }
 
