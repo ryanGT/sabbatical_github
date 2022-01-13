@@ -24,7 +24,7 @@ byte inByte;
 
 //bdsysinitcode
 step_input u = step_input(0.1, 100);
-pwm_output pwm_out = pwm_output(9);
+pwm_output pwm_out = pwm_output(5);
 analog_sensor ai_sensor = analog_sensor(A0);
 plant G = plant(&pwm_out, &ai_sensor);
 
@@ -47,15 +47,11 @@ float t_ms, t_sec, prev_t, dt;
 void setup(){
    Serial.begin(115200);
    //bdsyswelcomecode
-   Serial.println("auto-generated Arduino code");
+   Serial.println("Autogen RC OL code");
 
    Serial.println("using rtblockdiagram library");
    pinMode(squarewave_pin, OUTPUT);
 
-   Serial.print("kp = ");
-   Serial.println(PD.Kp);
-   Serial.print("kd = ");
-   Serial.println(PD.Kd);
 
    //!// encoder pin on interrupt 0 (pin 2)
 
@@ -152,7 +148,6 @@ void loop(){
     //bdsysprintcode
    print_comma_then_int(u.read_output());
    print_comma_then_int(G.read_output());
-   print_comma_then_int(None.read_output());
 
 
     //Serial.print(",");

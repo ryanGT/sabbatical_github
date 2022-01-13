@@ -41,14 +41,10 @@ float t_ms, t_sec, prev_t, dt;
 
 void setup(){
    Serial.begin(115200);
-   Serial.println("auto-generated PD code v.1.0.0");
+   //bdsyswelcomecode
    Serial.println("using rtblockdiagram library");
    pinMode(squarewave_pin, OUTPUT);
 
-   Serial.print("kp = ");
-   Serial.println(PD.Kp);
-   Serial.print("kd = ");
-   Serial.println(PD.Kd);
    
    //!// encoder pin on interrupt 0 (pin 2)
 
