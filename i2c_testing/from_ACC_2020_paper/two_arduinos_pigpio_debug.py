@@ -106,8 +106,10 @@ for i in range(N):
     senddata = [30,msb,lsb]
     #senddata = [17,81]
     
-    time.sleep(0.00001)
-    pi.i2c_write_device(m_ino,senddata)
+    time.sleep(0.0001)
+    pi.i2c_write_byte(m_ino, msb)
+    pi.i2c_write_byte(m_ino, lsb)
+	#pi.i2c_write_device(m_ino,senddata)
     #bus.write_i2c_block_data(MOTOR_ADDRESS,33,senddata)
     
 

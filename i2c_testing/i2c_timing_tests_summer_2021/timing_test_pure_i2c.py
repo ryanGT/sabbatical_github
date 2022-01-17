@@ -24,7 +24,7 @@ t_ino = pi.i2c_open(1, TIMING_ADDRESS)#t_ino is the timing arduino
 
 # setup the variables and arrays for running a test
 # and storig the data
-N = 1000
+N = 5000
 
 t0 = time.time()
 check_array = np.zeros(1000)
@@ -56,15 +56,20 @@ for i in range(N):
         check = pi.i2c_read_byte(t_ino)
     # acknowledge that the RPi has received the "go" signal
     # that the next time step has arrived
-    pi.i2c_write_byte(t_ino, 7)
+    #pi.i2c_write_byte(t_ino, 7)#<-- i2c write error occurs here
+	#                           # - is it possible that one Arduino cannot
+	#   switch from writing to reading fast enough
+	#   sometimes?
+	#     - in my ACC paper, this write went to
+	#       the other Arduino
     num_read[i] = check# log the time step counter to see if we
-                       # get them all
-    e, cur_resp = pi.i2c_read_device(t_ino, 3)# read the micros t value from the
-                                              # timing Arduino to see how we are doing
-                                              # on consistently having 2000 microseconds
-                                              # per time step
-    t_i = cur_resp[1] + cur_resp[2]*256# convert the two bytes for t to a 16-bit integer
-    t[i] = t_i
+    #                   # get them all
+    #e, cur_resp = pi.i2c_read_device(t_ino, 3)# read the micros t value from the
+    #                                          # timing Arduino to see how we are doing
+    #                                          # on consistently having 2000 microseconds
+    #                                          # per time step
+    #t_i = cur_resp[1] + cur_resp[2]*256# convert the two bytes for t to a 16-bit integer
+    #t[i] = t_i
 
     # save the time step counter for the next loop
     prev_check = check
@@ -107,9 +112,9 @@ ndiff = n_unw-n_expected
 print("max diff = " + str(np.abs(ndiff).max()))
 
 
-dt_vect = t[1:] - t[0:-1]
-inds = np.where(dt_vect<0)
-dt_vect[inds[0]] += 2**16
+#dt_vect = t[1:] - t[0:-1]
+#inds = np.where(dt_vect<0)
+#dt_vect[inds[0]] += 2**16
 
 plt.figure(1)
 plt.plot(n_unw)
@@ -119,8 +124,8 @@ plt.figure(2)
 plt.plot(ndiff)
 plt.title("ndiff")
 
-plt.figure(3)
-plt.plot(dt_vect)
-plt.title("dt")
+#plt.figure(3)
+#plt.plot(dt_vect)
+#plt.title("dt")
 
 plt.show()
