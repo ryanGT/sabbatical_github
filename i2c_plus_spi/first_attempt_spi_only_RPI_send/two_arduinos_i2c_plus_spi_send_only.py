@@ -130,9 +130,9 @@ print("dt = %f" % dt)
 # In[169]:
 
 
-dt/N*1000
+ave_time_step = dt/N*1000
 
-
+print("ave_time_step = %0.4g" % ave_time_step)
 # In[170]:
 
 
