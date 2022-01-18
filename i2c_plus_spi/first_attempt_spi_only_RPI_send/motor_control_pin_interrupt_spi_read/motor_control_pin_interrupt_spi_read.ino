@@ -3,8 +3,11 @@ int SLAVE_ADDRESS = 0x04;
 #include <SPI.h>
 
 byte buf [100];
+byte out_buf [100];
 volatile byte pos;
 volatile boolean process_it;
+
+byte n_lsb, n_msb;
 
 // Todo:
 // - add command motor
@@ -265,15 +268,24 @@ void loop()
   }
 
   if (process_it){
+    process_it = false;    
     v1 = reassemblebytes(buf[0],buf[1]);
+    Serial.print(nISR);
+    print_int_with_comma(v1);
+    mynewline();
+    n_lsb = (byte)nISR;
+    n_msb = getsecondbyte(nISR);
+    
+    out_buf[0] = n_msb;
+    out_buf[1] = n_lsb;
+    out_buf[2] = 9;
     pos = 0;
     buf[0] = 0;
     buf[1] = 0;
-    process_it = false;
     command_motor(v1);
   }
   
-  unsigned char n_lsb, n_msb;
+
   unsigned char e_lsb, e_msb;  
   
   if (ISR_Happened > 0){
@@ -375,10 +387,12 @@ byte c = SPDR;  // grab byte from SPI Data Register
   // add to buffer if room
   if (pos < sizeof buf)
     {
-    buf [pos++] = c;
-
+    buf[pos] = c;
+    SPDR = out_buf[pos];
+    //SPI.transfer(out_buf[pos]);
+    pos++;
     // example: newline means time to process buffer
-    if (pos > 1)
+    if (pos > 2)
       process_it = true;
 
     }  // end of room available
