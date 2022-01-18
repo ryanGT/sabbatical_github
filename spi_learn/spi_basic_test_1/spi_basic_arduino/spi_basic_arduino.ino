@@ -11,7 +11,7 @@ volatile boolean process_it;
 void setup (void)
 {
   Serial.begin (115200);   // debugging
-
+  Serial.println("basic spi test");
   // turn on SPI in slave mode
   SPCR |= bit (SPE);
 
@@ -49,7 +49,7 @@ byte c = SPDR;  // grab byte from SPI Data Register
 void loop (void)
 {
   int i, c;
-  delay(5);
+  //delay(5);
   if (process_it)
   { buf[pos]=0;
     Serial.println(buf);
