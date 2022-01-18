@@ -32,7 +32,7 @@ MOTOR_ADDRESS = 0x04
 t_ino = pi.i2c_open(1, TIMING_ADDRESS)
 m_ino = pi.i2c_open(1, MOTOR_ADDRESS)
 
-h_spi = pi.spi_open(0, 500000)
+h_spi = pi.spi_open(0, 400000)
 
 #c, d = pi.i2c_read_device(h,8)
 
@@ -69,6 +69,7 @@ time.sleep(0.01)
 kp = 3
 kd = 1
 
+spi_list = []
 
 for i in range(N):
     check = pi.i2c_read_byte(t_ino)
@@ -107,11 +108,12 @@ for i in range(N):
     lsb = int(v_out % 256)
     #senddata = [30,msb,lsb]
     #senddata = [17,81]
-    spi_data = [msb, lsb]
+    spi_data = [msb, lsb, 10]
     
     time.sleep(0.0001)
 
-    pi.spi_xfer(h_spi, spi_data)
+    spi_resp = pi.spi_xfer(h_spi, spi_data)
+    spi_list.append(spi_resp)
     #pi.i2c_write_byte(m_ino, msb)
     #pi.i2c_write_byte(m_ino, lsb)
 	#pi.i2c_write_device(m_ino,senddata)
