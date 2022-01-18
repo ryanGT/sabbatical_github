@@ -88,7 +88,8 @@ void setup()
   Wire.begin(SLAVE_ADDRESS);
   Wire.onReceive(read_all_bytes);
   Wire.onRequest(sendData);
-
+  Wire.setClock(400000);//<-- is this actually bad for a secondary device?
+ 
   //Serial1.begin(115200);
 
   send_ser = false;
@@ -295,22 +296,22 @@ void doEncoder()
 }
 
 void read_all_bytes(int numBytes){
-  digitalWrite(receivePin, HIGH);  
+  //digitalWrite(receivePin, HIGH);  
   for(int i=0;i<numBytes;i++){
     inArray[i] = Wire.read();
   }
   new_data = true;
-  digitalWrite(receivePin, LOW);
+  //digitalWrite(receivePin, LOW);
 }
 
 void sendData(){
-  digitalWrite(sendPin, HIGH);  
+  //digitalWrite(sendPin, HIGH);  
   Wire.write(outArray,sizeof(outArray));
   //if (ISR_Happened == 1){
   //    digitalWrite(handshake_pin, HIGH);
   //}
   mypause = 0;
-  digitalWrite(sendPin, LOW);    
+  //digitalWrite(sendPin, LOW);    
 }
 
 /* void sendData(){ */

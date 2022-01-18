@@ -57,8 +57,8 @@ void setup()
   TCNT2  = 0;//initialize counter value to 0
   // set compare match register for 8khz increments
   //OCR2A = 61;// 1000 Hz (1 kHz)
-  OCR2A = 124;// 500 Hz
-  //OCR2A = 249;// challenge solution
+  //OCR2A = 124;// 500 Hz
+  OCR2A = 249;// challenge solution
   // turn on CTC mode
   TCCR2A |= (1 << WGM21);
   // from starter code:
