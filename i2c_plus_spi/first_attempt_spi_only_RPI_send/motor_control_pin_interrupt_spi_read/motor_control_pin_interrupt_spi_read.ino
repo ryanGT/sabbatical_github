@@ -1,12 +1,17 @@
 #include <Wire.h>
 int SLAVE_ADDRESS = 0x04;
+#include <SPI.h>
+
+byte buf [100];
+volatile byte pos;
+volatile boolean process_it;
 
 // Todo:
 // - add command motor
 // - add encoder
 // - change communication scheme 
 #define encoderPinA 2
-#define encoderPinB 11
+#define encoderPinB 5
 
 #define in_bytes 3
 #define out_bytes 6
@@ -80,9 +85,9 @@ void setup()
 {
   Serial.begin(115200);
 
-  Serial.println("i2c motor control two arduinos");
+  Serial.println("i2c plus spi read motor control two arduinos");
   Serial.println("pin interrupt");
-  Serial.println("04/11/2021");
+  Serial.println("01/18/2022");
   Serial.print("\n");
   
   Wire.begin(SLAVE_ADDRESS);
@@ -123,6 +128,19 @@ void setup()
   attachInterrupt(0, doEncoder, RISING);
   attachInterrupt(1, pinISR, CHANGE);
 
+  SPCR |= bit (SPE);
+
+  // have to send on master in, *slave out*
+  pinMode(MISO, OUTPUT);
+
+  // get ready for an interrupt 
+  pos = 0;   // buffer empty
+  process_it = false;
+
+  // now turn on interrupts
+  SPI.attachInterrupt();
+
+  
   Serial.println("motor test begin");
   command_motor(255);
   delay(500);
@@ -230,11 +248,11 @@ void loop()
       ISR_Happened = 0;
       //digitalWrite(handshake_pin, LOW);
     }
-    else if (inArray[0] == 30){
-      v1 = reassemblebytes(inArray[1],inArray[2]);
-      Serial.println(v1);
-      command_motor(v1);
-    }
+    /* else if (inArray[0] == 30){ */
+    /*   v1 = reassemblebytes(inArray[1],inArray[2]); */
+    /*   Serial.println(v1); */
+    /*   command_motor(v1); */
+    /* } */
     //Serial.print(inArray[0]);
     //Serial.print(",");    
     //Serial.print(inArray[1]);
@@ -246,6 +264,15 @@ void loop()
     //Serial.println(v1);
   }
 
+  if (process_it){
+    v1 = reassemblebytes(buf[0],buf[1]);
+    pos = 0;
+    buf[0] = 0;
+    buf[1] = 0;
+    process_it = false;
+    command_motor(v1);
+  }
+  
   unsigned char n_lsb, n_msb;
   unsigned char e_lsb, e_msb;  
   
@@ -340,3 +367,20 @@ void pinISR()
   //accel = analogRead(analogPin);
   digitalWrite(isrPin, LOW);
 }
+
+ISR (SPI_STC_vect)
+{
+byte c = SPDR;  // grab byte from SPI Data Register
+
+  // add to buffer if room
+  if (pos < sizeof buf)
+    {
+    buf [pos++] = c;
+
+    // example: newline means time to process buffer
+    if (pos > 1)
+      process_it = true;
+
+    }  // end of room available
+}  // end of interrupt routine SPI_STC_vect
+
