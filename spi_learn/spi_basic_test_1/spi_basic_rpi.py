@@ -15,16 +15,18 @@ if not pi.connected:
 
 h = pi.spi_open(0, 40000)
 
-stop = time.time() + 120.0
+stop = time.time() + 10.0
 
 n = 0
 
 while time.time() < stop:
-
+    print("n = " + str(n))
     n += 1
-    pi.spi_xfer(h, "This is message number {}\n".format(n))
-    time.sleep(1)
-
+    msg = "This is message number {}\n".format(n)
+    pi.spi_xfer(h, msg)
+    time.sleep(0.01)
+    print(msg)
+	
 pi.spi_close(h)
 
 pi.stop()
