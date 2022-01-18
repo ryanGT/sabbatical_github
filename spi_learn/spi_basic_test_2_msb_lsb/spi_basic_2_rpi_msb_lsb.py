@@ -22,8 +22,11 @@ n = 0
 while time.time() < stop:
     print("n = " + str(n))
     n += 1
-    msg = "This is message number {}\n".format(n)
-    pi.spi_xfer(h, msg)
+    #msg = "This is message number {}\n".format(n)
+	msb = int(n/256)
+	lsb = int(v_out % 256)
+	msg = [msb,lsb]
+	pi.spi_xfer(h, msg)
     time.sleep(0.01)
     print(msg)
 	
