@@ -5,7 +5,7 @@ import numpy as np
 import copy
 import matplotlib.pyplot as plt
 plt.close('all')
-
+import py_block_diagram
 import serial_utils
 
 
@@ -42,7 +42,7 @@ h_spi = pi.spi_open(0, 400000)
 
 # In[168]:
 
-# sys pre code:
+# sysprecode
 
 N = 500
 
@@ -51,7 +51,7 @@ check_array = np.zeros(1000)
 j = 0
 n = 0
 
-# block init code
+# blockinitcode
 num_checks = np.zeros(N)
 prev_check = 0
 num_read = np.zeros(N)
@@ -65,8 +65,9 @@ responses = np.zeros((N,read_bytes))
 kp = 3
 kd = 1
 
-# block secondary init code
-# - make input connections
+# make input connections here:
+# blocksecondaryinitcode
+
 
 
 # start new test
@@ -95,7 +96,7 @@ for i in range(N):
     #bus.write_byte(TIMING_ADDRESS, 7)
     #time.sleep(0.00001)
 
-    # block loop code
+    # pythonloopcode
     #
     # i2c read block in feedback loop:
     e, cur_resp = pi.i2c_read_device(m_ino,6)#<-- question for me: what are the 6 bytes?
