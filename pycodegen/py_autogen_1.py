@@ -135,6 +135,7 @@ ndiff = n_unw-n_expected
 print("max diff = " + str(np.abs(ndiff).max()))
 
 pi.i2c_write_byte(m_ino, 2)#end test
+pi.i2c_write_byte(t_ino, 2)#end test
 
 pi.i2c_close(t_ino)
 pi.i2c_close(m_ino)
