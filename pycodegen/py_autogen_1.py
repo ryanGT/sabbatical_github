@@ -102,14 +102,14 @@ for i in range(N):
     prev_check = check
 
 t1 = time.time()
-dt = t1-t0
-print("dt = %f" % dt)
+loop_dt = t1-t0
+print("loop_dt = %f" % loop_dt)
 
 
 # In[169]:
 
 
-ave_time_step = dt/N*1000
+ave_time_step = loop_dt/N*1000
 
 print("ave_time_step = %0.4g" % ave_time_step)
 # In[170]:
@@ -134,8 +134,6 @@ n_expected = np.arange(1,N+1,1)
 ndiff = n_unw-n_expected
 print("max diff = " + str(np.abs(ndiff).max()))
 
-# plottingcode
-
 pi.i2c_write_byte(m_ino, 2)#end test
 
 pi.i2c_close(t_ino)
@@ -143,6 +141,12 @@ pi.i2c_close(m_ino)
 pi.spi_close(h_spi)
 
 pi.stop()
+
+
+# plottingcode
+plt.figure(1)
+plt.plot(t, u.output_vector, t, sum1.output_vector, t, sat_block.output_vector, t, i2c_1.output_vector)
+
 
 
 plt.show()
