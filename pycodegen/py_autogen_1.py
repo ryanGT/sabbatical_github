@@ -32,12 +32,27 @@ h_spi = pi.spi_open(0, 400000)
 # In[168]:
 
 # sysprecode
+N = 1000
+num_read = np.zeros(N)
+
 
 # blockinitcode
+u = py_block_diagram.step_input(label="$U(s)$", on_time=0.1, amp=100)
+sum1 = py_block_diagram.summing_junction()
+PD = py_block_diagram.PD_controller(label="$D(s)$", Kp=3, Kd=0.1)
+i2c_1 = py_block_diagram.i2c_read_block(i2c_connection=m_ino, pi_instance=pi, read_bytes=6, msb_index=2, lsb_index=3)
+sat_block = py_block_diagram.saturation_block(label="sat", mymax=255)
+spi_1 = py_block_diagram.spi_send_block(spi_connection=h_spi, pi_instance=pi, )
+
 
 
 # make input connections here:
 # blocksecondaryinitcode
+sum1.input1 = u
+sum1.input2 = i2c_1
+PD.input = sum1
+sat_block.input = PD
+
 
 
 
@@ -66,10 +81,17 @@ for i in range(N):
     #time.sleep(0.00001)
 
     # pythonloopcode
+    u.find_output(i)
+    i2c_1.read_data(i)
+    sum1.find_output(i)
+    PD.find_output(i)
+    sat_block.find_output(i)
+    spi_1.send_data(i)
+
 
 
     prev_check = check
-    
+
 t1 = time.time()
 dt = t1-t0
 print("dt = %f" % dt)
