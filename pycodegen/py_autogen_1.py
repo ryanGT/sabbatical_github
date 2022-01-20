@@ -58,6 +58,7 @@ PD.init_vectors(N)
 i2c_1.init_vectors(N)
 sat_block.input_block = PD
 sat_block.init_vectors(N)
+spi_1.input_block = sat_block
 spi_1.init_vectors(N)
 
 
