@@ -34,6 +34,7 @@ h_spi = pi.spi_open(0, 400000)
 # sysprecode
 N = 1000
 num_read = np.zeros(N)
+prev_check = -1
 
 
 # blockinitcode
@@ -50,8 +51,11 @@ spi_1 = py_block_diagram.spi_send_block(spi_connection=h_spi, pi_instance=pi, )
 # blocksecondaryinitcode
 sum1.input1 = u
 sum1.input2 = i2c_1
+sum1.init_vectors(N)
 PD.input = sum1
+PD.init_vectors(N)
 sat_block.input = PD
+sat_block.init_vectors(N)
 
 
 
