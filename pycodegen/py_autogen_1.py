@@ -71,6 +71,7 @@ pi.i2c_write_byte(m_ino, 1)
 
 time.sleep(0.01)
 
+t0 = time.time()
 
 for i in range(N):
     check = pi.i2c_read_byte(t_ino)
