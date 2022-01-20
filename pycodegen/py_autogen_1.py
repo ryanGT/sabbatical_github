@@ -38,28 +38,28 @@ prev_check = -1
 
 
 # blockinitcode
-u = py_block_diagram.step_input(label="$U(s)$", on_time=0.1, amp=100)
-sum1 = py_block_diagram.summing_junction()
-PD = py_block_diagram.PD_controller(label="$D(s)$", Kp=3, Kd=0.1)
-i2c_1 = py_block_diagram.i2c_read_block(i2c_connection=m_ino, pi_instance=pi, read_bytes=6, msb_index=2, lsb_index=3)
+u_step_block = py_block_diagram.step_input(label="$U(s)$", on_time=0.1, amp=100)
+sum1_block = py_block_diagram.summing_junction()
+PD_block = py_block_diagram.PD_controller(label="$D(s)$", Kp=3, Kd=0.1)
+i2c_block_1 = py_block_diagram.i2c_read_block(i2c_connection=m_ino, pi_instance=pi, read_bytes=6, msb_index=2, lsb_index=3)
 sat_block = py_block_diagram.saturation_block(label="sat", mymax=255)
-spi_1 = py_block_diagram.spi_send_block(spi_connection=h_spi, pi_instance=pi, )
+spi_block_1 = py_block_diagram.spi_send_block(spi_connection=h_spi, pi_instance=pi, )
 
 
 
 # make input connections here:
 # blocksecondaryinitcode
-u.init_vectors(N)
-sum1.input1 = u
-sum1.input2 = i2c_1
-sum1.init_vectors(N)
-PD.input_block = sum1
-PD.init_vectors(N)
-i2c_1.init_vectors(N)
-sat_block.input_block = PD
+u_step_block.init_vectors(N)
+sum1_block.input1 = u_step_block
+sum1_block.input2 = i2c_block_1
+sum1_block.init_vectors(N)
+PD_block.input_block = sum1_block
+PD_block.init_vectors(N)
+i2c_block_1.init_vectors(N)
+sat_block.input_block = PD_block
 sat_block.init_vectors(N)
-spi_1.input_block = sat_block
-spi_1.init_vectors(N)
+spi_block_1.input_block = sat_block
+spi_block_1.init_vectors(N)
 
 
 
@@ -90,12 +90,12 @@ for i in range(N):
     #time.sleep(0.00001)
 
     # pythonloopcode
-    u.find_output(i)
-    i2c_1.read_data(i)
-    sum1.find_output(i)
-    PD.find_output(i)
+    u_step_block.find_output(i)
+    i2c_block_1.read_data(i)
+    sum1_block.find_output(i)
+    PD_block.find_output(i)
     sat_block.find_output(i)
-    spi_1.send_data(i)
+    spi_block_1.send_data(i)
 
 
 
@@ -149,8 +149,21 @@ nvect = np.arange(N)
 dt = 0.004
 t = nvect*dt
 
+u = u_step_block.output_vector
+e = sum1_block.output_vector
+v = PD_block.output_vector
+v_sat = spi_block_1.output_vector
+enc = i2c_block_1.output_vector
+
 plt.figure(1)
-plt.plot(t, u.output_vector, t, sum1.output_vector, t, sat_block.output_vector, t, i2c_1.output_vector)
+plt.plot(t, u, t, e, t, enc)
+plt.xlim([0, 1])
+plt.xlabel(Time (sec.))
+
+plt.figure(2)
+plt.plot(t, u, t, v, t, v_sat)
+plt.xlim([0, 1])
+plt.xlabel(Time (sec.))
 
 
 
