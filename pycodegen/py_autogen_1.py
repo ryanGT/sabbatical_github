@@ -152,7 +152,7 @@ t = nvect*dt
 u = u_step_block.output_vector
 e = sum1_block.output_vector
 v = PD_block.output_vector
-v_sat = spi_block_1.output_vector
+v_sat = sat_block.output_vector
 enc = i2c_block_1.output_vector
 
 plt.figure(1)
