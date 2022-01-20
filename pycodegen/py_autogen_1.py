@@ -53,10 +53,12 @@ u.init_vectors(N)
 sum1.input1 = u
 sum1.input2 = i2c_1
 sum1.init_vectors(N)
-PD.input = sum1
+PD.input_block = sum1
 PD.init_vectors(N)
-sat_block.input = PD
+i2c_1.init_vectors(N)
+sat_block.input_block = PD
 sat_block.init_vectors(N)
+spi_1.init_vectors(N)
 
 
 
