@@ -49,6 +49,7 @@ spi_1 = py_block_diagram.spi_send_block(spi_connection=h_spi, pi_instance=pi, )
 
 # make input connections here:
 # blocksecondaryinitcode
+u.init_vectors(N)
 sum1.input1 = u
 sum1.input2 = i2c_1
 sum1.init_vectors(N)
