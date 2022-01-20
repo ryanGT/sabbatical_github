@@ -144,6 +144,10 @@ pi.stop()
 
 
 # plottingcode
+nvect = np.arange(N)
+dt = 0.004
+t = nvect*dt
+
 plt.figure(1)
 plt.plot(t, u.output_vector, t, sum1.output_vector, t, sat_block.output_vector, t, i2c_1.output_vector)
 
