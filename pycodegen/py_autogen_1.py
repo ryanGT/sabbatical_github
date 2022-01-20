@@ -158,12 +158,12 @@ enc = i2c_block_1.output_vector
 plt.figure(1)
 plt.plot(t, u, t, e, t, enc)
 plt.xlim([0, 1])
-plt.xlabel(Time (sec.))
+plt.xlabel("Time (sec.)")
 
 plt.figure(2)
 plt.plot(t, u, t, v, t, v_sat)
 plt.xlim([0, 1])
-plt.xlabel(Time (sec.))
+plt.xlabel("Time (sec.)")
 
 
 
