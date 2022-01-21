@@ -42,7 +42,7 @@ prev_check = -1
 # blockinitcode
 u_step_block = py_block_diagram.step_input(label="$U(s)$", on_time=0.1, amp=100)
 sum1_block = py_block_diagram.summing_junction()
-Ds = TF([   90. 27000.], [  1 900])
+Ds = TF([90.0, 27000.0], [1, 900])
 Dz_block = py_block_diagram.digcomp_block(Ds, 0.002)
 i2c_block_1 = py_block_diagram.i2c_read_block(i2c_connection=m_ino, pi_instance=pi, read_bytes=6, msb_index=2, lsb_index=3)
 sat_block = py_block_diagram.saturation_block(label="sat", mymax=255)
