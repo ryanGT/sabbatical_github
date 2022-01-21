@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 plt.close('all')
 import py_block_diagram
 import serial_utils
+import control
+from control import TransferFunction as TF
 
 
 pi = pigpio.pi()

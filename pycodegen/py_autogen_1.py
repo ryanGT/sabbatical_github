@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 plt.close('all')
 import py_block_diagram
 import serial_utils
+import control
+from control import TransferFunction as TF
 
 
 pi = pigpio.pi()
@@ -40,7 +42,8 @@ prev_check = -1
 # blockinitcode
 u_step_block = py_block_diagram.step_input(label="$U(s)$", on_time=0.1, amp=100)
 sum1_block = py_block_diagram.summing_junction()
-PD_block = py_block_diagram.PD_controller(label="$D(s)$", Kp=3, Kd=0.1)
+Ds = TF([   90. 27000.], [  1 900])
+Dz_block = py_block_diagram.digcomp_block(Ds, 0.002)
 i2c_block_1 = py_block_diagram.i2c_read_block(i2c_connection=m_ino, pi_instance=pi, read_bytes=6, msb_index=2, lsb_index=3)
 sat_block = py_block_diagram.saturation_block(label="sat", mymax=255)
 spi_block_1 = py_block_diagram.spi_send_block(spi_connection=h_spi, pi_instance=pi, )
@@ -53,12 +56,14 @@ u_step_block.init_vectors(N)
 sum1_block.input1 = u_step_block
 sum1_block.input2 = i2c_block_1
 sum1_block.init_vectors(N)
-PD_block.input_block = sum1_block
-PD_block.init_vectors(N)
+Dz_block.init_vectors(N)
+Dz_block.set_input_block(sum1_block)
+Dz_block.Dz.input = sum1_block.output_vector
+Dz_block.Dz.output = Dz_block.output_vector
 i2c_block_1.init_vectors(N)
-sat_block.input_block = PD_block
+sat_block.set_input_block(Dz_block)
 sat_block.init_vectors(N)
-spi_block_1.input_block = sat_block
+spi_block_1.set_input_block(sat_block)
 spi_block_1.init_vectors(N)
 
 
@@ -93,7 +98,7 @@ for i in range(N):
     u_step_block.find_output(i)
     i2c_block_1.read_data(i)
     sum1_block.find_output(i)
-    PD_block.find_output(i)
+    Dz_block.find_output(i)
     sat_block.find_output(i)
     spi_block_1.send_data(i)
 
@@ -151,7 +156,7 @@ t = nvect*dt
 
 u = u_step_block.output_vector
 e = sum1_block.output_vector
-v = PD_block.output_vector
+v = Dz_block.output_vector
 v_sat = sat_block.output_vector
 enc = i2c_block_1.output_vector
 
