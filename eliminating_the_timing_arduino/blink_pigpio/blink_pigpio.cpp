@@ -4,7 +4,8 @@ using namespace std;
 
 int main()
 {
-  int pin = 25;
+  //int pin = 25;
+  int pin = 21;
   gpioInitialise();
   gpioSetMode(pin, PI_OUTPUT);
   gpioWrite(pin, 1);

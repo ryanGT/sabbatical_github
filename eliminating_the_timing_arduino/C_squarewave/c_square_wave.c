@@ -15,7 +15,7 @@ int main(int argc, char *argv[])
 
 
   pinMode(40, OUTPUT);
-  pinMode(17, OUTPUT);
+  pinMode(38, OUTPUT);
 
   signal(SIGALRM, alarmWakeup);   
   ualarm(5000, 5000);
@@ -40,9 +40,9 @@ void alarmWakeup(int sig_num)
 
   if(sig_num == SIGALRM)
     {
-      digitalWrite(17, HIGH); //pin 38 high
+      digitalWrite(38, HIGH); //pin 38 high
       for(i=0; i<65535; i++); //do something
-      digitalWrite(17, LOW);  //pin 38 low
+      digitalWrite(38, LOW);  //pin 38 low
     }
 
 }
