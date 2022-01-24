@@ -24,7 +24,7 @@ MOTOR_ADDRESS = 0x04
 
 t_ino = pi.i2c_open(1, TIMING_ADDRESS)
 m_ino = pi.i2c_open(1, MOTOR_ADDRESS)
-h_spi = pi.spi_open(0, 400000)
+h_spi = pi.spi_open(0, 200000)
 
 #c, d = pi.i2c_read_device(h,8)
 

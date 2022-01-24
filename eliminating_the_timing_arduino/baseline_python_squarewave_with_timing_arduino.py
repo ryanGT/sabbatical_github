@@ -10,6 +10,14 @@ import serial_utils
 import control
 from control import TransferFunction as TF
 
+import RPi.GPIO as GPIO
+GPIO.setmode(GPIO.BCM)
+LED = 17
+ledState = False
+GPIO.setup(LED,GPIO.OUT)
+
+ledState = 0
+
 
 pi = pigpio.pi()
 if not pi.connected:
@@ -54,6 +62,8 @@ for i in range(N):
         #j += 1
         #check_array[j] = check
         #time.sleep(0.00001)
+    ledState = not ledState
+    GPIO.output(LED, ledState)
     num_read[i] = check
     #num_checks[i] = n
     #time.sleep(0.0001)
