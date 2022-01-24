@@ -40,7 +40,7 @@ void setup()
   Wire.begin(SLAVE_ADDRESS);
   Wire.onReceive(read_all_bytes);
   Wire.onRequest(sendData);
-  Wire.setClock(400000);//<-- is this actually bad for a secondary device?
+  Wire.setClock(100000);//<-- is this actually bad for a secondary device?
   
   pinMode(square_wave_pin, OUTPUT);
   pinMode(handshake_pin, OUTPUT);  

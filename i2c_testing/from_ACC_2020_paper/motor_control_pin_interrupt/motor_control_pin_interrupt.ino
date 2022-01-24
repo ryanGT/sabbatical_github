@@ -6,7 +6,7 @@ int SLAVE_ADDRESS = 0x04;
 // - add encoder
 // - change communication scheme 
 #define encoderPinA 2
-#define encoderPinB 11
+#define encoderPinB 5
 
 #define in_bytes 3
 #define out_bytes 6
@@ -88,7 +88,7 @@ void setup()
   Wire.begin(SLAVE_ADDRESS);
   Wire.onReceive(read_all_bytes);
   Wire.onRequest(sendData);
-  Wire.setClock(400000);//<-- is this actually bad for a secondary device?
+  Wire.setClock(100000);//<-- is this actually bad for a secondary device?
  
   //Serial1.begin(115200);
 
