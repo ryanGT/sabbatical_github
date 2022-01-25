@@ -39,7 +39,7 @@ ledState = 0
 pi = pigpio.pi()
 if not pi.connected:
     print("not connected")
-    exit()
+    sys.exit()
 
 
 # leave this as manual for now
