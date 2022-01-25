@@ -87,9 +87,9 @@ void setup()
 {
   Serial.begin(115200);
 
-  Serial.println("i2c plus spi read motor control two arduinos");
+  Serial.println("i2c plus spi read motor control zeroMQ");
   Serial.println("pin interrupt");
-  Serial.println("01/18/2022");
+  Serial.println("01/25/2022");
   Serial.print("\n");
   
   Wire.begin(SLAVE_ADDRESS);
