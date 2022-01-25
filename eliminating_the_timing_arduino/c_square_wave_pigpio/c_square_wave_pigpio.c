@@ -3,33 +3,32 @@
 #include <signal.h>
 #include <unistd.h>
 
-
 #include <pigpio.h>
 
 
 void alarmWakeup(int sig_num);
 
+int pin = 21;
+int pin2 = 20;//look up a good choice here
+
 
 int main(int argc, char *argv[])
 {
   unsigned int j;
-
-  int pin = 25;
-  int pin2 = 23;//look up a good choice here
   
   gpioInitialise();
   gpioSetMode(pin, PI_OUTPUT);
   gpioSetMode(pin2, PI_OUTPUT);
 
   signal(SIGALRM, alarmWakeup);   
-  ualarm(5000, 5000);
+  ualarm(2000, 2000);
 
 
-  while(1)// change to for loop so terminate happens
+  for (j=0;j<1000;j++)// change to for loop so terminate happens
     {
-      gpioWrite(pin, 1);
+      gpioWrite(pin2, 1);
       gpioSleep(PI_TIME_RELATIVE, 0, 2000);
-      gpioWrite(pin, 1);
+      gpioWrite(pin2, 0);
       gpioSleep(PI_TIME_RELATIVE, 0, 2000);
     }
 
@@ -43,8 +42,6 @@ int main(int argc, char *argv[])
 
 void alarmWakeup(int sig_num)
 {
-  unsigned int i;
-
   if(sig_num == SIGALRM)
     {
       gpioWrite(pin, 1);
@@ -52,5 +49,4 @@ void alarmWakeup(int sig_num)
       gpioSleep(PI_TIME_RELATIVE, 0, 100);
       gpioWrite(pin,0);
     }
-
 }
