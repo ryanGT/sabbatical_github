@@ -18,14 +18,17 @@ import time
 #  Socket to talk to server
 context = zmq.Context()
 socket = context.socket(zmq.SUB)
-
+socket.setsockopt(zmq.CONFLATE,1)
+socket.setsockopt_string(zmq.SUBSCRIBE,'')
 print("Connectiong to zeroMQ timing server...")
 socket.connect("tcp://localhost:5556")
+
 
 # Subscribe to zipcode, default is NYC, 10001
 #zip_filter = sys.argv[1] if len(sys.argv) > 1 else "10001"
 #socket.setsockopt_string(zmq.SUBSCRIBE, zip_filter)
-socket.setsockopt_string(zmq.SUBSCRIBE,"")
+
+
 
 import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BCM)
