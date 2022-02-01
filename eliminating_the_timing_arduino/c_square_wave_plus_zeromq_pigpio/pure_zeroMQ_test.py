@@ -133,53 +133,12 @@ for i in range(N):
     check = myfunc()
     while (check == prev_check):
         check = myfunc()
-        
-    GPIO.output(LED, GPIO.HIGH)
+
+    ledState = not ledState
+    GPIO.output(LED, ledState)
     num_read[i] = check
-    #num_checks[i] = n
-    #time.sleep(0.0001)
-
-    #bus.write_byte(TIMING_ADDRESS, 7)
-    #time.sleep(0.00001)
-    e, cur_resp = pi.i2c_read_device(m_ino,6)
-    #cur_resp = bus.read_i2c_block_data(MOTOR_ADDRESS,99,read_bytes)
-    responses[i,:]= cur_resp[0:read_bytes]
-    enc_i = cur_resp[3] + cur_resp[2]*256
-    if enc_i > 30000:
-        enc_i -= 2**16
-    enc_vect[i] = enc_i
-    # send pulse input to motor control Arduino
-    e_i = u_vect[i] - enc_i
-    error_vect[i] = e_i
-    e_diff = e_i - error_vect[i-1]
-    v_out = kp*e_i +kd*e_diff
-    v_out = mysat(v_out)
-    v_sent[i] = v_out
-
-    if v_out < 0:
-        v_out = 2**16+v_out
-    
-    msb = int(v_out/256)
-    lsb = int(v_out % 256)
-    #senddata = [30,msb,lsb]
-    #senddata = [17,81]
-    spi_data = [msb, lsb, 10]
-    
-    time.sleep(0.0001)
-
-    spi_resp = pi.spi_xfer(h_spi, spi_data)
-    spi_list.append(spi_resp)
-    #pi.i2c_write_byte(m_ino, msb)
-    #pi.i2c_write_byte(m_ino, lsb)
-	#pi.i2c_write_device(m_ino,senddata)
-    #bus.write_i2c_block_data(MOTOR_ADDRESS,33,senddata)
-    
-
-    #time.sleep(0.000001)
-    #for i in range(100):
-    #    a = 2*i
     prev_check = check
-    GPIO.output(LED, GPIO.LOW)    
+
 
 t1 = time.time()
 loop_time = t1-t0
@@ -267,8 +226,7 @@ plt.plot(n_motor, enc_vect)
 
 plt.figure(2)
 plt.plot(ndiff)
-plt.plot(n_diff_motor_self)
-plt.plot(n_diff_motor_v_expected)
+
 
 pi.i2c_write_byte(m_ino, 2)#end test
 
