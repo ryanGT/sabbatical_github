@@ -30,13 +30,13 @@ int in2 = 4;
 #define sendPin A0
 #define receivePin A1
 #define spiprocessPin A2
-#define i2cprocessPin A3
+#define isrPin A3
 
 int analogPin = 0;
 int accel = 0;
 
 int ISR_Happened;
-
+int ISR_state = 0;
 //  encoder
 volatile bool _EncoderBSet;
 volatile long encoder_count = 0;
@@ -87,9 +87,9 @@ void setup()
 {
   Serial.begin(115200);
 
-  Serial.println("i2c plus spi read motor control two arduinos");
+  Serial.println("i2c plus spi read motor control zeroMQ");
   Serial.println("pin interrupt");
-  Serial.println("01/18/2022");
+  Serial.println("01/25/2022");
   Serial.print("\n");
   
   Wire.begin(SLAVE_ADDRESS);
@@ -110,14 +110,14 @@ void setup()
   pinMode(sendPin, OUTPUT);
   pinMode(receivePin, OUTPUT);
   pinMode(spiprocessPin, OUTPUT);
-  pinMode(i2cprocessPin, OUTPUT);  
+  pinMode(isrPin, OUTPUT);  
   
     
 
   digitalWrite(receivePin, LOW);
   digitalWrite(sendPin, LOW);
   digitalWrite(spiprocessPin, LOW);
-  digitalWrite(i2cprocessPin, LOW);  
+  digitalWrite(isrPin, LOW);  
 // encoder
   pinMode(encoderPinA, INPUT); 
   pinMode(encoderPinB, INPUT); 
@@ -232,7 +232,7 @@ void loop()
 
   if ( new_data ){
     new_data = false;
-    digitalWrite(i2cprocessPin, HIGH);  
+    //digitalWrite(i2cprocessPin, HIGH);  
 
     //Serial.println("new data");
     if (inArray[0] == 1){
@@ -252,6 +252,8 @@ void loop()
     else if (inArray[0] == 2){
       // test over
       v1 = 0;
+      command_motor(v1);
+      Serial.println("#end");
     }
     else if (inArray[0] == 7){
       ISR_Happened = 0;
@@ -271,15 +273,21 @@ void loop()
     //Serial.print(nISR);
     //Serial.print(",");
     //Serial.println(v1);
-    digitalWrite(i2cprocessPin, LOW);  
+    //digitalWrite(i2cprocessPin, LOW);  
   }
 
   if (process_it){
     process_it = false;
     digitalWrite(spiprocessPin, HIGH);
-    v1 = reassemblebytes(buf[0],buf[1]);
-    //Serial.print(nISR);
-    //print_int_with_comma(v1);
+    byte v_msb, v_lsb;
+    v_msb = buf[0];
+    v_lsb = buf[1];
+    v1 = reassemblebytes(v_msb,v_lsb);
+    print_int_with_comma(nISR);
+    //Serial.println(v1);
+    print_int_with_comma(v_msb);
+    print_int_with_comma(v_lsb);
+    print_int_with_newline(v1);
     //mynewline();
     n_lsb = (byte)nISR;
     n_msb = getsecondbyte(nISR);
@@ -382,6 +390,13 @@ void pinISR()
   if (mypause == 0){
     nISR++;
   }
+  if (ISR_state == 0){
+    ISR_state = 1;
+  }
+  else{
+    ISR_state = 0;
+  }
+  digitalWrite(isrPin, ISR_state);
   //analogWrite(pwmA, v1);
   //v_out = v1*v1;
   command_motor(v1);
