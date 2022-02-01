@@ -15,17 +15,24 @@ import sys
 import zmq
 import time
 
-#  Socket to talk to server
-context = zmq.Context()
-socket = context.socket(zmq.SUB)
+# user timer arduino flag
+TA = 1
 
-print("Connectiong to zeroMQ timing server...")
-socket.connect("tcp://localhost:5556")
+if not TA:
+    #  Socket to talk to server
+    context = zmq.Context()
+    socket = context.socket(zmq.SUB)
+    socket.setsockopt(zmq.CONFLATE,1)
+    socket.setsockopt_string(zmq.SUBSCRIBE,'')
+    print("Connectiong to zeroMQ timing server...")
+    socket.connect("tcp://localhost:5556")
+
 
 # Subscribe to zipcode, default is NYC, 10001
 #zip_filter = sys.argv[1] if len(sys.argv) > 1 else "10001"
 #socket.setsockopt_string(zmq.SUBSCRIBE, zip_filter)
-socket.setsockopt_string(zmq.SUBSCRIBE,"")
+
+
 
 import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BCM)
@@ -56,6 +63,9 @@ if not pi.connected:
     
 MOTOR_ADDRESS = 0x04
 
+if TA:
+    TIMER_ADDRESS = 0x05
+    t_ino = pi.i2c_open(1, TIMER_ADDRESS)
 
 m_ino = pi.i2c_open(1, MOTOR_ADDRESS)
 h_spi = pi.spi_open(0, 300000)
@@ -87,6 +97,8 @@ responses = np.zeros((N,read_bytes))
 # start new test
 pi.i2c_write_byte(m_ino, 1)
 
+if TA:
+    pi.i2c_write_byte(t_ino, 1)
 
 #time.sleep(0.001)
 
@@ -97,14 +109,32 @@ spi_list = []
 
 t0 = time.time()
 
-for i in range(N):
+def get_int_zeroMQ():
     string = socket.recv_string()
     check = int(string)
-    #n = 0
-    while (check == prev_check):
-        string = socket.recv_string()
-        check = int(string)
+    return check
 
+
+def get_int_timer_ino():
+    check = pi.i2c_read_byte(t_ino)
+    return check
+
+
+if TA:
+    myfunc = get_int_timer_ino
+else:
+    myfunc = get_int_zeroMQ
+    prev_check = myfunc()
+    prev_check = myfunc()
+
+
+
+for i in range(N):
+    check = myfunc()
+    while (check == prev_check):
+        check = myfunc()
+        
+    GPIO.output(LED, GPIO.HIGH)
     num_read[i] = check
     #num_checks[i] = n
     #time.sleep(0.0001)
@@ -149,6 +179,8 @@ for i in range(N):
     #for i in range(100):
     #    a = 2*i
     prev_check = check
+    GPIO.output(LED, GPIO.LOW)    
+
 t1 = time.time()
 loop_time = t1-t0
 print("loop_time = %f" % loop_time)
@@ -240,6 +272,8 @@ plt.plot(n_diff_motor_v_expected)
 
 pi.i2c_write_byte(m_ino, 2)#end test
 
+if TA:
+    pi.i2c_close(t_ino)    
 
 pi.i2c_close(m_ino)
 pi.spi_close(h_spi)
