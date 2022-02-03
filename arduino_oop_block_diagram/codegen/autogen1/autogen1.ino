@@ -23,10 +23,18 @@ byte inByte;
 /* saturation_block sat_block = saturation_block(&PD); */
 
 //bdsysinitcode
-step_input u = step_input(0.1, 100);
-pwm_output pwm_out = pwm_output(9);
-analog_sensor ai_sensor = analog_sensor(A0);
-plant G = plant(&pwm_out, &ai_sensor);
+step_input u_step_block = step_input(0.1, 100);
+summing_junction sum1_block = summing_junction();
+PD_control_block PD_block = PD_control_block(3, 0.1);
+saturation_block sat_block = saturation_block();
+h_bridge_actuator HB_actuator = h_bridge_actuator(6, 4, 9);
+encoder encoder_sensor = encoder(11);
+
+void encoder_sensor_isr_wrapper() {
+    encoder_sensor.encoderISR();
+}
+
+plant G_block = plant(&HB_actuator, &encoder_sensor);
 
 
 //attachInterrupt(0, isr, FALLING);
@@ -52,10 +60,6 @@ void setup(){
    Serial.println("using rtblockdiagram library");
    pinMode(squarewave_pin, OUTPUT);
 
-   Serial.print("kp = ");
-   Serial.println(PD.Kp);
-   Serial.print("kd = ");
-   Serial.println(PD.Kd);
 
    //!// encoder pin on interrupt 0 (pin 2)
 
@@ -64,8 +68,12 @@ void setup(){
    //HB.setup();
 
    //bdsyssetupcode
-   pwm_out.setup();
-   G.set_input(&u);
+   sum1_block.set_inputs(&u_step_block, &G_block);
+   PD_block.set_input_block(&sum1_block);
+   sat_block.set_input_block(&PD_block);
+   HB_actuator.setup();
+   attachInterrupt(0, encoder_sensor_isr_wrapper, RISING);
+   G_block.set_input_block(&sat_block);
 
 
    //=======================================================
@@ -104,6 +112,7 @@ void menu(){
   // reset encoders and t0 at the start of a test
   //enc.encoder_count = 0;
   //bdsysmenucode
+   encoder_sensor.encoder_count = 0;
 
   t0 = micros();
   ISR_Happened = 0;// clear flag and wait for next time step
@@ -139,9 +148,12 @@ void loop(){
     /* G.send_command(motor_speed); */
 
     //bdsysloopcode
-   u.find_output(t_sec);
-   G.send_command();
-   G.find_output(t_sec);
+   u_step_block.find_output(t_sec);
+   sum1_block.find_output(t_sec);
+   PD_block.find_output(t_sec);
+   sat_block.find_output(t_sec);
+   G_block.send_command();
+   G_block.find_output(t_sec);
 
 
 
@@ -150,9 +162,11 @@ void loop(){
     Serial.print(t_ms);
 
     //bdsysprintcode
-   print_comma_then_int(u.read_output());
-   print_comma_then_int(G.read_output());
-   print_comma_then_int(None.read_output());
+   print_comma_then_int(u_step_block.read_output());
+   print_comma_then_int(sum1_block.read_output());
+   print_comma_then_int(PD_block.read_output());
+   print_comma_then_int(sat_block.read_output());
+   print_comma_then_int(G_block.read_output());
 
 
     //Serial.print(",");
