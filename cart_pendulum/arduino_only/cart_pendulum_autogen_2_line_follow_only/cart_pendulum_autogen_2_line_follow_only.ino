@@ -33,7 +33,7 @@ unsigned long t;
 unsigned long t1;
 unsigned long cur_t;
 float t_ms, t_sec, prev_t, dt;
-
+float t_stop = 5;
 
 int dt_micro;
 int mydelay;
@@ -174,8 +174,8 @@ class qtr_line_sensor: public sensor{
 int_constant_block U_cl = int_constant_block(3500);
 summing_junction sum1_block = summing_junction();
 PD_control_block PD_block = PD_control_block(0.1, 0.01);
-saturation_block sat_block = saturation_block();
-int_constant_block v_nom_block = int_constant_block(100);
+sat2_adjustable_block sat2_block = sat2_adjustable_block(150, -150);
+int_constant_block v_nom_block = int_constant_block(200);
 addition_block add_block1 = addition_block();
 subtraction_block subtract_block1 = subtraction_block();
 two_motors_dbl_actuator dual_motors = two_motors_dbl_actuator(&motors);
@@ -225,9 +225,9 @@ void setup()
   //bdsyssetupcode
    sum1_block.set_inputs(&U_cl, &G_block);
    PD_block.set_input_block(&sum1_block);
-   sat_block.set_input_block(&PD_block);
-   add_block1.set_input_blocks(&v_nom_block, &sat_block);
-   subtract_block1.set_input_blocks(&v_nom_block, &sat_block);
+   sat2_block.set_input_block(&PD_block);
+   add_block1.set_input_blocks(&v_nom_block, &sat2_block);
+   subtract_block1.set_input_blocks(&v_nom_block, &sat2_block);
    G_block.set_input_blocks(&add_block1, &subtract_block1);
 
 
@@ -322,13 +322,13 @@ void loop()
       t += 65536;
     }
     t_ms = t/1000.0;
+    t_sec = t_ms/1000.0;
+    dt = t_sec - prev_t;
 
-    if (t_ms > 3000){
+    if (t_sec > t_stop){
       stop_motors();
       menu();
     }
-    t_sec = t_ms/1000.0;
-    dt = t_sec - prev_t;
 
 
 
@@ -341,7 +341,7 @@ void loop()
    U_cl.find_output();
    sum1_block.find_output(t_sec);
    PD_block.find_output(t_sec);
-   sat_block.find_output(t_sec);
+   sat2_block.find_output(t_sec);
    v_nom_block.find_output();
    add_block1.find_output();
    subtract_block1.find_output();
@@ -357,7 +357,7 @@ void loop()
     //bdsysprintcode
    print_comma_then_int(sum1_block.read_output());
    print_comma_then_int(PD_block.read_output());
-   print_comma_then_int(sat_block.read_output());
+   print_comma_then_int(sat2_block.read_output());
    print_comma_then_int(add_block1.read_output());
    print_comma_then_int(subtract_block1.read_output());
    print_comma_then_int(G_block.read_output());

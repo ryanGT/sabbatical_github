@@ -33,7 +33,7 @@ unsigned long t;
 unsigned long t1;
 unsigned long cur_t;
 float t_ms, t_sec, prev_t, dt;
-
+float t_stop = 5;
 
 int dt_micro;
 int mydelay;
@@ -298,13 +298,13 @@ void loop()
       t += 65536;
     }
     t_ms = t/1000.0;
+    t_sec = t_ms/1000.0;
+    dt = t_sec - prev_t;
 
-    if (t_ms > 3000){
+    if (t_sec > t_stop){
       stop_motors();
       menu();
     }
-    t_sec = t_ms/1000.0;
-    dt = t_sec - prev_t;
 
 
 
