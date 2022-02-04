@@ -178,6 +178,8 @@ sat2_adjustable_block sat2_block = sat2_adjustable_block(150, -150);
 int_constant_block v_nom_block = int_constant_block(200);
 addition_block add_block1 = addition_block();
 subtraction_block subtract_block1 = subtraction_block();
+sat2_adjustable_block satP = sat2_adjustable_block(400, -400);
+sat2_adjustable_block satN = sat2_adjustable_block(400, -400);
 two_motors_dbl_actuator dual_motors = two_motors_dbl_actuator(&motors);
 qtr_line_sensor line_sense = qtr_line_sensor(&qtr);
 plant_with_double_actuator G_block = plant_with_double_actuator(&dual_motors, &line_sense);
@@ -200,6 +202,7 @@ void menu(){
 PD_block.Kp = get_float_with_message_no_pointer("PD_block.Kp");
 PD_block.Kd = get_float_with_message_no_pointer("PD_block.Kd");
 v_nom_block.value = get_int_with_message_no_pointer("v_nom_block.value");
+t_stop = get_float_with_message_no_pointer("t_stop");
 
   t0 = micros();
   nISR = 0;
@@ -228,7 +231,9 @@ void setup()
    sat2_block.set_input_block(&PD_block);
    add_block1.set_input_blocks(&v_nom_block, &sat2_block);
    subtract_block1.set_input_blocks(&v_nom_block, &sat2_block);
-   G_block.set_input_blocks(&add_block1, &subtract_block1);
+   satP.set_input_block(&add_block1);
+   satN.set_input_block(&subtract_block1);
+   G_block.set_input_blocks(&satP, &satN);
 
 
   //Serial.print("pendulum/cart v. 1.1.0 RT Serial");
@@ -345,6 +350,8 @@ void loop()
    v_nom_block.find_output();
    add_block1.find_output();
    subtract_block1.find_output();
+   satP.find_output(t_sec);
+   satN.find_output(t_sec);
    G_block.send_commands();
    G_block.find_output(t_sec);
 
