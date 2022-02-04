@@ -367,6 +367,8 @@ void loop()
    print_comma_then_int(sat2_block.read_output());
    print_comma_then_int(add_block1.read_output());
    print_comma_then_int(subtract_block1.read_output());
+   print_comma_then_int(satP.read_output());
+   print_comma_then_int(satN.read_output());
    print_comma_then_int(G_block.read_output());
 
 
