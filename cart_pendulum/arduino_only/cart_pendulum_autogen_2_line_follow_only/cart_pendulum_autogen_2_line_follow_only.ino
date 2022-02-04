@@ -99,6 +99,7 @@ void calibrate_line_sensor(){
   }
   Serial.println();
   Serial.println();
+  calibrated = 1;
   delay(500);
 }
 
@@ -110,14 +111,14 @@ class two_motors_dbl_actuator: public double_actuator{
  public:
   DualMAX14870MotorShield* _motors;
 
-  two_motors_actuator(DualMAX14870MotorShield* mymotors){
+  two_motors_dbl_actuator(DualMAX14870MotorShield* mymotors){
     _motors = mymotors;
-  }
+  };
 
   void send_commands(int speed1, int speed2){
     _motors->setM1Speed(speed1);
     _motors->setM2Speed(speed2);
-  }
+  };
 };
 
 
@@ -148,7 +149,7 @@ class pendulum_encoder: public sensor{
     // needed.....
     output = read_encoder_i2c();
     return(output);
-  }
+  };
 };
 
 
@@ -166,8 +167,8 @@ class qtr_line_sensor: public sensor{
     // needed.....
     output = qtr->readLineBlack(sensorValues);
     return(output);
-  }
-}
+  };
+};
 
 //bdsysinitcode
 int_constant_block U_cl = int_constant_block(3500);
@@ -185,8 +186,14 @@ plant_with_double_actuator G_block = plant_with_double_actuator(&dual_motors, &l
 
 
 void menu(){
+  char mychar;
+  if (calibrated == 0){
+    Serial.println("enter any character to calibrate");
+    mychar = get_char();
+    calibrate_line_sensor();
+  };
   Serial.println("enter any character to start a test");
-  char mychar = get_char();
+  mychar = get_char();
   // reset encoders and t0 at the start of a test
   //enc.encoder_count = 0;
   //bdsysmenucode
@@ -218,7 +225,7 @@ void setup()
    sat_block.set_input_block(&PD_block);
    add_block1.set_input_blocks(&v_nom_block, &sat_block);
    subtract_block1.set_input_blocks(&v_nom_block, &sat_block);
-   G_block.set_input_blocks(&add_block1, &subtract_block1);
+   G_block.set_input_blocks(&subtract_block1, &add_block1);
 
 
   //Serial.print("pendulum/cart v. 1.1.0 RT Serial");
