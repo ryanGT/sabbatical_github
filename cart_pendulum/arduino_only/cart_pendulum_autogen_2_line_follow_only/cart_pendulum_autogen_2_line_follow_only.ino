@@ -197,6 +197,9 @@ void menu(){
   // reset encoders and t0 at the start of a test
   //enc.encoder_count = 0;
   //bdsysmenucode
+PD_block.Kp = get_float_with_message_no_pointer("PD_block.Kp");
+PD_block.Kd = get_float_with_message_no_pointer("PD_block.Kd");
+v_nom_block.value = get_int_with_message_no_pointer("v_nom_block.value");
 
   t0 = micros();
   nISR = 0;
