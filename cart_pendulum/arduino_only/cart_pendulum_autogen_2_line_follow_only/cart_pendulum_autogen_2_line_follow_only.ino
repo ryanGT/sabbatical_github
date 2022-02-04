@@ -181,6 +181,14 @@ subtraction_block subtract_block1 = subtraction_block();
 two_motors_dbl_actuator dual_motors = two_motors_dbl_actuator(&motors);
 qtr_line_sensor line_sense = qtr_line_sensor(&qtr);
 plant_with_double_actuator G_block = plant_with_double_actuator(&dual_motors, &line_sense);
+PD_control_block PD_block = PD_control_block(0.1, 0.01);
+saturation_block sat_block = saturation_block();
+int_constant_block v_nom_block = int_constant_block(100);
+addition_block add_block1 = addition_block();
+subtraction_block subtract_block1 = subtraction_block();
+two_motors_dbl_actuator dual_motors = two_motors_dbl_actuator(&motors);
+qtr_line_sensor line_sense = qtr_line_sensor(&qtr);
+plant_with_double_actuator G_block = plant_with_double_actuator(&dual_motors, &line_sense);
 
 
 
@@ -221,6 +229,11 @@ void setup()
 
   //bdsyssetupcode
    sum1_block.set_inputs(&U_cl, &G_block);
+   PD_block.set_input_block(&sum1_block);
+   sat_block.set_input_block(&PD_block);
+   add_block1.set_input_blocks(&v_nom_block, &sat_block);
+   subtract_block1.set_input_blocks(&v_nom_block, &sat_block);
+   G_block.set_input_blocks(&subtract_block1, &add_block1);
    PD_block.set_input_block(&sum1_block);
    sat_block.set_input_block(&PD_block);
    add_block1.set_input_blocks(&v_nom_block, &sat_block);
@@ -342,6 +355,13 @@ void loop()
    v_nom_block.find_output();
    add_block1.find_output();
    subtract_block1.find_output();
+   PD_block.find_output(t_sec);
+   sat_block.find_output(t_sec);
+   v_nom_block.find_output();
+   add_block1.find_output();
+   subtract_block1.find_output();
+   G_block.send_commands();
+   G_block.find_output(t_sec);
    G_block.send_commands();
    G_block.find_output(t_sec);
 
