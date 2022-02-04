@@ -225,7 +225,7 @@ void setup()
    sat_block.set_input_block(&PD_block);
    add_block1.set_input_blocks(&v_nom_block, &sat_block);
    subtract_block1.set_input_blocks(&v_nom_block, &sat_block);
-   G_block.set_input_blocks(&subtract_block1, &add_block1);
+   G_block.set_input_blocks(&add_block1, &subtract_block1);
 
 
   //Serial.print("pendulum/cart v. 1.1.0 RT Serial");
