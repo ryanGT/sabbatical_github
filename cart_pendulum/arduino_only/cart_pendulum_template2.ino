@@ -181,11 +181,11 @@ void menu(){
     mychar = get_char();
     calibrate_line_sensor();
   };
-  Serial.println("enter any character to start a test");
-  mychar = get_char();
   // reset encoders and t0 at the start of a test
   //enc.encoder_count = 0;
   //bdsysmenucode
+  Serial.println("enter any character to start a test");
+  mychar = get_char();
   t0 = micros();
   nISR = 0;
   ISR_Happened = 0;// clear flag and wait for next time step
