@@ -1,0 +1,2 @@
+- The interfaces file goes in the folder `/etc/network/`
+- the wpa_supplicant.conf file goes in `/etc/wpa_supplicant`
