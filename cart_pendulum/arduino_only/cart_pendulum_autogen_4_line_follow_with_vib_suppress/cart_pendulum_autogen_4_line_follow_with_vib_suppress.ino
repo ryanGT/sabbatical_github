@@ -188,7 +188,7 @@ int_constant_block U_pend = int_constant_block(0);
 summing_junction sum2 = summing_junction();
 PD_control_block D_pend = PD_control_block(3, 0.1);
 sat2_adjustable_block pend_sat = sat2_adjustable_block(200, -200);
-addition_block add_block1 = addition_block();
+addition_block add_pend = addition_block();
 
 
 
@@ -235,15 +235,15 @@ void setup()
    sum1_block.set_inputs(&U_cl, &line_sense);
    PD_block.set_input_block(&sum1_block);
    sat2_block.set_input_block(&PD_block);
-   add_block1.set_input_blocks(&add_block1, &sat2_block);
-   subtract_block1.set_input_blocks(&add_block1, &sat2_block);
+   add_block1.set_input_blocks(&add_pend, &sat2_block);
+   subtract_block1.set_input_blocks(&add_pend, &sat2_block);
    satP.set_input_block(&add_block1);
    satN.set_input_block(&subtract_block1);
    G_block.set_input_blocks(&satP, &satN);
    sum2.set_inputs(&U_pend, &pend_enc);
    D_pend.set_input_block(&sum2);
    pend_sat.set_input_block(&D_pend);
-   add_block1.set_input_blocks(&pend_sat, &v_nom_block);
+   add_pend.set_input_blocks(&pend_sat, &v_nom_block);
 
 
   //Serial.print("pendulum/cart v. 1.1.0 RT Serial");
@@ -364,7 +364,7 @@ void loop()
    v_nom_block.find_output();
    add_block1.find_output();
    subtract_block1.find_output();
-   add_block1.find_output();
+   add_pend.find_output();
    satP.find_output(t_sec);
    satN.find_output(t_sec);
    G_block.send_commands();
