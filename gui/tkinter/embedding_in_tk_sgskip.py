@@ -61,11 +61,10 @@ button.pack(side=tkinter.BOTTOM)
 
 w = 1200 # width for the Tk root
 h = 1000 # height for the Tk root
-x = 50
-y = -100
+x = 100
+y = 100
 #root.geometry('%dx%d+%d+%d' % (w, h, x, y))
 #root.state('zoomed')
-root.attributes('-zoomed', True)
 tkinter.mainloop()
 # If you put root.destroy() here, it will cause an error if the window is
 # closed with the window manager.
