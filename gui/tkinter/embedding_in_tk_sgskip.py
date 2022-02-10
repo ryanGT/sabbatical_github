@@ -20,7 +20,7 @@ import numpy as np
 root = tkinter.Tk()
 root.wm_title("Embedding in Tk")
 
-fig = Figure(figsize=(12, 8), dpi=100)
+fig = Figure(figsize=(9, 6), dpi=100)
 t = np.arange(0, 3, .01)
 ax = fig.add_subplot(111)
 ax.plot(t, 2 * np.sin(2 * np.pi * t))
@@ -63,7 +63,8 @@ w = 1200 # width for the Tk root
 h = 1000 # height for the Tk root
 x = 50
 y = -100
-root.geometry('%dx%d+%d+%d' % (w, h, x, y))
+#root.geometry('%dx%d+%d+%d' % (w, h, x, y))
+root.state('zoomed')
 tkinter.mainloop()
 # If you put root.destroy() here, it will cause an error if the window is
 # closed with the window manager.
