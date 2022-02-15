@@ -50,28 +50,40 @@ class pybd_gui(tk.Tk):
         self.make_widgets()
 
 
-    def button_clicked(self):
+    def add_block(self):
         showinfo(title='Information',
-                 message='Hello, Tkinter!')
+                 message='add block pressed')
 
     def _quit(self):
         self.quit()     # stops mainloop
         self.destroy()  # this is necessary on Windows to prevent
                         # Fatal Python Error: PyEval_RestoreThread: NULL tstate
 
+    def items_selected(self, event):
+        """ handle item selected event
+        """
+        # get selected indices
+        selected_indices = self.blocklistbox.curselection()
+        # get selected items
+        selected_langs = ",".join([self.blocklistbox.get(i) for i in selected_indices])
+        msg = f'You selected: {selected_langs}'
+        
+        showinfo(
+            title='Information',
+            message=msg)
+
+
     def make_widgets(self):
         # don't assume that self.parent is a root window.
         # instead, call `winfo_toplevel to get the root window
         #self.winfo_toplevel().title("Simple Prog")
         #self.wm_title("Python Block Diagram GUI")        
-        
+
+
+        # column 0
         self.label = ttk.Label(self, text=self.mylabel)
         self.label.grid(row=0,column=0,sticky='NW', **self.options)
 
-        # button
-        self.button = ttk.Button(self, text='Click Me')
-        self.button['command'] = self.button_clicked
-        self.button.grid(row=1,column=1,**self.options)
 
         #self.big_button = ttk.Button(self, text='Big Button')
         #self.big_button.grid(row=1,column=0,sticky='news',**self.options)
@@ -94,7 +106,31 @@ class pybd_gui(tk.Tk):
         self.quit_button.grid(column=0, row=3, **self.options)
 
 
+        # Column 1
+        cur_col = 1
 
+        self.block_label = ttk.Label(self, text="Blocks")
+        self.block_label.grid(row=0,column=cur_col,sticky='NW', **self.options)
+
+        langs = ('Java', 'C#', 'C', 'C++', 'Python',
+                 'Go', 'JavaScript', 'PHP', 'Swift')
+
+        self.block_list_var = tk.StringVar(value=langs)
+
+        self.blocklistbox = tk.Listbox(self, \
+                                        listvariable=self.block_list_var, \
+                                        height=6, \
+                                        #selectmode='extended'
+                                       )
+
+        
+        self.blocklistbox.grid(column=cur_col, row=1,sticky='nwes', **self.options)
+        self.blocklistbox.bind('<<ListboxSelect>>', self.items_selected)
+
+        # button
+        self.button = ttk.Button(self, text='Add Block')
+        self.button['command'] = self.add_block
+        self.button.grid(row=2,column=cur_col,**self.options)
 
 
 
