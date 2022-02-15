@@ -60,6 +60,7 @@ def main():
 def show_dialog():
     answer = mydialog(app)
     # print(type(answer)) # tuple
+    print("after mydialog(app) called")
     print(answer)
 
 app = tk.Tk()
