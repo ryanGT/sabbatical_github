@@ -204,13 +204,25 @@ class MyDialog(tk.Toplevel):
 
         # ultimately, input_block_names need to be converted to actual block instances
         # - look up the block in parent.block_diagram
-        if self.input_block_name is not None:
-            print("input block name: %s" % self.input_block_name)
-            kwargs['input'] = self.input_block_name
-        if self.input2_block_name is not None:
-            kwargs['input2'] = self.input2_block_name
-        if self.input3_block_name is not None:
-            kwargs['input3'] = self.input3_block_name
+        #
+        # Approach:
+        # - input_block_name, input2_block_name, and input3_block_name are attributes of this
+        #   dialog box that the user may have optionally set
+        # - input_block1 through input_block3 are attributes recognized by pybd
+        # - I need to map from one to the other
+        input_pairs = [('input_block_name','input_block1'), \
+                       ('input2_block_name','input_block2'), \
+                       ('input3_block_name','input_block3'), \
+                       ]
+                       
+        for attr, key in input_pairs:
+            input_block_name = getattr(self, attr)
+            if input_block_name is not None:
+                input_block = self.parent.get_block_by_name(input_block_name)
+                kwargs[key] = input_block
+                key2 = key + '_name'
+                kwargs[key2] = input_block_name 
+
             
         block_name = self.block_name.get()
         block_class = getattr(pybd, block_type)
@@ -283,6 +295,10 @@ class pybd_gui(tk.Tk):
         return mylist
 
 
+    def get_block_by_name(self, block_name):
+        return self.block_diagram.get_block_by_name(block_name)
+
+    
     def append_block_to_dict(self, block_name, new_block):
         self.block_diagram.append_block_to_dict(block_name, new_block)
         # update listbox
