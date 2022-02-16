@@ -32,33 +32,79 @@ from tkinter.messagebox import showinfo
 
 from tkinter import simpledialog
 
-class MyDialog(simpledialog.Dialog):
-    def __init__(self, parent, title):
+import py_block_diagram
+
+#class MyDialog(simpledialog.Dialog):
+class MyDialog(tk.Toplevel):
+    def __init__(self, parent, title="Add Block Dialog"):
+        super().__init__(parent)
+
+        self.geometry('500x400')
+        self.title(title)
+        self.make_widgets()
+        self.parent = parent
+        
+
+    #def __init__(self, parent, title):
         self.my_username = None
         self.my_password = None
-        super().__init__(parent, title)
+        #super().__init__(parent, title)
+        #print("self: %s" % self)
+        #print("parent: %s" % parent)
+        
 
-
-    def body(self, frame):
+    def make_widgets(self):
+        #def body(self):
+        #print("frame: %s" % frame)
         # print(type(frame)) # tkinter.Frame
-        self.my_username_label = tk.Label(frame, width=25, text="Username")
-        self.my_username_label.pack()
-        self.my_username_box = tk.Entry(frame, width=25)
-        self.my_username_box.pack()
+        self.label1 = ttk.Label(self, width=25, text="Block Category")
 
-        self.my_password_label = tk.Label(frame, width=25, text="Password")
-        self.my_password_label.pack()
-        self.my_password_box = tk.Entry(frame, width=25)
-        self.my_password_box.pack()
+
+        #self.label1.grid(row=0, column=0)
+
+        self.selected_category = tk.StringVar()
+        self.category_combobox = ttk.Combobox(self, textvariable=self.selected_category)
+        
+        # get first 3 letters of every month name
+        self.category_combobox['values'] = py_block_diagram.block_categories
+        
+        # prevent typing a value
+        self.category_combobox['state'] = 'readonly'
+
+        label2 = ttk.Label(self, width=25, text="Block Type")
+
+        self.selected_block = tk.StringVar(value=[])
+
+        self.blockchoice = tk.Listbox(self, \
+                                      listvariable=self.selected_block, \
+                                      height=6, \
+                                      #selectmode='extended'
+                                      )
+
+
+        #self.category_combobox.grid(row=1, column=0)
+
+        column0_widgets = [self.label1, self.category_combobox, label2, self.blockchoice]
+
+        for i, widget in enumerate(column0_widgets):
+            widget.grid(row=i, column=0)
+            
+
+        self.my_password_label = ttk.Label(self, width=25, text="Password")
+        self.my_password_label.grid(row=0, column=1)
+        self.my_password_box = ttk.Entry(self, width=25)
+        self.my_password_box.grid(row=1, column=1,sticky="")
         self.my_password_box['show'] = '*'
 
-        return frame
+        self.ok_button = ttk.Button(self, text='OK', width=5, command=self.ok_pressed)
+        self.ok_button.grid(row=2, column=1)
 
 
     def ok_pressed(self):
         # print("ok")
-        self.my_username = self.my_username_box.get()
+        #self.my_username = self.my_username_box.get()
         self.my_password = self.my_password_box.get()
+        self.parent.password = self.my_password
         self.destroy()
 
 
@@ -67,13 +113,13 @@ class MyDialog(simpledialog.Dialog):
         self.destroy()
 
 
-    def buttonbox(self):
-        self.ok_button = tk.Button(self, text='OK', width=5, command=self.ok_pressed)
-        self.ok_button.pack(side="left")
-        cancel_button = tk.Button(self, text='Cancel', width=5, command=self.cancel_pressed)
-        cancel_button.pack(side="right")
-        self.bind("<Return>", lambda event: self.ok_pressed())
-        self.bind("<Escape>", lambda event: self.cancel_pressed())
+#    def buttonbox(self):
+#        self.ok_button = tk.Button(self, text='OK', width=5, command=self.ok_pressed)
+#        self.ok_button.pack(side="left")
+#        cancel_button = tk.Button(self, text='Cancel', width=5, command=self.cancel_pressed)
+#        cancel_button.pack(side="right")
+#        self.bind("<Return>", lambda event: self.ok_pressed())
+#        self.bind("<Escape>", lambda event: self.cancel_pressed())
 
 
 #def mydialog(app):
@@ -106,6 +152,7 @@ class pybd_gui(tk.Tk):
         #showinfo(title='Information',
         #        message='add block pressed')
         mydialog = MyDialog(title="Add New Block", parent=self)
+        mydialog.grab_set()
         print("%s, %s" % (mydialog.my_username, mydialog.my_password))
 
         
@@ -127,6 +174,10 @@ class pybd_gui(tk.Tk):
             title='Information',
             message=msg)
 
+
+        if hasattr(self, "password"):
+            print("parent password = %s" % self.password)
+            
 
     def make_widgets(self):
         # don't assume that self.parent is a root window.
