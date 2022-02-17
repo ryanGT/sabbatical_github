@@ -318,6 +318,7 @@ class pybd_gui(tk.Tk):
         self.destroy()  # this is necessary on Windows to prevent
                         # Fatal Python Error: PyEval_RestoreThread: NULL tstate
 
+
     def items_selected(self, event):
         """ handle item selected event
         """
@@ -358,15 +359,16 @@ class pybd_gui(tk.Tk):
 
         self.canvas = FigureCanvasTkAgg(self.fig, master=self)
         self.canvas.draw()
-        self.canvas.get_tk_widget().grid(row=1, column=0, ipadx=40, ipady=20, sticky="news")
+        self.canvas.get_tk_widget().grid(row=1, column=0, ipadx=40, ipady=20, \
+                                         sticky="news", rowspan=16)
 
         self.toolbarFrame = ttk.Frame(master=self)
-        self.toolbarFrame.grid(row=2,column=0)
+        self.toolbarFrame.grid(row=19,column=0)
         self.toolbar = NavigationToolbar2Tk(self.canvas, self.toolbarFrame)
 
 
         self.quit_button = ttk.Button(master=self, text="Quit", command=self._quit)
-        self.quit_button.grid(column=0, row=3, **self.options)
+        self.quit_button.grid(column=0, row=20, **self.options)
 
 
         # Column 1
@@ -387,10 +389,46 @@ class pybd_gui(tk.Tk):
         self.blocklistbox.grid(column=cur_col, row=1,sticky='nwes', **self.options)
         self.blocklistbox.bind('<<ListboxSelect>>', self.items_selected)
 
+
+        padx_opts = {'padx':10}
+
+        # Input display and buttons
+        self.input1_label = ttk.Label(self, text="Input 1")
+        self.input1_label.grid(column=cur_col, row=2, sticky="SW", pady=(5,0), **padx_opts)
+        self.input1_var = tk.StringVar()
+        self.input1_box = ttk.Entry(self, textvariable=self.input1_var)
+        self.input1_box.grid(column=cur_col, row=3, sticky="NW", pady=(0,5), **padx_opts)
+        self.set_intput1_btn = ttk.Button(self, text='Set Input 1')
+        self.set_intput1_btn.grid(column=cur_col, row=4, pady=5)
+        self.input2_label = ttk.Label(self, text="Input 2")
+        self.input2_label.grid(column=cur_col, row=5, sticky="SW", pady=(5,0), **padx_opts)
+        self.input2_var = tk.StringVar()
+        self.input2_box = ttk.Entry(self, textvariable=self.input2_var)
+        self.input2_box.grid(column=cur_col, row=6, sticky="NW", pady=(0,5), **padx_opts)
+        self.set_intput2_btn = ttk.Button(self, text='Set Input 2')
+        self.set_intput2_btn.grid(column=cur_col, row=7, pady=5)
+
+        # Placement display and buttons
+        self.placement_label = ttk.Label(self, text="Placement")
+        self.placement_label.grid(column=cur_col, row=8, sticky="SW", pady=(5,0), **padx_opts)
+        self.placement_var = tk.StringVar()
+        self.placement_box = ttk.Entry(self, textvariable=self.placement_var)
+        self.placement_box.grid(column=cur_col, row=9, sticky="NW", pady=(0,5), **padx_opts)
+        self.placement_btn = ttk.Button(self, text='Place')
+        self.placement_btn.grid(column=cur_col, row=10, pady=5)
+
+        col1_list = [self.input1_label, self.input1_box, self.set_intput1_btn, \
+                     self.input2_label, self.input2_box, self.set_intput2_btn]
+
+        #for i, widget in enumerate(col1_list):
+        #    widget.grid(row=i+2, column=cur_col)
+                                    
+
+        #.grid_remove()
         # button
         self.button = ttk.Button(self, text='Add Block')
         self.button['command'] = self.add_block
-        self.button.grid(row=2,column=cur_col,**self.options)
+        self.button.grid(row=20,column=cur_col,**self.options)
 
 
 
