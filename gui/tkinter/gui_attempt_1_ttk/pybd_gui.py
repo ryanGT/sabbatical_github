@@ -1,11 +1,3 @@
-"""
-===============
-Embedding in Tk
-===============
-
-"""
-
-
 #iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
 #
 # Issues:
@@ -14,6 +6,13 @@ Embedding in Tk
 #   created?
 #     - gui could show actuator and sensor comboboxes when plant is selected
 #         - or only sensor for plant_no_actuator
+# - make the set input buttons work
+# - create a place block dialog
+# - draw the block diagram
+#
+# Resovled:
+# - selecting a block type and then selecting an input block messes up
+#   the current selection of the block type listbox
 #
 # - how do I handle cases with input(s) set when creating new blocks?
 #     - pass kwargs to the create block function?
@@ -24,10 +23,6 @@ Embedding in Tk
 #         - the gui can pass along chosen input name(s)
 #         - the create block function in pydb can handle
 #           input vs. input1 depending on block type
-#
-# Resovled:
-# - selecting a block type and then selecting an input block messes up
-#   the current selection of the block type listbox
 #  
 #iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
 
@@ -48,222 +43,14 @@ import numpy as np
 from tkinter import ttk
 from tkinter.messagebox import showinfo
 
-# Initialize style
-#s = ttk.Style()
-# Create style used by default for all Frames
-#s.configure('TFrame', background='green')
+from add_block_dialog import add_block_dialog
 
-# Create style for the first frame
-#s.configure('Frame1.TFrame', background='red')
-
-from tkinter import simpledialog
+#from tkinter import simpledialog
 
 import py_block_diagram as pybd
 
 pad_options = {'padx': 5, 'pady': 5}
 
-#class MyDialog(simpledialog.Dialog):
-class MyDialog(tk.Toplevel):
-    def __init__(self, parent, title="Add Block Dialog"):
-        super().__init__(parent)
-        self.selected_block_type = None
-        self.input_block_name = None
-        self.input2_block_name = None
-        self.input3_block_name = None
-        self.parent = parent
-        self.geometry('800x600')
-        self.title(title)
-        self.make_widgets()
-
-        
-
-    #def __init__(self, parent, title):
-        self.my_username = None
-        self.my_password = None
-        #super().__init__(parent, title)
-        #print("self: %s" % self)
-        #print("parent: %s" % parent)
-        
-
-    def make_widgets(self):
-        #def body(self):
-        #print("frame: %s" % frame)
-        # print(type(frame)) # tkinter.Frame
-
-        #=================================
-        #
-        # column 0 
-        #
-        #=================================
-        self.label1 = ttk.Label(self, text="Block Category")
-
-
-        #self.label1.grid(row=0, column=0)
-
-        self.selected_category = tk.StringVar()
-        self.category_combobox = ttk.Combobox(self, textvariable=self.selected_category)
-        
-        # get first 3 letters of every month name
-        self.category_combobox['values'] = pybd.block_categories
-        
-        # prevent typing a value
-        self.category_combobox['state'] = 'readonly'
-        self.category_combobox.bind('<<ComboboxSelected>>', self.category_selected)
-        start_key = 'input'
-        self.category_combobox.set(start_key)
-        label2 = ttk.Label(self, text="Block Type")
-
-        self.block_choice_list = tk.StringVar(value=pybd.block_category_dict[start_key])
-
-        self.blockchoice = tk.Listbox(self, \
-                                      listvariable=self.block_choice_list, \
-                                      height=6, \
-                                      width=40, \
-                                      #selectmode='extended'
-                                      )
-
-        self.blockchoice.bind("<<ListboxSelect>>", self.on_block_type_selected)
-        #self.category_combobox.grid(row=1, column=0)
-
-        column0_widgets = [self.label1, self.category_combobox, label2, self.blockchoice]
-
-        for i, widget in enumerate(column0_widgets):
-            widget.grid(row=i, column=0, sticky='W', **pad_options)
-            
-
-        #=================================
-        #
-        # column 1 
-        #
-        #=================================
-        label_BN = ttk.Label(self, text="Block Name")
-
-        self.block_name = tk.StringVar()
-        self.block_name_box = ttk.Entry(self, textvariable=self.block_name)
-
-        label_input = ttk.Label(self, text="Input Block")
-        self.input_block_list = tk.StringVar(value=self.parent.get_block_name_list())
-        
-        self.input_choice = tk.Listbox(self, \
-                                       listvariable=self.input_block_list, \
-                                       height=6, \
-                                       width=25, \
-                                       #selectmode='extended'
-                                       )
-        self.input_choice.bind("<<ListboxSelect>>", self.on_input_selected)
-        
-        self.go_button = ttk.Button(self, text='Add Block', command=self.go_pressed)
-
-        column1_widgets = [label_BN, self.block_name_box, label_input, \
-                           self.input_choice, self.go_button]
-        for i, widget in enumerate(column1_widgets):
-            widget.grid(row=i, column=1, sticky='W', **pad_options)
-
-
-    def on_input_selected(self, *args):
-        selection = self.input_choice.curselection()
-        print("input selection:")
-        print(selection)
-        if selection:
-            self.input_block_name = self.get_input_block_name()
-            print("input selected: %s" % self.input_block_name)
-        else:
-            print("no selection")
-        
-        
-    def on_block_type_selected(self, *args):
-        selection = self.blockchoice.curselection()
-        print("block type selection:")
-        print(selection)
-        if not selection:
-            print("no selection")
-            return None
-        block_type = self.get_selected_block_type()
-        print("block_type: %s" % block_type)
-        self.selected_block_type = block_type
-        suggested_name = self.parent.block_diagram.suggest_block_name(block_type)
-        self.block_name.set(suggested_name)
-        
-
-    def get_selected_block_type(self):
-        block_type = self.blockchoice.get(self.blockchoice.curselection())
-        return block_type
-
-
-    def get_input_block_name(self):
-        input_name = self.input_choice.get(self.input_choice.curselection())
-        return input_name
-    
-    
-    def go_pressed(self):
-        assert self.selected_block_type is not None, "block_type has not been set"
-        print("you pressed go")
-        block_type = self.selected_block_type
-        print("block_type: %s" % block_type)
-        kwargs = {}
-
-        # ultimately, input_block_names need to be converted to actual block instances
-        # - look up the block in parent.block_diagram
-        #
-        # Approach:
-        # - input_block_name, input2_block_name, and input3_block_name are attributes of this
-        #   dialog box that the user may have optionally set
-        # - input_block1 through input_block3 are attributes recognized by pybd
-        # - I need to map from one to the other
-        input_pairs = [('input_block_name','input_block1'), \
-                       ('input2_block_name','input_block2'), \
-                       ('input3_block_name','input_block3'), \
-                       ]
-                       
-        for attr, key in input_pairs:
-            input_block_name = getattr(self, attr)
-            if input_block_name is not None:
-                input_block = self.parent.get_block_by_name(input_block_name)
-                kwargs[key] = input_block
-                key2 = key + '_name'
-                kwargs[key2] = input_block_name 
-
-            
-        block_name = self.block_name.get()
-        block_class = getattr(pybd, block_type)
-        # how do I handle cases with input(s) set?
-        new_block = pybd.create_block(block_class, block_type, block_name, **kwargs)
-        self.parent.append_block_to_dict(block_name, new_block)
-        #self.parent.password = self.my_password
-        self.destroy()
-
-
-    def cancel_pressed(self):
-        # print("cancel")
-        self.destroy()
-
-
-    def category_selected(self, event):
-        chosen_cat = self.selected_category.get()
-        print("category_selected: %s" % chosen_cat)
-        new_list = pybd.block_category_dict[chosen_cat]
-        print("new_list: %s" % new_list)
-        #lb.delete(0,END)
-        #Label(win, text="Nothing Found Here!",
-        #font=('TkheadingFont, 20')).pack()
-
-        # Add items in the Listbox
-        #lb.insert("end","item1","item2","item3","item4","item5")
-
-        self.block_choice_list.set(new_list)
-        
-#    def buttonbox(self):
-#        self.ok_button = tk.Button(self, text='OK', width=5, command=self.ok_pressed)
-#        self.ok_button.pack(side="left")
-#        cancel_button = tk.Button(self, text='Cancel', width=5, command=self.cancel_pressed)
-#        cancel_button.pack(side="right")
-#        self.bind("<Return>", lambda event: self.ok_pressed())
-#        self.bind("<Escape>", lambda event: self.cancel_pressed())
-
-
-#def mydialog(app):
-#    dialog = MyDialog(title="Login", parent=app)
-#    return dialog.my_username, dialog.my_password
 
 
 
@@ -308,7 +95,7 @@ class pybd_gui(tk.Tk):
     def add_block(self):
         #showinfo(title='Information',
         #        message='add block pressed')
-        mydialog = MyDialog(title="Add New Block", parent=self)
+        mydialog = add_block_dialog(title="Add New Block", parent=self)
         mydialog.grab_set()
         print("%s, %s" % (mydialog.my_username, mydialog.my_password))
 
@@ -319,23 +106,79 @@ class pybd_gui(tk.Tk):
                         # Fatal Python Error: PyEval_RestoreThread: NULL tstate
 
 
-    def items_selected(self, event):
-        """ handle item selected event
-        """
+    def block_selected(self, event):
         # get selected indices
         selected_indices = self.blocklistbox.curselection()
-        # get selected items
-        selected_langs = ",".join([self.blocklistbox.get(i) for i in selected_indices])
-        msg = f'You selected: {selected_langs}'
-        
-        showinfo(
-            title='Information',
-            message=msg)
+        if not selected_indices:
+            # if no blocks are selected, clear input and placement boxes
+            self.clear_boxes()
+            return
+        # - if the selected block is an input, hide input widgets
+        #     - pybd.source_block
+        # - if the selected block is not an instance of block_with_two_inputs, hide input2 widgets
+        #     - pybd.block_with_two_inputs
+        #     - could also be an if_block with three inputs
+        # - populate entry boxes if input1 or input2 blocks are set
+        block_name = self.blocklistbox.get(selected_indices)
+        block = self.get_block_by_name(block_name)
+        if isinstance(block, pybd.source_block):
+            self.hide_input_widgets()
+            # exit before populating the input boxes
+            return
+        elif isinstance(block, pybd.block_with_two_inputs):
+            self.unhide_input_widgets()
+        else:
+            # assume one input
+            self.unhide_input1_widgets()
+            self.hide_input2_widgets()
 
-
-        if hasattr(self, "password"):
-            print("parent password = %s" % self.password)
+        # populate the entry boxes if appropriate
+        if block.input_block1 is not None:
+            in1_name = block.input_block1.variable_name
+            self.input1_var.set(in1_name)
+        else:
+            # clear
+            self.input1_var.set("")
             
+        if isinstance(block, pybd.block_with_two_inputs):
+            if block.input_block2 is not None:
+                in2_name = block.input_block2.variable_name
+                self.input2_var.set(in2_name)
+            else:
+                # clear
+                self.input2_var.set("")
+                
+    def _hide_widgets(self, widget_list):
+        for widget in widget_list:
+            widget.grid_remove()
+
+
+    def _unhide_widgets(self, widget_list):
+        for widget in widget_list:
+            widget.grid()
+        
+
+    def hide_input_widgets(self):
+        self._hide_widgets(self.input1_widgets)
+        self._hide_widgets(self.input2_widgets)
+
+
+    def unhide_input_widgets(self):
+        self._unhide_widgets(self.input1_widgets)
+        self._unhide_widgets(self.input2_widgets)
+
+
+    def unhide_input1_widgets(self):
+        self._unhide_widgets(self.input1_widgets)
+
+
+    def unhide_input2_widgets(self):
+        self._unhide_widgets(self.input2_widgets)
+
+
+    def hide_input2_widgets(self):
+        self._hide_widgets(self.input2_widgets)
+        
 
     def make_widgets(self):
         # don't assume that self.parent is a root window.
@@ -387,7 +230,7 @@ class pybd_gui(tk.Tk):
 
         
         self.blocklistbox.grid(column=cur_col, row=1,sticky='nwes', **self.options)
-        self.blocklistbox.bind('<<ListboxSelect>>', self.items_selected)
+        self.blocklistbox.bind('<<ListboxSelect>>', self.block_selected)
 
 
         padx_opts = {'padx':10}
@@ -397,25 +240,28 @@ class pybd_gui(tk.Tk):
         self.input1_label.grid(column=cur_col, row=2, sticky="SW", pady=(5,0), **padx_opts)
         self.input1_var = tk.StringVar()
         self.input1_box = ttk.Entry(self, textvariable=self.input1_var)
-        self.input1_box.grid(column=cur_col, row=3, sticky="NW", pady=(0,5), **padx_opts)
+        self.input1_box.grid(column=cur_col, row=3, sticky="NWE", pady=(0,5), **padx_opts)
         self.set_intput1_btn = ttk.Button(self, text='Set Input 1')
-        self.set_intput1_btn.grid(column=cur_col, row=4, pady=5)
+        self.set_intput1_btn.grid(column=cur_col, row=4, pady=(2,5))
         self.input2_label = ttk.Label(self, text="Input 2")
         self.input2_label.grid(column=cur_col, row=5, sticky="SW", pady=(5,0), **padx_opts)
         self.input2_var = tk.StringVar()
         self.input2_box = ttk.Entry(self, textvariable=self.input2_var)
-        self.input2_box.grid(column=cur_col, row=6, sticky="NW", pady=(0,5), **padx_opts)
+        self.input2_box.grid(column=cur_col, row=6, sticky="NWE", pady=(0,5), **padx_opts)
         self.set_intput2_btn = ttk.Button(self, text='Set Input 2')
-        self.set_intput2_btn.grid(column=cur_col, row=7, pady=5)
+        self.set_intput2_btn.grid(column=cur_col, row=7, pady=(2,5))
 
+        self.input1_widgets = [self.input1_label, self.input1_box, self.set_intput1_btn]
+        self.input2_widgets = [self.input2_label, self.input2_box, self.set_intput2_btn]
+        
         # Placement display and buttons
         self.placement_label = ttk.Label(self, text="Placement")
         self.placement_label.grid(column=cur_col, row=8, sticky="SW", pady=(5,0), **padx_opts)
         self.placement_var = tk.StringVar()
         self.placement_box = ttk.Entry(self, textvariable=self.placement_var)
-        self.placement_box.grid(column=cur_col, row=9, sticky="NW", pady=(0,5), **padx_opts)
+        self.placement_box.grid(column=cur_col, row=9, sticky="NWE", pady=(0,5), **padx_opts)
         self.placement_btn = ttk.Button(self, text='Place')
-        self.placement_btn.grid(column=cur_col, row=10, pady=5)
+        self.placement_btn.grid(column=cur_col, row=10, pady=(2,5))
 
         col1_list = [self.input1_label, self.input1_box, self.set_intput1_btn, \
                      self.input2_label, self.input2_box, self.set_intput2_btn]
@@ -431,7 +277,12 @@ class pybd_gui(tk.Tk):
         self.button.grid(row=20,column=cur_col,**self.options)
 
 
-
+    def clear_boxes(self, *args, **kwargs):
+        attr_list = ["input1_var", "input2_var", "placement_var"]
+        for attr in attr_list:
+            myvar = getattr(self, attr)
+            myvar.set("")
+            
 #root = tkinter.Tk()
 #root.wm_title("Embedding in Tk")
 
