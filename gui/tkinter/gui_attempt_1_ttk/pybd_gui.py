@@ -218,9 +218,21 @@ class pybd_gui(tk.Tk):
         self.toolbar = NavigationToolbar2Tk(self.canvas, self.toolbarFrame)
 
 
-        self.quit_button = ttk.Button(master=self, text="Quit", command=self._quit)
-        self.quit_button.grid(column=0, row=20, **self.options)
+        self.button_frame1 = ttk.Frame(self)
+        self.quit_button = ttk.Button(self.button_frame1, text="Quit", command=self._quit)
+        self.quit_button.grid(column=0, row=0, **self.options)
 
+        self.draw_button = ttk.Button(self.button_frame1, text="Draw", command=self.on_draw_btn)
+        self.draw_button.grid(column=1, row=0, **self.options)
+
+        ## self.xlim_label = ttk.Label(self.button_frame1, text="xlim:")
+        ## self.xlim.grid(row=0,column=2,sticky='E')
+        ## self.xlim_var = tk.StringVar()
+        ## self.xlim_box = ttk.Entry(self.button_frame1, textvariable=self.xlim_var)
+        ## self.xlim_box.grid(column=3, row=0, sticky="W", padx=(0,5))
+
+        
+        self.button_frame1.grid(row=20, column=0)
 
         # Column 1
         cur_col = 1
@@ -286,6 +298,23 @@ class pybd_gui(tk.Tk):
 
 
 
+
+    def on_draw_btn(self, *args, **kwargs):
+        print("you pressed draw")
+        self.ax.clear()
+        self.block_diagram.update_block_list()
+        block_list = self.block_diagram.block_list
+        print("block_list: %s" % block_list)
+        self.block_diagram.ax = self.ax
+        self.block_diagram.draw()
+        xlims = self.block_diagram.get_xlims()
+        ylims = self.block_diagram.get_ylims()
+        self.ax.set_xlim(xlims)
+        self.ax.set_ylim(ylims)
+        self.block_diagram.axis_off()        
+        self.canvas.draw()
+        
+        
     def fill_placement_entry(self, place_str):
         self.placement_var.set(place_str)
 
