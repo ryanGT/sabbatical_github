@@ -44,6 +44,7 @@ from tkinter import ttk
 from tkinter.messagebox import showinfo
 
 from add_block_dialog import add_block_dialog
+from place_block_dialog import place_block_dialog
 
 #from tkinter import simpledialog
 
@@ -97,7 +98,7 @@ class pybd_gui(tk.Tk):
         #        message='add block pressed')
         mydialog = add_block_dialog(title="Add New Block", parent=self)
         mydialog.grab_set()
-        print("%s, %s" % (mydialog.my_username, mydialog.my_password))
+        #print("%s, %s" % (mydialog.my_username, mydialog.my_password))
 
         
     def _quit(self):
@@ -121,6 +122,11 @@ class pybd_gui(tk.Tk):
         # - populate entry boxes if input1 or input2 blocks are set
         block_name = self.blocklistbox.get(selected_indices)
         block = self.get_block_by_name(block_name)
+
+        place_str = block.get_placememt_str()
+        print("place_str: %s" % place_str)
+        self.fill_placement_entry(place_str)
+
         if isinstance(block, pybd.source_block):
             self.hide_input_widgets()
             # exit before populating the input boxes
@@ -147,6 +153,8 @@ class pybd_gui(tk.Tk):
             else:
                 # clear
                 self.input2_var.set("")
+
+        
                 
     def _hide_widgets(self, widget_list):
         for widget in widget_list:
@@ -218,7 +226,7 @@ class pybd_gui(tk.Tk):
         cur_col = 1
 
         self.block_label = ttk.Label(self, text="Blocks")
-        self.block_label.grid(row=0,column=cur_col,sticky='NW', **self.options)
+        self.block_label.grid(row=0,column=cur_col,sticky='SW', pady=(5,0), padx=5)
 
         self.block_list_var = tk.StringVar(value=[])
 
@@ -229,7 +237,7 @@ class pybd_gui(tk.Tk):
                                        )
 
         
-        self.blocklistbox.grid(column=cur_col, row=1,sticky='nwes', **self.options)
+        self.blocklistbox.grid(column=cur_col, row=1,sticky='nwes', pady=(0,5), padx=5)
         self.blocklistbox.bind('<<ListboxSelect>>', self.block_selected)
 
 
@@ -260,7 +268,7 @@ class pybd_gui(tk.Tk):
         self.placement_var = tk.StringVar()
         self.placement_box = ttk.Entry(self, textvariable=self.placement_var)
         self.placement_box.grid(column=cur_col, row=9, sticky="NWE", pady=(0,5), **padx_opts)
-        self.placement_btn = ttk.Button(self, text='Place')
+        self.placement_btn = ttk.Button(self, text='Place', command=self.on_place_btn)
         self.placement_btn.grid(column=cur_col, row=10, pady=(2,5))
 
         col1_list = [self.input1_label, self.input1_box, self.set_intput1_btn, \
@@ -277,12 +285,31 @@ class pybd_gui(tk.Tk):
         self.button.grid(row=20,column=cur_col,**self.options)
 
 
+
+    def fill_placement_entry(self, place_str):
+        self.placement_var.set(place_str)
+
+        
     def clear_boxes(self, *args, **kwargs):
         attr_list = ["input1_var", "input2_var", "placement_var"]
         for attr in attr_list:
             myvar = getattr(self, attr)
             myvar.set("")
-            
+
+
+    def on_place_btn(self, *args, **kwargs):
+        selected_indices = self.blocklistbox.curselection()
+        if not selected_indices:
+            showinfo(title='Information',
+                     message='You must select a block before placing it.')
+            return
+        
+        place_dialog = place_block_dialog(title="Place Block", parent=self)
+        block_name = self.blocklistbox.get(selected_indices)
+        place_dialog.set_block_to_place(block_name)
+        place_dialog.grab_set()
+
+        
 #root = tkinter.Tk()
 #root.wm_title("Embedding in Tk")
 
