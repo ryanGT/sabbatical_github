@@ -257,7 +257,7 @@ class pybd_gui(tk.Tk):
         self.canvas = FigureCanvasTkAgg(self.fig, master=self)
         self.canvas.draw()
         self.canvas.get_tk_widget().grid(row=1, column=0, ipadx=40, ipady=20, \
-                                         sticky="news", rowspan=16)
+                                         sticky="news")#, rowspan=16)
 
         self.toolbarFrame = ttk.Frame(master=self)
         self.toolbarFrame.grid(row=19,column=0)
@@ -281,14 +281,27 @@ class pybd_gui(tk.Tk):
         self.button_frame1.grid(row=20, column=0)
 
         # Column 1
-        cur_col = 1
+        self.notebook = ttk.Notebook(self)
+        self.notebook.grid(row=1, column=1, ipadx=10, ipady=10, \
+                                         sticky="news")
+        self.notebook.columnconfigure(0, weight=4)
+        self.notebook.rowconfigure(0, weight=4)
 
-        self.block_label = ttk.Label(self, text="Blocks")
+        self.frame1 = ttk.Frame(self.notebook)#, width=400, height=280)
+        self.frame1.grid(row=0, column=0, sticky="news")
+        self.frame1.columnconfigure(0, weight=4)
+        self.frame1.rowconfigure(1, weight=4)
+
+        self.notebook.add(self.frame1, text='Blocks')
+        
+        cur_col = 0# switching to notebook changes this
+
+        self.block_label = ttk.Label(self.frame1, text="Blocks")
         self.block_label.grid(row=0,column=cur_col,sticky='SW', pady=(5,0), padx=5)
 
         self.block_list_var = tk.StringVar(value=[])
 
-        self.blocklistbox = tk.Listbox(self, \
+        self.blocklistbox = tk.Listbox(self.frame1, \
                                         listvariable=self.block_list_var, \
                                         height=6, \
                                         #selectmode='extended'
@@ -302,31 +315,31 @@ class pybd_gui(tk.Tk):
         padx_opts = {'padx':10}
 
         # Input display and buttons
-        self.input1_label = ttk.Label(self, text="Input 1")
+        self.input1_label = ttk.Label(self.frame1, text="Input 1")
         self.input1_label.grid(column=cur_col, row=2, sticky="SW", pady=(5,0), **padx_opts)
         self.input1_var = tk.StringVar()
-        self.input1_box = ttk.Entry(self, textvariable=self.input1_var)
+        self.input1_box = ttk.Entry(self.frame1, textvariable=self.input1_var)
         self.input1_box.grid(column=cur_col, row=3, sticky="NWE", pady=(0,5), **padx_opts)
-        self.set_intput1_btn = ttk.Button(self, text='Set Input 1')
+        self.set_intput1_btn = ttk.Button(self.frame1, text='Set Input 1')
         self.set_intput1_btn.grid(column=cur_col, row=4, pady=(2,5))
-        self.input2_label = ttk.Label(self, text="Input 2")
+        self.input2_label = ttk.Label(self.frame1, text="Input 2")
         self.input2_label.grid(column=cur_col, row=5, sticky="SW", pady=(5,0), **padx_opts)
         self.input2_var = tk.StringVar()
-        self.input2_box = ttk.Entry(self, textvariable=self.input2_var)
+        self.input2_box = ttk.Entry(self.frame1, textvariable=self.input2_var)
         self.input2_box.grid(column=cur_col, row=6, sticky="NWE", pady=(0,5), **padx_opts)
-        self.set_intput2_btn = ttk.Button(self, text='Set Input 2')
+        self.set_intput2_btn = ttk.Button(self.frame1, text='Set Input 2')
         self.set_intput2_btn.grid(column=cur_col, row=7, pady=(2,5))
 
         self.input1_widgets = [self.input1_label, self.input1_box, self.set_intput1_btn]
         self.input2_widgets = [self.input2_label, self.input2_box, self.set_intput2_btn]
         
         # Placement display and buttons
-        self.placement_label = ttk.Label(self, text="Placement")
+        self.placement_label = ttk.Label(self.frame1, text="Placement")
         self.placement_label.grid(column=cur_col, row=8, sticky="SW", pady=(5,0), **padx_opts)
         self.placement_var = tk.StringVar()
-        self.placement_box = ttk.Entry(self, textvariable=self.placement_var)
+        self.placement_box = ttk.Entry(self.frame1, textvariable=self.placement_var)
         self.placement_box.grid(column=cur_col, row=9, sticky="NWE", pady=(0,5), **padx_opts)
-        self.placement_btn = ttk.Button(self, text='Place', command=self.on_place_btn)
+        self.placement_btn = ttk.Button(self.frame1, text='Place', command=self.on_place_btn)
         self.placement_btn.grid(column=cur_col, row=10, pady=(2,5))
 
         col1_list = [self.input1_label, self.input1_box, self.set_intput1_btn, \
@@ -338,11 +351,32 @@ class pybd_gui(tk.Tk):
 
         #.grid_remove()
         # button
-        self.button = ttk.Button(self, text='Add Block')
+        self.button = ttk.Button(self.frame1, text='Add Block')
         self.button['command'] = self.add_block
         self.button.grid(row=20,column=cur_col,**self.options)
 
+        # make other frames for notebook
+        self.make_actuator_frame()
+        self.make_sensors_frame()
+        
 
+    def make_actuator_frame(self):
+        self.act_frame = ttk.Frame(self.notebook)#, width=400, height=280)
+        self.act_frame.grid(row=0, column=0, sticky="news")
+        self.act_frame.columnconfigure(0, weight=4)
+        self.act_frame.rowconfigure(1, weight=4)
+
+        self.notebook.add(self.act_frame, text='Actuators')
+
+
+
+    def make_sensors_frame(self):
+        self.sensors_frame = ttk.Frame(self.notebook)#, width=400, height=280)
+        self.sensors_frame.grid(row=0, column=0, sticky="news")
+        self.sensors_frame.columnconfigure(0, weight=4)
+        self.sensors_frame.rowconfigure(1, weight=4)
+        
+        self.notebook.add(self.sensors_frame, text='Sensors')
 
 
     def on_draw_btn(self, *args, **kwargs):
