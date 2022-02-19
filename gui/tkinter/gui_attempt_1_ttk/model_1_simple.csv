@@ -1,0 +1,3 @@
+block_type,variable_name,label,arduino_class,input_block1_name,input_block2_name,width,height,placement_type,abs_x,abs_y,rel_block_name,rel_pos,rel_distance,xshift,yshift
+step_input,U,$U(s)$,step_input,,,3,2,absolute,0.0,0.0,,,,,
+summing_junction,sum_junct,,summing_junction,U,,2,2,relative,,,U,right,4,0,0

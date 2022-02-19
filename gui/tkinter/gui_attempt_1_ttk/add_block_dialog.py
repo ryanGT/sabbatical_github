@@ -178,10 +178,14 @@ class add_block_dialog(tk.Toplevel):
                 key2 = key + '_name'
                 kwargs[key2] = input_block_name 
 
-
+        
         block_name = self.block_name.get()
         block_class = getattr(pybd, block_type)
         # how do I handle cases with input(s) set?
+
+        print("creatig block in go_pressed")
+        print("kwargs:")
+        print(kwargs)
         new_block = pybd.create_block(block_class, block_type, block_name, **kwargs)
         self.parent.append_block_to_dict(block_name, new_block)
         #self.parent.password = self.my_password

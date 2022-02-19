@@ -58,7 +58,7 @@ pad_options = {'padx': 5, 'pady': 5}
 class pybd_gui(tk.Tk):
     def __init__(self):
         super().__init__()
-
+        self.option_add('*tearOff', False)
         self.geometry("900x600")
         self.mylabel = 'Python Block Diagram GUI'
         self.title(self.mylabel)
@@ -70,12 +70,53 @@ class pybd_gui(tk.Tk):
         self.rowconfigure(1, weight=4)
 
         self.options = {'padx': 5, 'pady': 5}
+
+        self.menubar = tk.Menu(self)
+        self['menu'] = self.menubar
+        self.menu_file = tk.Menu(self.menubar)
+        self.menu_edit = tk.Menu(self.menubar)
+        self.menubar.add_cascade(menu=self.menu_file, label='File')
+        self.menubar.add_cascade(menu=self.menu_edit, label='Edit')
+        self.menu_file.add_command(label='Save', command=self.on_save_menu)
+        self.menu_file.add_command(label='Load', command=self.on_load_menu)        
+        #menu_file.add_command(label='Open...', command=openFile)
+        self.menu_file.add_command(label='Close', command=self._quit)
+
+        #self.bind("<Key>", self.key_pressed)
+        self.bind('<Control-q>', self._quit)
+        self.bind('<Control-s>', self.on_save_menu)
+        self.bind('<Control-l>', self.on_load_menu)
+        self.bind('<Control-a>', self.add_block)
+        self.bind('<Control-p>', self.on_place_btn)
+        self.bind('<Control-d>', self.on_draw_btn)
         
         # configure the root window
         self.make_widgets()
 
         self.block_diagram = pybd.block_diagram()
+
+
+
+    def key_pressed(self, event):
+        print("pressed:")
+        print(repr(event.char))
+
+
+    def on_load_menu(self, *args, **kwargs):
+        print("in menu laod")
+        filename = tk.filedialog.askopenfilename(title = "Select Model to Load (CSV)",\
+                                                 filetypes = (("csv files","*.csv"),("all files","*.*")))
+        print (filename)
         
+    
+    def on_save_menu(self, *args, **kwargs):
+        print("in menu save")
+        filename = tk.filedialog.asksaveasfilename(title = "Select filename",\
+                                                   filetypes = (("csv files","*.csv"),("all files","*.*")))
+        print (filename)
+        if filename:
+            self.block_diagram.save_model_to_csv(filename)
+            
 
     def get_block_name_list(self):
         #block_list = self.block_diagram._build_block_list()
@@ -93,7 +134,7 @@ class pybd_gui(tk.Tk):
         self.block_list_var.set(self.block_diagram.block_name_list)
         
         
-    def add_block(self):
+    def add_block(self, *args, **kwargs):
         #showinfo(title='Information',
         #        message='add block pressed')
         mydialog = add_block_dialog(title="Add New Block", parent=self)
@@ -101,7 +142,7 @@ class pybd_gui(tk.Tk):
         #print("%s, %s" % (mydialog.my_username, mydialog.my_password))
 
         
-    def _quit(self):
+    def _quit(self, *args, **kwargs):
         self.quit()     # stops mainloop
         self.destroy()  # this is necessary on Windows to prevent
                         # Fatal Python Error: PyEval_RestoreThread: NULL tstate
