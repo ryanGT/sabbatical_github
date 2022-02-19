@@ -87,7 +87,8 @@ class pybd_gui(tk.Tk):
         self.bind('<Control-s>', self.on_save_menu)
         self.bind('<Control-l>', self.on_load_menu)
         self.bind('<Control-a>', self.add_block)
-        self.bind('<Control-p>', self.on_place_btn)
+        self.bind('<Control-P>', self.on_place_btn)
+        self.bind('<Alt-p>', self.on_place_btn)
         self.bind('<Control-d>', self.on_draw_btn)
         
         # configure the root window
@@ -107,7 +108,11 @@ class pybd_gui(tk.Tk):
         filename = tk.filedialog.askopenfilename(title = "Select Model to Load (CSV)",\
                                                  filetypes = (("csv files","*.csv"),("all files","*.*")))
         print (filename)
-        
+        if filename:
+            new_bd = pybd.load_model_from_csv(filename)
+            self.block_diagram = new_bd
+            self.block_list_var.set(self.block_diagram.block_name_list)
+            
     
     def on_save_menu(self, *args, **kwargs):
         print("in menu save")
