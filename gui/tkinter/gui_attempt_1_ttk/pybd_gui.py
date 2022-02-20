@@ -1,11 +1,43 @@
+############################################
+#
+# Next Steps:
+#
+# ----------------
+#
+# - how to add an actuator?
+#     - custom dialog or make it fit on the page
+#         - why not a custom dialog?
+#         - have my own class with helper functions for adding and gridding widgets
+#     - need a list of actuator names and properties
+#
+#############################################
+
 #iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
 #
 # Issues:
 #
-# - how do I handle sensors and actuators so that plants can be
-#   created?
+# - **how do I handle sensors and actuators so that plants can be
+#   created?**
 #     - gui could show actuator and sensor comboboxes when plant is selected
 #         - or only sensor for plant_no_actuator
+#     - what does it take to create an actuator?
+#     - what does it take to create a sensor?
+#     - what about custom sensors and actuators?
+#     - example code:
+#         - encoder = pybd.encoder(11)
+#         - HB = pybd.h_bridge(6,4,9)
+#     - Approach:
+#         - combobox to select a standard actuator or sensor or custom
+#         - entry boxes for appropriate params
+#             - making these appear and disapper and have the labels change
+#               will get a little complicated
+#             - if they are numbered with a pattern, I think it can work:
+#               - self.actuator_param1_label
+#               - self.actuator_param1_var
+#               - self.actuator_param1_entry
+#             - then a dict or list to map to the params for a particular sensor or actuator
+#
+#
 # - make the set input buttons work
 # - create a place block dialog
 # - draw the block diagram
@@ -97,7 +129,122 @@ class pybd_gui(tk.Tk):
         self.block_diagram = pybd.block_diagram()
 
 
+    def make_label(self, text, root=None):
+        if root is None:
+            root = self
+        widget = ttk.Label(root, text=text)
+        return widget
 
+
+    def grid_label_sw(self, widget, row, col):
+        widget.grid(row=row, column=col, sticky='SW', pady=(5,1), padx=10)
+
+
+    def grid_widget(self, widget, row, col, padx=10, pady=5, **kwargs):
+        widget.grid(row=row, column=col, padx=padx, pady=pady, **kwargs)
+
+
+    def grid_box_nw(self, widget, row, col, **grid_opts):
+        if 'sticky' in grid_opts:
+            sticky = grid_opts['sticky']
+        else:
+            sticky = 'NW'
+        widget.grid(row=row, column=col, sticky=sticky, pady=(1,5), padx=10)
+
+
+    def make_label_and_grid_sw(self, text, row, col, root=None):
+        if root is None:
+            root = self
+        widget = self.make_label(text, root=root)
+        self.grid_label_sw(widget, row, col)
+        return widget
+
+
+    def make_widget_and_var_grid_nw(self, basename, row, col, type="entry", root=None):
+        if root is None:
+            root = self
+        
+        myvar = tk.StringVar()
+        if type.lower() == 'entry':
+            widget_class = ttk.Entry
+            tail = '_entry'
+        elif 'combo' in type.lower():
+            widget_class = ttk.Combobox
+            tail = '_combobox'
+
+        mywidget = widget_class(root, textvariable=myvar)
+        self.grid_box_nw(mywidget, row, col)
+        var_attr = basename + '_var'
+        setattr(self, var_attr, myvar)
+        widget_attr = basename + tail
+        setattr(self, widget_attr, mywidget)
+        return mywidget
+
+
+    def _assign_widget_and_var_to_attrs(self, basename, tail, mywidget, myvar):
+        var_attr = basename + '_var'
+        setattr(self, var_attr, myvar)
+        widget_attr = basename + tail
+        setattr(self, widget_attr, mywidget)
+        
+
+    def make_listbox_and_var(self, basename, row, col, root=None, height=6, grid_opts={}):
+        if root is None:
+            root = self
+
+        myvar = tk.StringVar([])
+
+        mywidget = tk.Listbox(root, \
+                              listvariable=myvar, \
+                              height=height, \
+                              #selectmode='extended'
+                              )
+        self.grid_box_nw(mywidget, row, col, **grid_opts)
+        tail = "_listbox"
+        self._assign_widget_and_var_to_attrs(basename, tail, mywidget, myvar)
+        return mywidget
+
+
+    def make_entry_and_var_grid_nw(self, basename, row, col, root=None):
+        if root is None:
+            root = self
+        
+        return self.make_widget_and_var_grid_nw(basename, row, col, type="entry", root=root)
+        ## myvar = tk.StringVar()
+        ## myentry = ttk.Entry(self, textvariable=myvar)
+        ## self.grid_box_nw(myentry, row, col)
+        ## var_attr = basename + '_var'
+        ## setattr(self, var_attr, myvar)
+        ## entry_attr = basename + '_entry'
+        ## setattr(self, entry_attr, myentry)
+
+
+    def make_combo_and_var_grid_nw(self, basename, row, col, root=None):
+        if root is None:
+            root = self
+        
+        return self.make_widget_and_var_grid_nw(basename, row, col, type="combobox", root=root)        
+
+
+    def make_button_and_grid(self, btn_text, row, col, command=None, root=None, sticky=None):
+        if root is None:
+            root = self
+            
+        kwargs = {}
+        if command is not None:
+            kwargs['command'] = command
+
+        grid_opts = {}
+        if sticky is not None:
+            print("sticky = %s" % sticky)
+            grid_opts['sticky'] = sticky
+            
+        mybutton = ttk.Button(root, text=btn_text, **kwargs)
+        mybutton.grid(column=col, row=row, pady=10, padx=10, **grid_opts)
+        return mybutton
+    
+        
+############################
     def key_pressed(self, event):
         print("pressed:")
         print(repr(event.char))
@@ -365,6 +512,41 @@ class pybd_gui(tk.Tk):
         self.act_frame.grid(row=0, column=0, sticky="news")
         self.act_frame.columnconfigure(0, weight=4)
         self.act_frame.rowconfigure(1, weight=4)
+
+
+        myroot = self.act_frame
+        kwargs = {'root':myroot}# note: helper functions handle padding
+        curcol = 0# switching to notebook changes this
+
+        self.act_label1 = self.make_label_and_grid_sw("Actuators", 0, curcol, **kwargs)
+        self.make_listbox_and_var("actuators", 1, curcol, root=myroot, grid_opts={'sticky':'news'})
+        self.add_actuator_btn = self.make_button_and_grid("Add Actuator", \
+                                                          row=2, col=curcol, command=None, sticky='n', \
+                                                          **kwargs)
+        
+        #self.make_combo_and_var_grid_nw("relative_block", 5, curcol)
+        #self.relative_block_combobox['values'] = self.parent.get_block_name_list()
+
+
+
+        ## self.block_label = ttk.Label(self.frame1, text="Blocks")
+        ## self.block_label.grid(row=0,column=cur_col,sticky='SW', pady=(5,0), padx=5)
+
+        ## self.block_list_var = tk.StringVar(value=[])
+
+        ## self.blocklistbox = tk.Listbox(self.frame1, \
+        ##                                 listvariable=self.block_list_var, \
+        ##                                 height=6, \
+        ##                                 #selectmode='extended'
+        ##                                )
+
+
+        ## self.blocklistbox.grid(column=cur_col, row=1,sticky='nwes', pady=(0,5), padx=5)
+        ## self.blocklistbox.bind('<<ListboxSelect>>', self.block_selected)
+
+
+        ## padx_opts = {'padx':10}
+
 
         self.notebook.add(self.act_frame, text='Actuators')
 

@@ -175,7 +175,7 @@ class place_block_dialog(tk.Toplevel):
             block.place_absolute(block.abs_x, block.abs_y)
         else:
             print("relative placement")
-            #place_relative(self, rel_block, rel_pos='right', rel_distance=4, xshift=0, yshift=0):
+            #place_relative(self, rel_block, rel_pos='right', ref_distance=4, xshift=0, yshift=0):
             rel_block_name = self.relative_block_var.get()
             rel_block = self.parent.get_block_by_name(rel_block_name)
             rel_pos = self.relative_direction_var.get()
