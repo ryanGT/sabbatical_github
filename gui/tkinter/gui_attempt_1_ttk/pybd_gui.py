@@ -9,6 +9,9 @@
 #         - why not a custom dialog?
 #         - have my own class with helper functions for adding and gridding widgets
 #     - need a list of actuator names and properties
+#     - need a method that calls the add actuator box
+#         - pass in a list of actuator classes along with a dict of dicts
+#         - each dict contains the options for an actuator along with the default values, maybe
 #
 #############################################
 
@@ -80,10 +83,12 @@ from place_block_dialog import place_block_dialog
 
 #from tkinter import simpledialog
 
+from actuator_or_sensor_chooser import actuator_or_sensor_chooser
+
+
 import py_block_diagram as pybd
 
 pad_options = {'padx': 5, 'pady': 5}
-
 
 
 
@@ -521,35 +526,23 @@ class pybd_gui(tk.Tk):
         self.act_label1 = self.make_label_and_grid_sw("Actuators", 0, curcol, **kwargs)
         self.make_listbox_and_var("actuators", 1, curcol, root=myroot, grid_opts={'sticky':'news'})
         self.add_actuator_btn = self.make_button_and_grid("Add Actuator", \
-                                                          row=2, col=curcol, command=None, sticky='n', \
+                                                          row=2, col=curcol, \
+                                                          command=self.on_add_actuator_btn, \
+                                                          sticky='n', \
                                                           **kwargs)
-        
-        #self.make_combo_and_var_grid_nw("relative_block", 5, curcol)
-        #self.relative_block_combobox['values'] = self.parent.get_block_name_list()
-
-
-
-        ## self.block_label = ttk.Label(self.frame1, text="Blocks")
-        ## self.block_label.grid(row=0,column=cur_col,sticky='SW', pady=(5,0), padx=5)
-
-        ## self.block_list_var = tk.StringVar(value=[])
-
-        ## self.blocklistbox = tk.Listbox(self.frame1, \
-        ##                                 listvariable=self.block_list_var, \
-        ##                                 height=6, \
-        ##                                 #selectmode='extended'
-        ##                                )
-
-
-        ## self.blocklistbox.grid(column=cur_col, row=1,sticky='nwes', pady=(0,5), padx=5)
-        ## self.blocklistbox.bind('<<ListboxSelect>>', self.block_selected)
-
-
-        ## padx_opts = {'padx':10}
-
-
         self.notebook.add(self.act_frame, text='Actuators')
 
+
+    def on_add_actuator_btn(self, *args, **kwargs):
+        ## place_dialog.set_block_to_place(block_name)
+        ## place_dialog.grab_set()
+        actuator_dialog = actuator_or_sensor_chooser(parent=self, dialog_type="actuator", \
+                                                     class_list=[], \
+                                                     param_lists_dict={}, \
+                                                     defaults_dicts={}, \
+                                                     geometry='300x600', \
+                                                     max_params=5)
+        actuator_dialog.grab_set()
 
 
     def make_sensors_frame(self):
