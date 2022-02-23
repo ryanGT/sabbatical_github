@@ -83,7 +83,7 @@ from place_block_dialog import place_block_dialog
 
 #from tkinter import simpledialog
 
-from actuator_or_sensor_chooser import actuator_or_sensor_chooser
+from actuator_or_sensor_chooser import actuator_chooser, sensor_chooser
 
 
 import py_block_diagram as pybd
@@ -533,23 +533,46 @@ class pybd_gui(tk.Tk):
         self.notebook.add(self.act_frame, text='Actuators')
 
 
+    def refresh_actuator_names(self):
+        self.actuators_var.set(self.block_diagram.actuator_name_list)
+
+
+    def refresh_sensor_names(self):
+        self.sensors_var.set(self.block_diagram.sensor_name_list)
+        
+        
+
     def on_add_actuator_btn(self, *args, **kwargs):
         ## place_dialog.set_block_to_place(block_name)
         ## place_dialog.grab_set()
-        actuator_dialog = actuator_or_sensor_chooser(parent=self, dialog_type="actuator", \
-                                                     class_list=[], \
-                                                     param_lists_dict={}, \
-                                                     defaults_dicts={}, \
-                                                     geometry='300x600', \
-                                                     max_params=5)
+        actuator_dialog = actuator_chooser(parent=self, geometry='300x600', \
+                                           max_params=5)
         actuator_dialog.grab_set()
 
+
+    def on_add_sensor_btn(self, *arg, **kwargs):
+        sensor_dialog = sensor_chooser(parent=self, geometry='300x600', \
+                                           max_params=5)
+        sensor_dialog.grab_set()
+        
 
     def make_sensors_frame(self):
         self.sensors_frame = ttk.Frame(self.notebook)#, width=400, height=280)
         self.sensors_frame.grid(row=0, column=0, sticky="news")
         self.sensors_frame.columnconfigure(0, weight=4)
         self.sensors_frame.rowconfigure(1, weight=4)
+
+        myroot = self.sensors_frame
+        kwargs = {'root':myroot}# note: helper functions handle padding
+        curcol = 0# switching to notebook changes this
+
+        self.sensors_label1 = self.make_label_and_grid_sw("Sensors", 0, curcol, **kwargs)
+        self.make_listbox_and_var("sensors", 1, curcol, root=myroot, grid_opts={'sticky':'news'})
+        self.add_sensor_btn = self.make_button_and_grid("Add Sensor", \
+                                                          row=2, col=curcol, \
+                                                          command=self.on_add_sensor_btn, \
+                                                          sticky='n', \
+                                                          **kwargs)
         
         self.notebook.add(self.sensors_frame, text='Sensors')
 
