@@ -18,16 +18,17 @@ from tkinter.messagebox import showinfo
 import py_block_diagram as pybd
 pad_options = {'padx': 5, 'pady': 5}
 
-class add_block_dialog(tk.Toplevel):
+from tkinter_utils import my_toplevel_window
+
+class add_block_dialog(my_toplevel_window):
     def __init__(self, parent, title="Add Block Dialog"):
-        super().__init__(parent)
+        super().__init__(parent, title=title, geometry="600x400")
         self.selected_block_type = None
         self.input_block_name = None
         self.input2_block_name = None
         self.input3_block_name = None
         self.parent = parent
-        self.geometry('800x600')
-        self.title(title)
+        self.bd = self.parent.block_diagram
         self.make_widgets()
 
 
@@ -86,6 +87,10 @@ class add_block_dialog(tk.Toplevel):
             widget.grid(row=i, column=0, sticky='W', **pad_options)
 
 
+        currow = i+1
+        self.make_label_and_grid_sw("Actuators", row=currow, col=0,  attr="actuators_label")
+        currow += 1
+        self.make_combo_and_var_grid_nw("actuators", row=currow, col=0)
         #=================================
         #
         # column 1 
@@ -110,9 +115,33 @@ class add_block_dialog(tk.Toplevel):
         self.go_button = ttk.Button(self, text='Add Block', command=self.go_pressed)
 
         column1_widgets = [label_BN, self.block_name_box, label_input, \
-                           self.input_choice, self.go_button]
+                           self.input_choice]#, self.go_button]
         for i, widget in enumerate(column1_widgets):
             widget.grid(row=i, column=1, sticky='W', **pad_options)
+
+        currow = i+1
+        mycol = 1
+        self.make_label_and_grid_sw("Sensors", row=currow, col=mycol,  attr="sensors_label")
+        currow += 1
+        print("currow = %s" % currow)
+        self.make_combo_and_var_grid_nw("sensors", row=currow, col=mycol)
+        currow += 1
+        print("currow = %s" % currow)
+        self.go_button.grid(row=20, columnspan=2, column=0, padx=5, pady=5)
+
+        self.act_and_sense_list = ['sensors_label','actuators_label','sensors_combobox', 'actuators_combobox']
+
+    def hide_act_and_sense_combos(self):
+        for attr in self.act_and_sense_list:
+            widget = getattr(self, attr)
+            widget.grid_remove()
+
+
+    def show_act_and_sense_combos(self):
+        for attr in self.act_and_sense_list:
+            widget = getattr(self, attr)
+            widget.grid()
+
 
 
     def on_input_selected(self, *args):
@@ -138,7 +167,7 @@ class add_block_dialog(tk.Toplevel):
         self.selected_block_type = block_type
         suggested_name = self.parent.block_diagram.suggest_block_name(block_type)
         self.block_name.set(suggested_name)
-
+            
 
     def get_selected_block_type(self):
         block_type = self.blockchoice.get(self.blockchoice.curselection())
@@ -183,7 +212,21 @@ class add_block_dialog(tk.Toplevel):
         block_class = getattr(pybd, block_type)
         # how do I handle cases with input(s) set?
 
-        print("creatig block in go_pressed")
+        # get actuator and sensor if it is a plant
+        print("plant classes: %s" % pybd.plant_class_names)
+        if block_type in pybd.plant_class_names:
+            print("this is a plant")
+            actuator_name = self.actuators_var.get()
+            print("actuator_name: %s" % actuator_name)
+            sensor_name = self.sensors_var.get()
+            print("sensor_name: %s" % sensor_name)
+            myactuator = self.bd.get_actuator_by_name(actuator_name)
+            mysensor = self.bd.get_sensor_by_name(sensor_name)
+            kwargs['actuator'] = myactuator
+            kwargs['sensor'] = mysensor
+
+            
+        print("creating block in go_pressed")
         print("kwargs:")
         print(kwargs)
         new_block = pybd.create_block(block_class, block_type, block_name, **kwargs)
@@ -195,6 +238,20 @@ class add_block_dialog(tk.Toplevel):
     def cancel_pressed(self):
         # print("cancel")
         self.destroy()
+
+
+    def set_actuator_and_sensor_lists(self):
+        self.actuator_names = self.bd.actuator_name_list
+        self.sensor_names = self.bd.sensor_name_list
+        N_act = len(self.actuator_names)
+        N_sense = len(self.sensor_names)
+        if N_act*N_sense == 0:
+            msg = "You cannot create a plant until an actuator and a sensor have been defined."
+            showinfo(title='Information',
+                     message=msg)
+        else:
+            self.actuators_combobox['values'] = self.actuator_names
+            self.sensors_combobox['values'] = self.sensor_names
 
 
     def category_selected(self, event):
@@ -210,4 +267,9 @@ class add_block_dialog(tk.Toplevel):
         #lb.insert("end","item1","item2","item3","item4","item5")
 
         self.block_choice_list.set(new_list)
+        if chosen_cat == "plant":
+            self.show_act_and_sense_combos()
+            self.set_actuator_and_sensor_lists()
+        else:
+            self.hide_act_and_sense_combos()
 
