@@ -4,14 +4,19 @@
 #
 # ----------------
 #
-# - how to add an actuator?
-#     - custom dialog or make it fit on the page
-#         - why not a custom dialog?
-#         - have my own class with helper functions for adding and gridding widgets
-#     - need a list of actuator names and properties
-#     - need a method that calls the add actuator box
-#         - pass in a list of actuator classes along with a dict of dicts
-#         - each dict contains the options for an actuator along with the default values, maybe
+# - make the set input buttons work
+# - make the load csv method handle the new format with actuators and sensors
+#     - break the file into three chunks: actuators, sensors, and blocks
+#     - create actuators and sensors from the first two chunks
+#     - create the other blocks
+#         - plant blocks need to find their actuators and sensors
+#         - does my save csv stuff save the actutor and sensor for each plant?
+#             - probably not
+#         - you are already not saving params for the blocks
+#             - Kp and Kd for PD
+#             - amp and step time for a step input
+#             - you need some columns for key:value for param1, param2, ...
+#
 #
 #############################################
 
@@ -40,12 +45,11 @@
 #               - self.actuator_param1_entry
 #             - then a dict or list to map to the params for a particular sensor or actuator
 #
-#
 # - make the set input buttons work
-# - create a place block dialog
-# - draw the block diagram
 #
 # Resovled:
+# - create a place block dialog
+# - draw the block diagram
 # - selecting a block type and then selecting an input block messes up
 #   the current selection of the block type listbox
 #
@@ -472,14 +476,14 @@ class pybd_gui(tk.Tk):
         self.input1_var = tk.StringVar()
         self.input1_box = ttk.Entry(self.frame1, textvariable=self.input1_var)
         self.input1_box.grid(column=cur_col, row=3, sticky="NWE", pady=(0,5), **padx_opts)
-        self.set_intput1_btn = ttk.Button(self.frame1, text='Set Input 1')
+        self.set_intput1_btn = ttk.Button(self.frame1, text='Set Input 1', command=self.on_set_input1)
         self.set_intput1_btn.grid(column=cur_col, row=4, pady=(2,5))
         self.input2_label = ttk.Label(self.frame1, text="Input 2")
         self.input2_label.grid(column=cur_col, row=5, sticky="SW", pady=(5,0), **padx_opts)
         self.input2_var = tk.StringVar()
         self.input2_box = ttk.Entry(self.frame1, textvariable=self.input2_var)
         self.input2_box.grid(column=cur_col, row=6, sticky="NWE", pady=(0,5), **padx_opts)
-        self.set_intput2_btn = ttk.Button(self.frame1, text='Set Input 2')
+        self.set_intput2_btn = ttk.Button(self.frame1, text='Set Input 2', self.on_set_input2)
         self.set_intput2_btn.grid(column=cur_col, row=7, pady=(2,5))
 
         self.input1_widgets = [self.input1_label, self.input1_box, self.set_intput1_btn]
@@ -510,7 +514,17 @@ class pybd_gui(tk.Tk):
         # make other frames for notebook
         self.make_actuator_frame()
         self.make_sensors_frame()
-        
+
+
+    def on_set_input1(self, *args, **kwargs):
+        print("in on_set_input1")
+        # - pop up a small custom dialog
+        # - let user choose the input
+        # - set the block's input
+        # - destroy the dialog
+
+    def on_set_input2(self, *args, **kwargs):        
+        pass
 
     def make_actuator_frame(self):
         self.act_frame = ttk.Frame(self.notebook)#, width=400, height=280)
