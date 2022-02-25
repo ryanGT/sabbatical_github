@@ -84,6 +84,7 @@ from tkinter.messagebox import showinfo
 
 from add_block_dialog import add_block_dialog
 from place_block_dialog import place_block_dialog
+from input_chooser import input_chooser
 
 #from tkinter import simpledialog
 
@@ -136,7 +137,7 @@ class pybd_gui(tk.Tk):
         self.make_widgets()
 
         self.block_diagram = pybd.block_diagram()
-
+        self.bd = self.block_diagram# alias
 
     def make_label(self, text, root=None):
         if root is None:
@@ -483,7 +484,7 @@ class pybd_gui(tk.Tk):
         self.input2_var = tk.StringVar()
         self.input2_box = ttk.Entry(self.frame1, textvariable=self.input2_var)
         self.input2_box.grid(column=cur_col, row=6, sticky="NWE", pady=(0,5), **padx_opts)
-        self.set_intput2_btn = ttk.Button(self.frame1, text='Set Input 2', self.on_set_input2)
+        self.set_intput2_btn = ttk.Button(self.frame1, text='Set Input 2', command=self.on_set_input2)
         self.set_intput2_btn.grid(column=cur_col, row=7, pady=(2,5))
 
         self.input1_widgets = [self.input1_label, self.input1_box, self.set_intput1_btn]
@@ -516,8 +517,37 @@ class pybd_gui(tk.Tk):
         self.make_sensors_frame()
 
 
+    def check_block_selected(self, msg):
+        selected_indices = self.blocklistbox.curselection()
+        if not selected_indices:
+            showinfo(title='Information',
+                     message=msg)
+            return 0
+        # everything is fine:
+        return 1
+
+    def get_selected_block_name(self, msg):
+        if not self.check_block_selected(msg):
+            return None
+        else:
+            selected_indices = self.blocklistbox.curselection()
+            block_name = self.blocklistbox.get(selected_indices)
+            return block_name
+
+
     def on_set_input1(self, *args, **kwargs):
         print("in on_set_input1")
+        block_name = self.get_selected_block_name("you must select a block before setting its input(s)")
+        if not block_name:
+            return None
+        block = self.get_block_by_name(block_name)
+        input_dialog = input_chooser(block, parent=self, geometry='300x200')
+        input_dialog.grab_set()
+
+        #class input_chooser(my_toplevel_window):
+        #    def __init__(self, block, parent, title="Input Chooser Dialog", \
+        
+
         # - pop up a small custom dialog
         # - let user choose the input
         # - set the block's input

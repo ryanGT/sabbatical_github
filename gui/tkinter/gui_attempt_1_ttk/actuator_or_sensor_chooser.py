@@ -20,20 +20,6 @@ from tkinter_utils import my_toplevel_window
 import py_block_diagram as pybd
 
 
-def value_from_str(string_in):
-    try:
-        out = float(string_in)
-        out2 = int(out)
-        if abs(out2-out) < 1e-5:
-            # it is basically an integer
-            return out2
-        else:
-            return out
-    except:
-        # cannot be converted to float
-        return string_in
-        
-
     
 class actuator_or_sensor_chooser(my_toplevel_window):
     def __init__(self, parent, title="act or sensor adder dialog", \
@@ -187,7 +173,7 @@ class actuator_or_sensor_chooser(my_toplevel_window):
             entry_attr = "param%i_var" % j
             entry_var = getattr(self, entry_attr)
             value = entry_var.get()
-            value_out = value_from_str(value)
+            value_out = pybd.value_from_str(value)
             kwargs[param] = value_out
 
         return kwargs
