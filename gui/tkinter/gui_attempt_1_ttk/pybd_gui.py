@@ -1,9 +1,62 @@
+"""
+This is the main file in the tkinter gui.  The main class is
+`pybd_gui`.  The main gui building function is
+`pybd_gui.make_widgets`.  The main gui window has two columns and
+placement is handled by tkinter's `grid` function.  The first column
+of the main gui contains the main matplotlib graph canvas.  The other
+column has a tkinter notebook with several pages.
+
+The `pybd_gui` class also has a reference to is associate
+`block_diagram` model, which can be accessed as
+`pybd_gui.block_diagram` (`self.block_diagram)` and is aliased to
+`pybd_gui.bd` (`self.bd`).
+
+There are several helper gui's in this module.  Most of them derive
+from the utility top-level class `tkinter_utils.my_toplevel_window`
+which provides convienence functions for easily adding and griding
+widgets.  Tkinter widgets often have an associated string variable for
+getting and setting the values or contents of the widgets.
+`tkinter_utils.py` also includes helper functions for creating a widget
+and its string variable in one step based on a `basename` and having
+certain tail strings for the varialbe and widget (entrybox, listbox,
+combobox, ...).  `setattr` is used to assign the variable and widget
+to the gui dialog.
+
+The helper dialogs are:
+
+- `add_block_dialog.py`
+- `place_block_dialog.py`
+- `actuator_or_sensor_chooser.py`
+
+"""
+
 ############################################
 #
 # Next Steps:
 #
 # ----------------
 #
+# - generate code menu functions
+#     - set, save, and load templates for code generation
+# - view and edit block details
+#     - probably another page on the notebook
+#     - combobox to choose the block
+#     - labels and entry boxes that show or disapper
+#         - labels from from block.param_list
+#         - I already do this in the actuator/sensor dialog
+# - click on a block on the mpl graph canvas and find the nearest block
+# - add wire waypoints
+#     - probably an option under the place blocks gui
+#     - may need a show grid option
+#
+#############################################
+
+#iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+#
+# Issues:
+#
+#
+# Resovled:
 # - make the set input buttons work
 # - make the load csv method handle the new format with actuators and sensors
 #     - break the file into three chunks: actuators, sensors, and blocks
@@ -16,13 +69,20 @@
 #             - Kp and Kd for PD
 #             - amp and step time for a step input
 #             - you need some columns for key:value for param1, param2, ...
+# - create a place block dialog
+# - draw the block diagram
+# - selecting a block type and then selecting an input block messes up
+#   the current selection of the block type listbox
 #
-#
-#############################################
-
-#iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
-#
-# Issues:
+# - how do I handle cases with input(s) set when creating new blocks?
+#     - pass kwargs to the create block function?
+#         - I need to handle blocks with more than one input differently
+#             - input vs. input1
+#     - how do I make this work without marrying it to the gui?
+#         - but only the gui knows if an input was chosen
+#         - the gui can pass along chosen input name(s)
+#         - the create block function in pydb can handle
+#           input vs. input1 depending on block type
 #
 # - **how do I handle sensors and actuators so that plants can be
 #   created?**
@@ -44,24 +104,6 @@
 #               - self.actuator_param1_var
 #               - self.actuator_param1_entry
 #             - then a dict or list to map to the params for a particular sensor or actuator
-#
-# - make the set input buttons work
-#
-# Resovled:
-# - create a place block dialog
-# - draw the block diagram
-# - selecting a block type and then selecting an input block messes up
-#   the current selection of the block type listbox
-#
-# - how do I handle cases with input(s) set when creating new blocks?
-#     - pass kwargs to the create block function?
-#         - I need to handle blocks with more than one input differently
-#             - input vs. input1
-#     - how do I make this work without marrying it to the gui?
-#         - but only the gui knows if an input was chosen
-#         - the gui can pass along chosen input name(s)
-#         - the create block function in pydb can handle
-#           input vs. input1 depending on block type
 #  
 #iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
 
@@ -137,7 +179,10 @@ class pybd_gui(tk.Tk):
         self.make_widgets()
 
         self.block_diagram = pybd.block_diagram()
+        """This is the block_diagram model for the gui, which refers
+        to an instance of py_block_diagram.block_diagram"""
         self.bd = self.block_diagram# alias
+        """This is an alias for pybd_gui.block_diagram."""
 
     def make_label(self, text, root=None):
         if root is None:
