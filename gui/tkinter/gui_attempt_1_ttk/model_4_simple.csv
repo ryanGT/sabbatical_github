@@ -1,0 +1,12 @@
+actuators
+h_bridge,h_bridge_act,in1_pin:6,in2_pin:4,pwm_pin:9
+
+sensors
+encoder,encoder_sensor,pinB:11,interrupt_number:0
+
+blocks
+block_type,variable_name,label,arduino_class,input_block1_name,input_block2_name,width,height,placement_type,abs_x,abs_y,rel_block_name,rel_pos,rel_distance,xshift,yshift,param1,param2,param3,param4,param5
+step_input,U,$U(s)$,step_input,,,3,2,absolute,0.0,0.0,,,,,,on_time:0.1,amp:100,,,
+summing_junction,sum_junct,,summing_junction,U,,2,2,relative,,,U,right,4,0,0,,,,,
+PD_controller,D,PD,PD_control_block,sum_junct,,3,2,relative,,,sum_junct,right,4,0,0,Kp:1,Kd:0,,,
+plant,G,$G(s)$,plant,D,,3,2,relative,,,D,right,4,0,0,actuator_name:h_bridge_act,sensor_name:encoder_sensor,,,
