@@ -28,7 +28,7 @@ class add_block_dialog(my_toplevel_window):
         self.input2_block_name = None
         self.input3_block_name = None
         self.parent = parent
-        self.bd = self.parent.block_diagram
+        self.bd = self.parent.bd
         self.make_widgets()
 
 
@@ -165,7 +165,7 @@ class add_block_dialog(my_toplevel_window):
         block_type = self.get_selected_block_type()
         print("block_type: %s" % block_type)
         self.selected_block_type = block_type
-        suggested_name = self.parent.block_diagram.suggest_block_name(block_type)
+        suggested_name = self.parent.bd.suggest_block_name(block_type)
         self.block_name.set(suggested_name)
             
 
@@ -187,7 +187,7 @@ class add_block_dialog(my_toplevel_window):
         kwargs = {}
 
         # ultimately, input_block_names need to be converted to actual block instances
-        # - look up the block in parent.block_diagram
+        # - look up the block in parent.bd
         #
         # Approach:
         # - input_block_name, input2_block_name, and input3_block_name are attributes of this

@@ -8,8 +8,7 @@ column has a tkinter notebook with several pages.
 
 The `pybd_gui` class also has a reference to is associate
 `block_diagram` model, which can be accessed as
-`pybd_gui.block_diagram` (`self.block_diagram)` and is aliased to
-`pybd_gui.bd` (`self.bd`).
+`pybd_gui.bd` (`self.bd)`.
 
 There are several helper gui's in this module.  Most of them derive
 from the utility top-level class `tkinter_utils.my_toplevel_window`
@@ -36,8 +35,9 @@ The helper dialogs are:
 #
 # ----------------
 #
-# - generate code menu functions
-#     - set, save, and load templates for code generation
+# - why does the feedback wire on my summing junction look terrible?
+# - figure out how to zoom the block diagram sketch well
+#     - first full BD (model 5 simple) looks like crap
 # - view and edit block details
 #     - probably another page on the notebook
 #     - combobox to choose the block
@@ -57,6 +57,7 @@ The helper dialogs are:
 #
 #
 # Resovled:
+# - generate code menu functions
 # - make the set input buttons work
 # - make the load csv method handle the new format with actuators and sensors
 #     - break the file into three chunks: actuators, sensors, and blocks
@@ -126,7 +127,7 @@ from tkinter.messagebox import showinfo
 
 from add_block_dialog import add_block_dialog
 from place_block_dialog import place_block_dialog
-from input_chooser import input_chooser
+from input_chooser import input_chooser, input2_chooser
 
 #from tkinter import simpledialog
 
@@ -134,9 +135,22 @@ from actuator_or_sensor_chooser import actuator_chooser, sensor_chooser
 
 
 import py_block_diagram as pybd
+import os, txt_mixin
 
 pad_options = {'padx': 5, 'pady': 5}
 
+
+def dict_to_key_value_strings(mydict):
+    """Helper function for saving a dictionary to a text value by
+    converting it to key:value strings as a list"""
+    mylist = []
+    pat = "%s:%s"
+    for key, value in mydict.items():
+        val_str = str(value)
+        cur_str = pat % (key, val_str)
+        mylist.append(cur_str)
+
+    return mylist
 
 
 class pybd_gui(tk.Tk):
@@ -159,12 +173,19 @@ class pybd_gui(tk.Tk):
         self['menu'] = self.menubar
         self.menu_file = tk.Menu(self.menubar)
         self.menu_edit = tk.Menu(self.menubar)
+        self.menu_codegen = tk.Menu(self.menubar)        
         self.menubar.add_cascade(menu=self.menu_file, label='File')
         self.menubar.add_cascade(menu=self.menu_edit, label='Edit')
+        self.menubar.add_cascade(menu=self.menu_codegen, label='Code Generation')        
         self.menu_file.add_command(label='Save', command=self.on_save_menu)
         self.menu_file.add_command(label='Load', command=self.on_load_menu)        
         #menu_file.add_command(label='Open...', command=openFile)
-        self.menu_file.add_command(label='Close', command=self._quit)
+        self.menu_file.add_command(label='Quit', command=self._quit)
+        self.menu_codegen.add_command(label='Set Arduino Template File', command=self.set_arduino_template)
+        self.menu_codegen.add_command(label='Get Arduino Template File', command=self.get_arduino_template)
+        self.menu_codegen.add_command(label='Set Arduino Output Path', \
+                                      command=self.set_arduino_output_folder)
+        self.menu_codegen.add_command(label='Generate Arduino Code', command=self.arduino_codegen)                
 
         #self.bind("<Key>", self.key_pressed)
         self.bind('<Control-q>', self._quit)
@@ -178,12 +199,106 @@ class pybd_gui(tk.Tk):
         # configure the root window
         self.make_widgets()
 
-        self.block_diagram = pybd.block_diagram()
+        self.bd = pybd.block_diagram()
         """This is the block_diagram model for the gui, which refers
         to an instance of py_block_diagram.block_diagram"""
-        self.bd = self.block_diagram# alias
-        """This is an alias for pybd_gui.block_diagram."""
 
+        # codegen variables
+        self.arduino_template_path = ''
+        """String for the path to the Arduino codegen template file."""
+        self.arduino_output_folder = ''
+        """String for the path to the folder where auto-generated
+        Arduino code will be saved."""
+
+        # params for saving
+        self.param_list = ['arduino_template_path','arduino_output_folder']
+        """List of parameters to save to the configuration file as
+        'key:value' string pairs."""
+        self.params_path = "gui_params_pybd.txt"
+        """Path to the txt file used for saving gui parameters listed
+        in pybd_gui.param_list, such as
+        `pybd_gui.arduino_template_path`."""
+        self.load_params()
+
+
+    def load_params(self):
+        """Load parameters for the gui from the txt file specified in
+        `pybd_gui.params_path`.  The parameters are saved as key:value
+        strings."""
+        myfile = txt_mixin.txt_file_with_list(self.params_path)
+        mylist = myfile.list
+        mydict = pybd.break_string_pairs_to_dict(mylist)
+        for key, value in mydict.items():
+            setattr(self, key, value)
+            
+
+    def save_params(self):
+        """Save parameters from pybd_gui.param_list to a txt values as
+        key:value string pairs."""
+        mydict = self.build_save_params_dict()
+        my_string_list = dict_to_key_value_strings(mydict)
+        txt_mixin.dump(self.params_path, my_string_list)
+        
+        
+    def build_save_params_dict(self):
+        """Build a dictionary of parameters to save to a txt file so
+        that various things in the gui are preserved from session to
+        session.  The parameters are listed in pybd_gui.param_list."""
+        mydict = {}
+        for key in self.param_list:
+            value = str(getattr(self, key))
+            mydict[key] = value
+        return mydict
+
+
+    def set_arduino_output_folder(self, *args, **kwargs):
+        folder_path =  tk.filedialog.askdirectory()
+        if folder_path:
+            print("folder_path: %s" % folder_path)
+            self.arduino_output_folder = folder_path
+
+
+    def arduino_codegen(self, *args, **kwargs):
+        """Generate the Arduino code by using the block diagram's
+        `generate_arduino_code` function."""
+        print("in arduino_codegen function")
+        if not self.arduino_output_folder:
+            self.set_arduino_output_folder()
+        rest, output_name = os.path.split(self.arduino_output_folder)
+        print("rest = %s" % rest)
+        print("blocks: %s" % self.bd.block_name_list)
+        self.bd.generate_arduino_code(output_name, \
+                                      template_path=self.arduino_template_path, \
+                                      output_folder=rest, \
+                                      )
+        ## def generate_arduino_code(self, output_name, \
+        ##                           template_path, \
+        ##                           output_folder='', \
+        ##                           verbosity=0):
+
+
+    def set_arduino_template(self, *args, **kwargs):
+        """Use a file dialog to allow the user to set the path to the
+        Arduino template file that will be used in code generation."""
+        print("in set_arduino_template function")
+        filename = tk.filedialog.askopenfilename(title = "Select Arduino Template File",\
+                                                 filetypes = (("ino files","*.ino"),("all files","*.*")))
+        print (filename)
+        if filename:
+            self.arduino_template_path = filename
+
+
+
+    def get_arduino_template(self, *args, **kwargs):
+        """Show the current path to the Arduino codegen template file
+        on a showinfo dialog.  This just lets the use check the
+        variable path."""
+        print("in get_arduino_template function")
+        # self.arduino_template_path #<--- put me on a dialog showinfo
+        showinfo(title='Information',
+                message='Arduino template file path: %s' % self.arduino_template_path)
+
+        
     def make_label(self, text, root=None):
         if root is None:
             root = self
@@ -312,8 +427,8 @@ class pybd_gui(tk.Tk):
         print (filename)
         if filename:
             new_bd = pybd.load_model_from_csv(filename)
-            self.block_diagram = new_bd
-            self.block_list_var.set(self.block_diagram.block_name_list)
+            self.bd = new_bd
+            self.block_list_var.set(self.bd.block_name_list)
             
     
     def on_save_menu(self, *args, **kwargs):
@@ -322,23 +437,23 @@ class pybd_gui(tk.Tk):
                                                    filetypes = (("csv files","*.csv"),("all files","*.*")))
         print (filename)
         if filename:
-            self.block_diagram.save_model_to_csv(filename)
+            self.bd.save_model_to_csv(filename)
             
 
     def get_block_name_list(self):
-        #block_list = self.block_diagram._build_block_list()
-        mylist = self.block_diagram.block_name_list
+        #block_list = self.bd._build_block_list()
+        mylist = self.bd.block_name_list
         return mylist
 
 
     def get_block_by_name(self, block_name):
-        return self.block_diagram.get_block_by_name(block_name)
+        return self.bd.get_block_by_name(block_name)
 
     
     def append_block_to_dict(self, block_name, new_block):
-        self.block_diagram.append_block_to_dict(block_name, new_block)
+        self.bd.append_block_to_dict(block_name, new_block)
         # update listbox
-        self.block_list_var.set(self.block_diagram.block_name_list)
+        self.block_list_var.set(self.bd.block_name_list)
         
         
     def add_block(self, *args, **kwargs):
@@ -350,6 +465,8 @@ class pybd_gui(tk.Tk):
 
         
     def _quit(self, *args, **kwargs):
+        print("in _quit")
+        self.save_params()
         self.quit()     # stops mainloop
         self.destroy()  # this is necessary on Windows to prevent
                         # Fatal Python Error: PyEval_RestoreThread: NULL tstate
@@ -598,8 +715,14 @@ class pybd_gui(tk.Tk):
         # - set the block's input
         # - destroy the dialog
 
-    def on_set_input2(self, *args, **kwargs):        
-        pass
+    def on_set_input2(self, *args, **kwargs):
+        block_name = self.get_selected_block_name("you must select a block before setting its input(s)")
+        if not block_name:
+            return None
+        block = self.get_block_by_name(block_name)
+        input2_dialog = input2_chooser(block, parent=self, geometry='300x200')
+        input2_dialog.grab_set()
+
 
     def make_actuator_frame(self):
         self.act_frame = ttk.Frame(self.notebook)#, width=400, height=280)
@@ -623,11 +746,11 @@ class pybd_gui(tk.Tk):
 
 
     def refresh_actuator_names(self):
-        self.actuators_var.set(self.block_diagram.actuator_name_list)
+        self.actuators_var.set(self.bd.actuator_name_list)
 
 
     def refresh_sensor_names(self):
-        self.sensors_var.set(self.block_diagram.sensor_name_list)
+        self.sensors_var.set(self.bd.sensor_name_list)
         
         
 
@@ -669,16 +792,16 @@ class pybd_gui(tk.Tk):
     def on_draw_btn(self, *args, **kwargs):
         print("you pressed draw")
         self.ax.clear()
-        self.block_diagram.update_block_list()
-        block_list = self.block_diagram.block_list
+        self.bd.update_block_list()
+        block_list = self.bd.block_list
         print("block_list: %s" % block_list)
-        self.block_diagram.ax = self.ax
-        self.block_diagram.draw()
-        xlims = self.block_diagram.get_xlims()
-        ylims = self.block_diagram.get_ylims()
+        self.bd.ax = self.ax
+        self.bd.draw()
+        xlims = self.bd.get_xlims()
+        ylims = self.bd.get_ylims()
         self.ax.set_xlim(xlims)
         self.ax.set_ylim(ylims)
-        self.block_diagram.axis_off()        
+        self.bd.axis_off()        
         self.canvas.draw()
         
         

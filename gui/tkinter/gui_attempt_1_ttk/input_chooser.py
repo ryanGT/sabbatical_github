@@ -15,20 +15,21 @@ class input_chooser(my_toplevel_window):
     def __init__(self, block, parent, title="Input Chooser Dialog", \
                  geometry='300x200'):        
         super().__init__(parent, title=title, geometry=geometry)
-        self.bd = self.parent.block_diagram
+        self.bd = self.parent.bd
         self.columnconfigure(0, weight=4)
         self.block = block
+        self.block_name = self.block.variable_name
+        self.setfunc = self.block.set_input_block1
+        self.main_label_text = "Choose the input for block: %s" % self.block_name 
         self.make_widgets()
 
 
     def make_widgets(self):
         mycol = 0
-        block_name = self.block.variable_name
-        main_label = "Choose the input for block: %s" % block_name
-        self.make_label_and_grid_sw(main_label, 0, mycol)
+        self.make_label_and_grid_sw(self.main_label_text, 0, mycol)
         self.make_combo_and_var_grid_nw("input_chooser", 1, mycol)
         self.all_block_names = self.bd.block_name_list
-        myind = self.all_block_names.index(block_name)
+        myind = self.all_block_names.index(self.block_name)
         self.other_block_names = copy.copy(self.all_block_names)
         self.other_block_names.pop(myind)
         self.input_chooser_combobox['values'] =  self.other_block_names
@@ -44,9 +45,23 @@ class input_chooser(my_toplevel_window):
         input_name = self.input_chooser_var.get()
         print("input_name: %s" % input_name)
         input_block = self.bd.get_block_by_name(input_name)
-        self.block.set_input_block1(input_block)
+        self.setfunc(input_block)
         self.destroy()
         # - get name from combobox
         # - get the selected block by name
         # - call the set input method of self.block
         # - handle second input if applicable
+
+
+
+class input2_chooser(input_chooser):
+    def __init__(self, block, parent, title="Input 2 Chooser Dialog", \
+                 geometry='300x200'):        
+        my_toplevel_window.__init__(self, parent, title=title, geometry=geometry)
+        self.bd = self.parent.bd
+        self.columnconfigure(0, weight=4)
+        self.block = block
+        self.block_name = self.block.variable_name
+        self.setfunc = self.block.set_input_block2
+        self.main_label_text = "Choose input 2 for block: %s" % self.block_name 
+        self.make_widgets()

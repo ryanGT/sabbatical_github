@@ -1,0 +1,2 @@
+arduino_template_path:/Users/kraussry/sabbatical_github/arduino_oop_block_diagram/codegen/arduino_template1.ino
+arduino_output_folder:/Users/kraussry/sabbatical_github/gui/tkinter/gui_attempt_1_ttk/autogen1

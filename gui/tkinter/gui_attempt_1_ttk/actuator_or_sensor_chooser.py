@@ -25,7 +25,7 @@ class actuator_or_sensor_chooser(my_toplevel_window):
     def __init__(self, parent, title="act or sensor adder dialog", \
                  geometry='600x300', max_params=5):        
         super().__init__(parent, title=title, geometry=geometry)
-        self.bd = self.parent.block_diagram
+        self.bd = self.parent.bd
         self.columnconfigure(0, weight=4)
         self.max_params = max_params
         
@@ -135,7 +135,7 @@ class actuator_or_sensor_chooser(my_toplevel_window):
         #     - can I get the data types from defaults?
         msg = "cannot create actuators or sensors if self.parent doesn't have a block diagram"
         assert hasattr(self.parent, "block_diagram"), msg
-        assert self.parent.block_diagram is not None, msg
+        assert self.parent.bd is not None, msg
         param_list = self.get_params_list()
         
 
