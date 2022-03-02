@@ -39,9 +39,10 @@ import numpy as np
 from tkinter import ttk
 from tkinter.messagebox import showinfo
 
-import tkinter_utils
+import tkinter_utils, rwkos
 
-import os, txt_mixin
+import os, txt_mixin, glob, time
+import serial, serial_utils
 
 pad_options = {'padx': 5, 'pady': 5}
 
@@ -63,26 +64,27 @@ class tkinter_serial_gui(tk.Tk, tkinter_utils.abstract_window):
 
         self.options = {'padx': 5, 'pady': 5}
 
-        ## self.menubar = tk.Menu(self)
-        ## self['menu'] = self.menubar
-        ## self.menu_file = tk.Menu(self.menubar)
+        self.menubar = tk.Menu(self)
+        self['menu'] = self.menubar
+        self.menu_file = tk.Menu(self.menubar)
         ## self.menu_edit = tk.Menu(self.menubar)
         ## self.menu_codegen = tk.Menu(self.menubar)        
-        ## self.menubar.add_cascade(menu=self.menu_file, label='File')
+        self.menubar.add_cascade(menu=self.menu_file, label='File')
         ## self.menubar.add_cascade(menu=self.menu_edit, label='Edit')
         ## self.menubar.add_cascade(menu=self.menu_codegen, label='Code Generation')        
         ## self.menu_file.add_command(label='Save', command=self.on_save_menu)
         ## self.menu_file.add_command(label='Load', command=self.on_load_menu)        
         ## #menu_file.add_command(label='Open...', command=openFile)
-        ## self.menu_file.add_command(label='Quit', command=self._quit)
+        self.menu_file.add_command(label='Quit', command=self._quit)
         ## self.menu_codegen.add_command(label='Set Arduino Template File', command=self.set_arduino_template)
         ## self.menu_codegen.add_command(label='Get Arduino Template File', command=self.get_arduino_template)
         ## self.menu_codegen.add_command(label='Set Arduino Output Path', \
         ##                               command=self.set_arduino_output_folder)
         ## self.menu_codegen.add_command(label='Generate Arduino Code', command=self.arduino_codegen)                
 
-        ## #self.bind("<Key>", self.key_pressed)
-        ## self.bind('<Control-q>', self._quit)
+        self.bind("<Key>", self.key_pressed)
+        self.bind('<Control-q>', self._quit)
+        self.bind('<Command-q>', self._quit)        
         ## self.bind('<Control-s>', self.on_save_menu)
         ## self.bind('<Control-l>', self.on_load_menu)
         ## self.bind('<Control-a>', self.add_block)
@@ -94,9 +96,64 @@ class tkinter_serial_gui(tk.Tk, tkinter_utils.abstract_window):
         self.make_widgets()
 
 
-    ## def key_pressed(self, event):
-    ##     print("pressed:")
-    ##     print(repr(event.char))
+    def find_serial_port(self):
+        if rwkos.amiMac():
+            pat = "/dev/tty.usb*"
+        else:
+            print("you are out of luck (for now)")
+            return
+
+        matches = glob.glob(pat)
+        if len(matches) == 1:
+            self.portname = matches[0]
+            self.portname_var.set(self.portname)
+        elif len(matches) == 0:
+            print("did not find a match for %s" % pat)
+        else:
+            print("found more than one match for %s:\n %s" % (pat, matches))
+
+
+    def open_serial_port(self):
+        self.ser = serial_utils.serial_test(self.portname)
+        self.ser.open()
+        time.sleep(2)
+
+
+    def close_serial_port(self):
+        self.ser.close()
+
+
+    def read_serial(self, *args, **kwargs):
+        new_str = self.ser.read_all()
+        #old_str = self.receive_text_var.get()
+        #new_new_str = old_str + new_str
+        #self.receive_text_var.set(new_new_str)
+        self.receive_text.insert('end', new_str)
+        print("new_str:")
+        print(new_str)
+
+
+    def write_serial(self, *args, **kwargs):
+        mytext = self.send_text_var.get()
+        if mytext:
+            print("mytext: %s" % mytext)
+            self.ser.write_string(mytext)
+        time.sleep(0.5)
+        # think about intelligent reading
+        self.read_serial()
+        time.sleep(0.1)
+        self.read_serial()
+        
+
+    def startup(self):
+        self.find_serial_port()
+        self.open_serial_port()
+        self.read_serial()
+
+        
+    def key_pressed(self, event):
+        print("pressed:")
+        print(repr(event.char))
 
 
     ## def on_load_menu(self, *args, **kwargs):
@@ -119,6 +176,7 @@ class tkinter_serial_gui(tk.Tk, tkinter_utils.abstract_window):
     ##         self.bd.save_model_to_csv(filename)
     def _quit(self, *args, **kwargs):
         print("in _quit")
+        self.close_serial_port()
         #self.save_params()
         self.quit()     # stops mainloop
         self.destroy()  # this is necessary on Windows to prevent
@@ -137,9 +195,12 @@ class tkinter_serial_gui(tk.Tk, tkinter_utils.abstract_window):
         self.make_label_and_grid_sw("Send Text", 0, mycol)
         self.make_entry_and_var_grid_nw("send_text", 1,mycol, sticky='new')
         self.send_button = self.make_button_and_grid("Transmit", 2, mycol, \
-                                                     command=None, sticky='e')
+                                                     command=self.write_serial, sticky='e')
         self.make_label_and_grid_sw("Received Text", 3, mycol)
-        self.make_entry_and_var_grid_nw("receive_text", 4,mycol, sticky='news')
+        self.receive_text = self.make_text_box_and_grid_nw(4,mycol, width=50, height=10, \
+                                                           sticky='news')
+        self.read_button = self.make_button_and_grid("Force Read", 5, mycol, \
+                                                     command=self.read_serial, sticky='e')
 
 
         # column 1
@@ -198,4 +259,5 @@ class tkinter_serial_gui(tk.Tk, tkinter_utils.abstract_window):
         
 if __name__ == "__main__":
     app = tkinter_serial_gui()
+    app.startup()
     app.mainloop()
