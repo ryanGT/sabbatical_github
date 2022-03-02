@@ -28,8 +28,7 @@ int in2 = 4;
 
 #define sendPin A0
 #define receivePin A1
-#define spiprocessPin A2
-#define isrPin A3
+#define controlPin A2
 
 int analogPin = 0;
 int accel = 0;
@@ -108,15 +107,13 @@ void setup()
 
   pinMode(sendPin, OUTPUT);
   pinMode(receivePin, OUTPUT);
-  pinMode(spiprocessPin, OUTPUT);
-  pinMode(isrPin, OUTPUT);  
+  pinMode(controlPin, OUTPUT);  
   
     
 
   digitalWrite(receivePin, LOW);
   digitalWrite(sendPin, LOW);
-  digitalWrite(spiprocessPin, LOW);
-  digitalWrite(isrPin, LOW);  
+  digitalWrite(controlPin, LOW);  
 // encoder
   pinMode(encoderPinA, INPUT); 
   pinMode(encoderPinB, INPUT); 
@@ -238,6 +235,7 @@ void loop()
     }
     else if (inArray[0] == 3){
       // main control case
+      digitalWrite(controlPin, HIGH);  
       v_msb = inArray[1];
       v_lsb = inArray[2];
       v1 = reassemblebytes(v_msb,v_lsb);
@@ -246,6 +244,7 @@ void loop()
       enc_msb = getsecondbyte(encoder_count);
       outArray[0] = enc_msb;
       outArray[1] = enc_lsb;
+      digitalWrite(controlPin, LOW);  
     }
     else if (inArray[0] == 7){
       ISR_Happened = 0;
