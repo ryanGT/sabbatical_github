@@ -6,6 +6,7 @@
 
 #define encoderPinA 2
 #define squarewave_pin 12
+int timingPinA0=A0;
 byte inByte;
 
 // this is the code I am seeking to autogenerate:
@@ -60,6 +61,7 @@ void setup(){
    Serial.println("using rtblockdiagram library");
    pinMode(squarewave_pin, OUTPUT);
 
+   pinMode(timingPinA0, OUTPUT);
 
    //!// encoder pin on interrupt 0 (pin 2)
 
@@ -157,6 +159,7 @@ void loop(){
 
     //HB.send_command(motor_speed);
     // print data
+   digitalWrite(timingPinA0, HIGH);
     Serial.print(t_ms);
 
     //bdsysprintcode
@@ -192,6 +195,8 @@ void loop(){
 
     //print_comma_then_int(enc.get_reading());
     mynewline();
+
+    digitalWrite(timingPinA0, LOW);
 
     prev_t = t_sec;
     //PD.save_values(t_sec);

@@ -39,7 +39,7 @@ def mysat(vin):
 
 tim = Timer(1, freq=1000)
 tim.counter() # get counter value
-tim.freq(400) # 0.5 Hz
+tim.freq(500) # 0.5 Hz
 tim.callback(tick) 
 
 from ulab import numpy as np
@@ -71,7 +71,7 @@ for i in range(N):
     #pin_A15.on()
     while (isr_happened == 0):
         # wait for next interrupt
-        time.sleep_us(10)
+        time.sleep_us(100)
     #pin_A15.off()
 
     # square wave that toggles each time step
@@ -82,7 +82,6 @@ for i in range(N):
         isr_state = 1
         pin_B4.on()
 
-    pin_A15.on()
     pin_A14.on()
     # clear flag
     isr_happened = 0
@@ -116,19 +115,18 @@ for i in range(N):
     i2c_send_array[4] = i_lsb
     i2c.writeto(MOTOR_ADDRESS, i2c_send_array)
     #time.sleep_us(50)
+    pin_A13.off()
     #i2c_recv_list.append(cur_resp)
 
     #data[i,:] = [nISR, enc_i, v_out]
     #data[i,0] = cur_resp[0]
     #data[i,1] = cur_resp[1]
-    #pin_A0.on()
+    pin_A0.on()
     ## data[i,0] = enc
     ## data[i,1] = v_i
     ## data[i,2] = n_echo
     data[i,:] = cur_resp
-    #pin_A0.off()
-    pin_A13.off()
-    pin_A15.off()
+    pin_A0.off()
 
 t1 = time.ticks_us()
 loop_time = t1 - t0

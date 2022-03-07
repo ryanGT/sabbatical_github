@@ -17,12 +17,23 @@ data = mystrarray.astype(int)
 enc = data[:,0]*256+data[:,1]
 n_echo = data[:,2]*256+data[:,3]
 delta_n = n_echo[1:] - n_echo[0:-1]
+dt_micros = data[:,4]*256+data[:,5]
 
 plt.figure(1)
+plt.clf()
 plt.plot(n_echo)
 
 plt.figure(2)
+plt.clf()
 plt.plot(delta_n)
+
+plt.figure(3)
+#plt.clf()
+plt.plot(dt_micros[2:])
+
+
+print("dt_max: %0.4g" % dt_micros.max())
+print("dt_min: %0.4g" % (dt_micros[2:]).min())
 
 #data[i,0] = enc
 #data[i,1] = e

@@ -72,16 +72,19 @@ class tkinter_serial_gui(tk.Tk, tkinter_utils.abstract_window):
         self['menu'] = self.menubar
         self.menu_file = tk.Menu(self.menubar)
         self.menu_serial = tk.Menu(self.menubar)
+        self.menu_plot = tk.Menu(self.menubar)        
         ## self.menu_codegen = tk.Menu(self.menubar)        
         self.menubar.add_cascade(menu=self.menu_file, label='File')
         self.menubar.add_cascade(menu=self.menu_serial, label='Serial')
+        self.menubar.add_cascade(menu=self.menu_plot, label='Plot')        
         ## self.menubar.add_cascade(menu=self.menu_codegen, label='Code Generation')        
         ## self.menu_file.add_command(label='Save', command=self.on_save_menu)
         ## self.menu_file.add_command(label='Load', command=self.on_load_menu)        
         ## #menu_file.add_command(label='Open...', command=openFile)
         self.menu_file.add_command(label='Quit', command=self._quit)
         self.menu_serial.add_command(label='Read (force read)', command=self.read_serial)
-        self.menu_serial.add_command(label='Transmit (write)', command=self.write_serial)        
+        self.menu_serial.add_command(label='Transmit (write)', command=self.write_serial)
+        self.menu_plot.add_command(label='dt Plot', command=self.plot_dt)                
         ## self.menu_codegen.add_command(label='Set Arduino Template File', command=self.set_arduino_template)
         ## self.menu_codegen.add_command(label='Get Arduino Template File', command=self.get_arduino_template)
         ## self.menu_codegen.add_command(label='Set Arduino Output Path', \
@@ -123,7 +126,7 @@ class tkinter_serial_gui(tk.Tk, tkinter_utils.abstract_window):
 
     def open_serial_port(self):
         if self.portname:
-            self.ser = serial_utils.serial_test(self.portname)
+            self.ser = serial_utils.serial_test(self.portname, baudrate=230400)
             self.ser.open()
             time.sleep(2)
             self.open = True
@@ -278,6 +281,24 @@ class tkinter_serial_gui(tk.Tk, tkinter_utils.abstract_window):
         self._plot()
 
 
+    def plot_dt(self, *args, **kwargs):
+        x_col_choice = self.x_axis_var.get()
+        print("x_col_choice = %s" % x_col_choice)
+        if not x_col_choice:
+            print("must choose the X column before plotting dt")
+            return
+
+        x_col = int(x_col_choice)
+        print("x_col: %i" % x_col)
+        myx = self.array[:,x_col]
+        dt = myx[1:] - myx[0:-1]
+        self.ax.clear()
+        self.ax.plot(dt)
+        self.ax.set_ylim([dt.min()*0.9, dt.max()*1.1])
+        self.ax.set_xlim([0, len(dt)])
+        self.canvas.draw()
+
+        
     def _plot(self, *args, **kwargs):
         x_col_choice = self.x_axis_var.get()
         print("x_col_choice = %s" % x_col_choice)
