@@ -434,6 +434,11 @@ void pinISR()
   dt_msb = getsecondbyte(dt_micros);
   dt_lsb = (byte)dt_micros;
   command_motor(v1);
+
+  enc_lsb = (byte)encoder_count;
+  enc_msb = getsecondbyte(encoder_count);
+  outArray[0] = enc_msb;
+  outArray[1] = enc_lsb;
   outArray[2] = n_msb;
   outArray[3] = n_lsb;
   outArray[4] = dt_msb;
