@@ -7,7 +7,7 @@ byte out_buf [100];
 volatile byte pos;
 volatile boolean process_it;
 
-byte n_lsb, n_msb;
+byte n_lsb, n_msb, enc_lsb, enc_msb, v_lsb, v_msb, dt_msb, dt_lsb;
 
 // Todo:
 // - add command motor
@@ -16,7 +16,7 @@ byte n_lsb, n_msb;
 #define encoderPinA 2
 #define encoderPinB 5
 
-#define in_bytes 3
+#define in_bytes 5
 #define out_bytes 6
 byte inArray[in_bytes];
 byte outArray[out_bytes];
@@ -29,7 +29,7 @@ int in2 = 4;
 
 #define sendPin A0
 #define receivePin A1
-#define spiprocessPin A2
+#define controlPin A2
 #define isrPin A3
 
 int analogPin = 0;
@@ -60,6 +60,11 @@ byte num_received;
 int prevenc;
 int posbreak;
 int negbreak;
+
+unsigned long t;
+unsigned long prev_t;
+int dt_micros;
+
 
 void command_motor(int speed){
 
@@ -109,14 +114,14 @@ void setup()
 
   pinMode(sendPin, OUTPUT);
   pinMode(receivePin, OUTPUT);
-  pinMode(spiprocessPin, OUTPUT);
+  pinMode(controlPin, OUTPUT);
   pinMode(isrPin, OUTPUT);  
   
     
 
   digitalWrite(receivePin, LOW);
   digitalWrite(sendPin, LOW);
-  digitalWrite(spiprocessPin, LOW);
+  digitalWrite(controlPin, LOW);
   digitalWrite(isrPin, LOW);  
 // encoder
   pinMode(encoderPinA, INPUT); 
@@ -232,6 +237,8 @@ void loop()
 
   if ( new_data ){
     new_data = false;
+    // i2c read receives new data to start and end tests
+    
     //digitalWrite(i2cprocessPin, HIGH);  
 
     //Serial.println("new data");
@@ -278,19 +285,25 @@ void loop()
 
   if (process_it){
     process_it = false;
-    digitalWrite(spiprocessPin, HIGH);
+    digitalWrite(controlPin, HIGH);
     byte v_msb, v_lsb;
+    // we do not receive a command byte
+    // like in the micropython i2c only version
+    // - spi is only used to send the control case
+    //   bytes from RPi to the Arduino
     v_msb = buf[0];
     v_lsb = buf[1];
     v1 = reassemblebytes(v_msb,v_lsb);
-    print_int_with_comma(nISR);
+    n_msb = buf[2];
+    n_lsb = buf[3];
+    //print_int_with_comma(nISR);
     //Serial.println(v1);
-    print_int_with_comma(v_msb);
-    print_int_with_comma(v_lsb);
-    print_int_with_newline(v1);
+    //print_int_with_comma(v_msb);
+    //print_int_with_comma(v_lsb);
+    //print_int_with_newline(v1);
     //mynewline();
-    n_lsb = (byte)nISR;
-    n_msb = getsecondbyte(nISR);
+    //n_lsb = (byte)nISR;
+    //n_msb = getsecondbyte(nISR);
     
     out_buf[0] = n_msb;
     out_buf[1] = n_lsb;
@@ -299,34 +312,34 @@ void loop()
     buf[0] = 0;
     buf[1] = 0;
     //command_motor(v1);
-    digitalWrite(spiprocessPin, LOW);
+    digitalWrite(controlPin, LOW);
   }
   
 
-  unsigned char e_lsb, e_msb;  
+  /* unsigned char e_lsb, e_msb;   */
   
-  if (ISR_Happened > 0){
-    ISR_Happened = 0;
+  /* if (ISR_Happened > 0){ */
+  /*   ISR_Happened = 0; */
 
-    n_lsb = (unsigned char)nISR;
-    n_msb = getsecondbyte(nISR);
+  /*   n_lsb = (unsigned char)nISR; */
+  /*   n_msb = getsecondbyte(nISR); */
 
-    outArray[0] = n_msb;
-    outArray[1] = n_lsb;
+  /*   outArray[0] = n_msb; */
+  /*   outArray[1] = n_lsb; */
 
-    e_lsb = (unsigned char)encoder_count;
-    e_msb = getsecondbyte(encoder_count);
+  /*   e_lsb = (unsigned char)encoder_count; */
+  /*   e_msb = getsecondbyte(encoder_count); */
     
-    outArray[2] = e_msb;
-    outArray[3] = e_lsb;
+  /*   outArray[2] = e_msb; */
+  /*   outArray[3] = e_lsb; */
 
-    //if (mypause == 0){
-    if (false){
-      print_int_with_comma(n_msb);
-      print_int_with_comma(n_lsb);
-      print_int_with_comma(e_msb);
-      print_int_with_newline(e_lsb);    
-    }
+  /*   //if (mypause == 0){ */
+  /*   if (false){ */
+  /*     print_int_with_comma(n_msb); */
+  /*     print_int_with_comma(n_lsb); */
+  /*     print_int_with_comma(e_msb); */
+  /*     print_int_with_newline(e_lsb);     */
+  /*   } */
       
     //digitalWrite(sendPin, LOW);
   }
@@ -382,27 +395,54 @@ void sendData(){
 
 
 
+/* void pinISR() */
+/* {      */
+/*   //digitalWrite(isrPin, HIGH); */
+/*   //Serial.println("pinISR"); */
+/*   ISR_Happened = 1; */
+/*   if (mypause == 0){ */
+/*     nISR++; */
+/*   } */
+/*   if (ISR_state == 0){ */
+/*     ISR_state = 1; */
+/*   } */
+/*   else{ */
+/*     ISR_state = 0; */
+/*   } */
+/*   digitalWrite(isrPin, ISR_state); */
+/*   //analogWrite(pwmA, v1); */
+/*   //v_out = v1*v1; */
+/*   command_motor(v1); */
+/*   //accel = analogRead(analogPin); */
+/*   //digitalWrite(isrPin, LOW); */
+/* } */
+
 void pinISR()
 {     
-  //digitalWrite(isrPin, HIGH);
+  digitalWrite(isrPin, HIGH);
+  prev_t = t;
+  t = micros();
+  dt_micros = t - prev_t;
+  
   //Serial.println("pinISR");
   ISR_Happened = 1;
   if (mypause == 0){
     nISR++;
   }
-  if (ISR_state == 0){
-    ISR_state = 1;
-  }
-  else{
-    ISR_state = 0;
-  }
-  digitalWrite(isrPin, ISR_state);
   //analogWrite(pwmA, v1);
   //v_out = v1*v1;
+  dt_msb = getsecondbyte(dt_micros);
+  dt_lsb = (byte)dt_micros;
   command_motor(v1);
+  outArray[2] = n_msb;
+  outArray[3] = n_lsb;
+  outArray[4] = dt_msb;
+  outArray[5] = dt_lsb;
   //accel = analogRead(analogPin);
-  //digitalWrite(isrPin, LOW);
+  digitalWrite(isrPin, LOW);
 }
+
+
 
 ISR (SPI_STC_vect)
 {
@@ -416,7 +456,7 @@ byte c = SPDR;  // grab byte from SPI Data Register
     //SPI.transfer(out_buf[pos]);
     pos++;
     // example: newline means time to process buffer
-    if (pos > 2)
+    if (pos > 4)//does this need to be 4 or 5, or is 2 still ok?
       process_it = true;
 
     }  // end of room available
