@@ -34,8 +34,8 @@ int main(int argc, char *argv[])
   gpioSetMode(pin2, PI_OUTPUT);
 
   signal(SIGALRM, alarmWakeup);   
-  //ualarm(2000, 2000);//500 Hz (2ms)
-  ualarm(4000, 4000);//250 Hz (4ms)
+  ualarm(2000, 2000);//500 Hz (2ms)
+  //ualarm(4000, 4000);//250 Hz (4ms)
 
 
   while(1)// change to for loop so terminate happens
