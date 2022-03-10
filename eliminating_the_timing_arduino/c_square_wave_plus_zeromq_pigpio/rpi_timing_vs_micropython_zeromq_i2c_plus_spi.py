@@ -36,11 +36,19 @@ if not TA:
 
 import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BCM)
-LED = 17
-ledState = False
-GPIO.setup(LED,GPIO.OUT)
 
-ledState = 0
+isr_state = False
+sw_pin = 27
+#p2 = 22
+p3 = 17
+p4 = 22
+
+pin_list = [sw_pin, p3, p4]
+for pin in pin_list:
+    GPIO.setup(pin,GPIO.OUT)
+    GPIO.output(pin, 0)
+    
+isr_state = 0
 
 
 
@@ -78,7 +86,7 @@ h_spi = pi.spi_open(0, 200000)
 # In[168]:
 
 
-N = 500
+N = 1000
 
 check_array = np.zeros(1000)
 j = 0
@@ -103,7 +111,7 @@ if TA:
 #time.sleep(0.001)
 
 kp = 3
-kd = 1
+kd = 0.1
 
 spi_list = []
 
@@ -128,13 +136,18 @@ else:
     prev_check = myfunc()
 
 
+isr_state = False
 
 for i in range(N):
     check = myfunc()
     while (check == prev_check):
         check = myfunc()
-        
-    GPIO.output(LED, GPIO.HIGH)
+
+    isr_state = not isr_state
+    GPIO.output(sw_pin, isr_state)
+
+
+    GPIO.output(p3, GPIO.HIGH)
     num_read[i] = check
     #num_checks[i] = n
     #time.sleep(0.0001)
@@ -166,6 +179,7 @@ for i in range(N):
     i_lsb  = i % 256
     #senddata = [30,msb,lsb]
     #senddata = [17,81]
+    GPIO.output(p4, GPIO.HIGH)    
     spi_data = [msb, lsb, i_msb, i_lsb]
     
     time.sleep(0.0001)
@@ -182,7 +196,8 @@ for i in range(N):
     #for i in range(100):
     #    a = 2*i
     prev_check = check
-    GPIO.output(LED, GPIO.LOW)    
+    GPIO.output(p4, GPIO.LOW)   
+    GPIO.output(p3, GPIO.LOW)    
 
 t1 = time.time()
 loop_time = t1-t0
@@ -251,27 +266,21 @@ i
 
 # In[8]:
 
-n_motor = responses[:,1] + responses[:,0]*256
-if np.abs(n_motor[0]) > 10:
-    n_motor[0] = 0
-#n_diff_motor = n_motor[1:] - n_motor[0:-1]
-n_diff_motor_v_expected = n_expected - n_motor
-enc = responses[:,3] + responses[:,2]*256
-n_diff_motor_self = n_motor[1:] - n_motor[0:-1]
-
-data = np.column_stack([n_motor, u_vect, error_vect, v_sent, enc])
-labels = ['n_motor','u','e','v_sent','enc']
+enc = responses[:,0]*256 + responses[:,1]
+n_echo = responses[:,2]*256 + responses[:,3]
+dn = n_echo[1:] - n_echo[0:-1]
 
 plt.figure(1)
-plt.plot(n_motor, u_vect)
-plt.plot(n_motor, v_sent)
-plt.plot(n_motor, enc_vect)
-
+plt.plot(u_vect)
+plt.plot(v_sent)
+plt.plot(enc)
 
 plt.figure(2)
-plt.plot(ndiff)
-plt.plot(n_diff_motor_self)
-plt.plot(n_diff_motor_v_expected)
+plt.plot(n_echo)
+
+plt.figure(3)
+plt.plot(dn)
+
 
 pi.i2c_write_byte(m_ino, 2)#end test
 
