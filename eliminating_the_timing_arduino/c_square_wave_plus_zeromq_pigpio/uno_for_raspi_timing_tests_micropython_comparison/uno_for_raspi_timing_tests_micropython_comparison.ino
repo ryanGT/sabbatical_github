@@ -252,6 +252,10 @@ void loop()
       outArray[1] = 0;
       outArray[2] = 0;
       outArray[3] = 0;
+      outArray[4] = 0;
+      outArray[5] = 0;
+      n_msb = 0;
+      n_lsb = 0;
       
       mypause = 1;//wait until first ISR read from RPi to increment the ISR n counter
       TCNT2  = 0;//reset timer count to sync both Arduinos
@@ -300,8 +304,10 @@ void loop()
     //Serial.println(v1);
     //print_int_with_comma(v_msb);
     //print_int_with_comma(v_lsb);
+    //print_int_with_comma(n_msb);
+    //print_int_with_comma(n_lsb);
     //print_int_with_newline(v1);
-    //mynewline();
+    mynewline();
     //n_lsb = (byte)nISR;
     //n_msb = getsecondbyte(nISR);
     
@@ -439,6 +445,7 @@ void pinISR()
   enc_msb = getsecondbyte(encoder_count);
   outArray[0] = enc_msb;
   outArray[1] = enc_lsb;
+
   outArray[2] = n_msb;
   outArray[3] = n_lsb;
   outArray[4] = dt_msb;
@@ -461,9 +468,8 @@ byte c = SPDR;  // grab byte from SPI Data Register
     //SPI.transfer(out_buf[pos]);
     pos++;
     // example: newline means time to process buffer
-    if (pos > 4)//does this need to be 4 or 5, or is 2 still ok?
+    if (pos > 3)//we are reading 4 bytes, (buf[0], buf[1], buf[2], buf[3]), process after buf[3] received
       process_it = true;
-
     }  // end of room available
   digitalWrite(receivePin, LOW); 
 }  // end of interrupt routine SPI_STC_vect

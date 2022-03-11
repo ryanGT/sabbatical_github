@@ -51,12 +51,12 @@ void loop()
     outArray[1] = myArray[1];
     digitalWrite(loopPin, LOW);    
 
-    Serial.print("first byte\n");
-    Serial.print(myArray[0]);
-    Serial.print("\n");
-    Serial.print("second byte\n");
-    Serial.print(myArray[1]);
-    Serial.print("\n");
+    //Serial.print("first byte\n");
+    //Serial.print(myArray[0]);
+    //Serial.print("\n");
+    //Serial.print("second byte\n");
+    //Serial.print(myArray[1]);
+    //Serial.print("\n");
   }
     /* Serial.print("third byte\n"); */
     /* Serial.print(myArray[2]); */
