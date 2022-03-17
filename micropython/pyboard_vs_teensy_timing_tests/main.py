@@ -27,13 +27,13 @@ elif case == 1:
     from machine import Timer
     from machine import Pin
 
-    sw_pin = Pin(14, mode=Pin.OUT)
+    sw_pin = Pin(20, mode=Pin.OUT)
     led = Pin(13, mode=Pin.OUT) # enable GP16 as output to drive the SW_PIN
     led.off()
 
-    p2 = Pin(15, mode=Pin.OUT)
-    p3 = Pin(16, mode=Pin.OUT)
-    p4 = Pin(17, mode=Pin.OUT)
+    p2 = Pin(21, mode=Pin.OUT)
+    p3 = Pin(22, mode=Pin.OUT)
+    p4 = Pin(23, mode=Pin.OUT)
 
 
 
