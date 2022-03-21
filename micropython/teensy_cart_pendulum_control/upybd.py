@@ -100,8 +100,31 @@ class i2c_sensor(block):
     find_output method."""
     def find_output(self, i):
         raise NotImplmentedError()
-    
 
+
+
+class int_constant_block(block):
+    """In order to save memory, a constan in micropython will not have
+    an ouput vector."""
+    def __init__(self, value=100):
+        self.value = value
+
+
+
+    def init_vectors(self, N=1000):
+        """Do nothing; create no vectors"""
+        pass
+
+
+    def find_output(self, i):
+        """There is nothing to do, we already know the output"""
+        return self.value
+
+
+    def read_output(self, i):
+        return self.value
+    
+    
 class pulse_input(block):
     def __init__(self, amp=100, on_ind=10, off_ind=200):
         self.amp = amp
@@ -119,13 +142,50 @@ class pulse_input(block):
 
 
 
+class saturation_block(block):
+    def __init__(self, mymax=255):
+        self.mymax = mymax
+
+
+    def find_output(self, i):
+        raw_in = self.input_block1.read_output(i)
+        if raw_in > self.mymax:
+            cur_out = self.mymax
+        elif raw_in < -self.mymax:
+            cur_out = -self.mymax
+        else:
+            cur_out = raw_in
+        self.output_vector[i] = cur_out
+        return self.output_vector[i]
+        
+
 class block_with_two_inputs(block):
     def set_input_block2(self, block):
         self.input_block2 = block
 
 
 
-class summing_junction(block_with_two_inputs):
+class addition_block(block_with_two_inputs):
+    def find_output(self, i):
+        output_i = self.input_block1.read_output(i) + self.input_block2.read_output(i)
+        self.output_vector[i] = output_i
+        return self.output_vector[i]
+
+
+class subtraction_block(block_with_two_inputs):
+    def find_output(self, i):
+        output_i = self.input_block1.read_output(i) - self.input_block2.read_output(i)
+        self.output_vector[i] = output_i        
+        return self.output_vector[i]
+
+
+class summing_junction(subtraction_block):
+    """The only real differences between an subtraction block and a
+    summing_junction is that they look different on the block diagram.
+    A summing junction generally has a feedback wire and an subtraction
+    block has both inputs coming from the left.  So, since he
+    micropython version of this libray doesn't worry about drawing the
+    block diagram, there is no difference here."""
     pass
 
 
