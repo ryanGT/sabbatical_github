@@ -37,10 +37,10 @@ float t_ms, t_sec, prev_t, dt;
 
 bool new_data;
 
-#define sendPin A0
-#define receivePin A1
-#define controlPin A2
-#define isrPin A3
+#define sendPin A8
+#define receivePin A9
+#define controlPin A10
+#define isrPin A11
 
 
 const uint8_t SensorCount = 7;//<---
@@ -253,6 +253,7 @@ void pinISR()
   if (inArray[0] == 3){
     // - process the data if it is there
     // - probably need to send [3,0,0,0,0] to keep the motors stopped, just to be safe
+    digitalWrite(controlPin, HIGH);
     n_msb = inArray[1];
     n_lsb = inArray[2];
     v1_msb = inArray[3];
@@ -268,6 +269,7 @@ void pinISR()
     dt_micro_msb = getsecondbyte(dt_micro);
     outArray[6] = dt_micro_msb;
     outArray[7] = dt_micro_msb;
+    digitalWrite(controlPin, LOW);    
   }
   set_speeds(v1, v2);
   //analogWrite(pwmA, v1);

@@ -156,6 +156,8 @@ class add_block_dialog(my_toplevel_window):
 
 
     def on_block_type_selected(self, *args):
+        """This is the method that is called when the user chooses a
+        specific class for the block that is being added"""
         selection = self.blockchoice.curselection()
         print("block type selection:")
         print(selection)
@@ -245,6 +247,8 @@ class add_block_dialog(my_toplevel_window):
         self.sensor_names = self.bd.sensor_name_list
         N_act = len(self.actuator_names)
         N_sense = len(self.sensor_names)
+        # - can I warn if there are no actuators and filter certain plants out of the list?
+        # - how do you handle multiple sensors?
         if N_act*N_sense == 0:
             msg = "You cannot create a plant until an actuator and a sensor have been defined."
             showinfo(title='Information',
@@ -255,6 +259,10 @@ class add_block_dialog(my_toplevel_window):
 
 
     def category_selected(self, event):
+        """This is one of the main methods.  When the user chooses the
+        type of block (plant, input, controller, ...), this method
+        populates the block_choice_list box with corresponding class
+        names."""
         chosen_cat = self.selected_category.get()
         print("category_selected: %s" % chosen_cat)
         new_list = pybd.block_category_dict[chosen_cat]

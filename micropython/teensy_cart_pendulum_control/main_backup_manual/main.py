@@ -18,9 +18,12 @@ from machine import Timer
 from machine import Pin
 
 sw_pin = Pin(40, mode=Pin.OUT)
-p2 = Pin(33, mode=Pin.OUT)
-p3 = Pin(34, mode=Pin.OUT)
-p4 = Pin(35, mode=Pin.OUT)
+led = Pin(13, mode=Pin.OUT) # enable GP16 as output to drive the SW_PIN
+led.off()
+
+p2 = Pin(21, mode=Pin.OUT)
+p3 = Pin(22, mode=Pin.OUT)
+p4 = Pin(23, mode=Pin.OUT)
 
 
 isr_state = 0 
@@ -60,14 +63,36 @@ uno_address = 0x08
 from ulab import numpy as np
 
 import upybd as pybd
+# create blocks
+u = pybd.pulse_input(amp=200, on_ind=10, off_ind=200)
+line_sense = pybd.i2c_sensor()
+encoder = pybd.i2c_sensor()
+v_nom = pybd.constant_input(amp=0)
+add1 = pybd.addition_block()
+sub1 = pybd.subtraction_block()
+G = pybd.cart_pendulum_upy(line_sense, encoder, i2c, \
+                           send_address=mega_address, \
+                           read_address1=mega_address, \
+                           read_address2=uno_address)
+# open-loop pulse test in a straightline (but with no sensor to drive
+# straight)
+add1.set_input_block1(v_nom)
+add1.set_input_block2(u)
 
-# sysprecode
+sub1.set_input_block1(v_nom)
+sub1.set_input_block2(u)
 
-# blockinitcode
+
+G.set_input_block1(add1)
+G.set_input_block2(sub1)
 
 
-# make input connections here:
-# blocksecondaryinitcode
+u.init_vectors(N)
+line_sense.init_vectors(N)
+encoder.init_vectors(N)
+G.init_vectors(N)
+add1.init_vectors(N)
+sub1.init_vectors(N)
 
 
 
@@ -126,18 +151,14 @@ for i in range(N):
     # clear flag
     isr_happened = 0
 
-    # pythonloopcode
-
-    p4.on()
-    # pythonsecondaryloopcode
-
+    u.find_output(i)
+    add1.find_output(i)
+    sub1.find_output(i)
+    G.send_commands(i)
+    G.find_output(i)
     
-    p4.off()
     p3.off()
 
-
-
-# system post loop code:
 
 t1 = time.ticks_us()
 loop_time = t1 - t0
@@ -150,10 +171,6 @@ G.stop_test()
 
 tim.deinit()
 
-
-# plottingcode
-
-# printingcode
 
 ## for row in data:
 ##     #print("%i, %i, %i" % (row[0],row[1],row[2]))

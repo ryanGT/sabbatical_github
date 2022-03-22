@@ -18,9 +18,12 @@ from machine import Timer
 from machine import Pin
 
 sw_pin = Pin(40, mode=Pin.OUT)
-p2 = Pin(33, mode=Pin.OUT)
-p3 = Pin(34, mode=Pin.OUT)
-p4 = Pin(35, mode=Pin.OUT)
+led = Pin(13, mode=Pin.OUT) # enable GP16 as output to drive the SW_PIN
+led.off()
+
+p2 = Pin(21, mode=Pin.OUT)
+p3 = Pin(22, mode=Pin.OUT)
+p4 = Pin(23, mode=Pin.OUT)
 
 
 isr_state = 0
@@ -70,43 +73,27 @@ prev_check = -1
 # blockinitcode
 line_sense = pybd.i2c_sensor()
 encoder = pybd.i2c_sensor()
-U_line_center = pybd.int_constant_block(value=3500)
-sum1_block = pybd.summing_junction()
-P_block = pybd.P_controller(Kp=0.1)
-sat_block = pybd.saturation_block(mymax=200)
+u_pulse_block = pybd.pulse_input(on_index=50, off_index=250, amp=100)
 G = pybd.cart_pendulum_upy(sensor1=line_sense, sensor2=encoder, send_address=7, read_address1=7, read_address2=8 ,i2c=i2c)
-v_nom_block = pybd.int_constant_block(value=200)
+v_nom_block = pybd.int_constant_block(value=0)
 add_block1 = pybd.addition_block()
 subtract_block1 = pybd.subtraction_block()
-satP = pybd.saturation_block(mymax=400)
-satN = pybd.saturation_block(mymax=400)
 
 
 
 # make input connections here:
 # blocksecondaryinitcode
-U_line_center.init_vectors(N)
-sum1_block.input_block1 = U_line_center
-sum1_block.input_block2 = line_sense
-sum1_block.init_vectors(N)
-P_block.set_input_block1(sum1_block)
-P_block.init_vectors(N)
-sat_block.set_input_block1(P_block)
-sat_block.init_vectors(N)
-G.set_input_block1(satP)
-G.set_input_block2(satN)
+u_pulse_block.init_vectors(N)
+G.set_input_block1(add_block1)
+G.set_input_block2(subtract_block1)
 G.init_vectors(N)
 v_nom_block.init_vectors(N)
 add_block1.set_input_block1(v_nom_block)
-add_block1.set_input_block2(sat_block)
+add_block1.set_input_block2(u_pulse_block)
 add_block1.init_vectors(N)
 subtract_block1.set_input_block1(v_nom_block)
-subtract_block1.set_input_block2(sat_block)
+subtract_block1.set_input_block2(u_pulse_block)
 subtract_block1.init_vectors(N)
-satP.set_input_block1(add_block1)
-satP.init_vectors(N)
-satN.set_input_block1(subtract_block1)
-satN.init_vectors(N)
 
 
 
@@ -167,25 +154,14 @@ for i in range(N):
     isr_happened = 0
 
     # pythonloopcode
-    G.find_output(i)
-    U_line_center.find_output(i)
-    sum1_block.find_output(i)
-    P_block.find_output(i)
-    sat_block.find_output(i)
+    u_pulse_block.find_output(i)
     v_nom_block.find_output(i)
     add_block1.find_output(i)
     subtract_block1.find_output(i)
-    satP.find_output(i)
-    satN.find_output(i)
-
-
-    p4.on()
-    # pythonsecondaryloopcode
     G.send_commands(i)
+    G.find_output(i)
 
 
-
-    p4.off()
     p3.off()
 
 
@@ -208,7 +184,7 @@ tim.deinit()
 
 
 # printingcode
-print_blocks = [U_line_center, P_block, sat_block, satP, satN, line_sense]
+print_blocks = [u_pulse_block, add_block1, subtract_block1, line_sense]
 for i in range(N):
     rowstr = str(i)
     for block in print_blocks:

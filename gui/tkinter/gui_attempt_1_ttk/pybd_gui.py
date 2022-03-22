@@ -29,11 +29,20 @@ The helper dialogs are:
 
 """
 
+
 ############################################
 #
 # Next Steps:
 #
 # ----------------
+#
+# - what does my gui need to be fully ready for student use?
+# - what would it take for the gui to generate micropython code?
+#
+# ## Plan:
+#    - try generating the micropython line following BD and see what is needed
+#         - how to handle two sensors and no actuator
+#
 #
 # - why does the feedback wire on my summing junction look terrible?
 # - figure out how to zoom the block diagram sketch well

@@ -14,10 +14,10 @@ Assumed usage:
 - the real-time file will import this library and run a loop of code
   in real-time
 
-- at the top of the real-time file, a timer function will be setup and
+- at the top of the real-utime file, a timer function will be setup and
   an i2c connection will be estabilished
 
-- each instance block will be created
+[p- each instance block will be created
 
 - each block will have a section of secondary init code where inputs
   are estabilished and where data vectors (1d arrays) will be created
@@ -126,14 +126,14 @@ class int_constant_block(block):
     
     
 class pulse_input(block):
-    def __init__(self, amp=100, on_ind=10, off_ind=200):
+    def __init__(self, amp=100, on_index=10, off_index=200):
         self.amp = amp
-        self.on_ind = on_ind
-        self.off_ind = off_ind
+        self.on_index = on_index
+        self.off_index = off_index
 
 
     def find_output(self, i):
-        if self.on_ind <= i < self.off_ind:
+        if self.on_index <= i < self.off_index:
             out = self.amp
         else:
             out = 0
@@ -157,7 +157,19 @@ class saturation_block(block):
             cur_out = raw_in
         self.output_vector[i] = cur_out
         return self.output_vector[i]
-        
+
+
+class P_controller(block):
+    def __init__(self, Kp=1):
+        self.Kp = Kp
+
+
+    def find_output(self, i):
+        """This is just making the loop counter act like a block"""
+        in_i = self.input_block1.read_output(i)
+        self.output_vector[i] = self.Kp*in_i
+        return self.output_vector[i] 
+
 
 class block_with_two_inputs(block):
     def set_input_block2(self, block):
