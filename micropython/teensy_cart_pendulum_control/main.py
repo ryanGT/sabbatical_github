@@ -9,8 +9,6 @@
 
 # 0 = pyboard, 1 = teensy41
 nISR = 0
-N = 1000#<-- probably longer
-print("N = %i" % N)
 
 import time
 
@@ -62,7 +60,7 @@ from ulab import numpy as np
 import upybd as pybd
 
 # sysprecode
-N = 1000
+N = 500
 num_read = np.zeros(N)
 prev_check = -1
 
@@ -138,7 +136,9 @@ enc = 0
 
 nISR = 0
 
-tim = Timer(1, mode=Timer.PERIODIC, callback=tick, freq=500)
+myfreq = 250
+#myfreq = 500
+tim = Timer(1, mode=Timer.PERIODIC, callback=tick, freq=myfreq)
 
 
 t0 = time.ticks_us()
@@ -214,23 +214,13 @@ for i in range(N):
     for block in print_blocks:
         if rowstr:
             rowstr += ', '
-        rowstr += str(block.output_vector[i])
+        rowstr += str(block.read_output(i))
     print(rowstr)
 
 
-## for row in data:
-##     #print("%i, %i, %i" % (row[0],row[1],row[2]))
-##     row_str = ""
-##     for i, elem in enumerate(row):
-##         if i > 0:
-##             row_str += ","
-##         row_str += str(elem)
-##     print(row_str)
-
-
-## n_echo = data[:,2]*256 + data[:,3]
-## dn = n_echo[1:] - n_echo[0:-1]
-## print("dn max = %i" % np.max(dn))
+dn = G.n_echo[1:] - G.n_echo[0:-1]
+print("dn max = %i" % np.max(dn))
+print("dn[1:] min = %i" % np.min(dn[1:]))
 
 ## for i, ent in enumerate(dn):
 ##     if ent != 1:
