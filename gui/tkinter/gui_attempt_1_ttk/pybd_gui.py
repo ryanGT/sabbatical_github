@@ -36,12 +36,19 @@ The helper dialogs are:
 #
 # ----------------
 #
+# - **allow parameters to be specified using the add_block_dialog**
 # - what does my gui need to be fully ready for student use?
 # - what would it take for the gui to generate micropython code?
+# - what do I need to do to do line following with micropython using the gui?
+#     - do "dumb" line following at 250 Hz
+#     - start reading pendulum
+#     - do vib supression
+#     - add check for new line sensor reading to the template
 #
 # ## Plan:
 #    - try generating the micropython line following BD and see what is needed
-#         - how to handle two sensors and no actuator
+#         - how to handle **two sensors** and no actuator <----
+#         - suggested name for cart_pend plant should be G
 #
 #
 # - why does the feedback wire on my summing junction look terrible?

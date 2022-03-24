@@ -11,24 +11,53 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 
 import numpy as np
-
+import copy
 from tkinter import ttk
 from tkinter.messagebox import showinfo
 
 import py_block_diagram as pybd
 pad_options = {'padx': 5, 'pady': 5}
 
-from tkinter_utils import my_toplevel_window
+from tkinter_utils import my_toplevel_window, window_with_param_widgets_that_appear_and_disappear
 
-class add_block_dialog(my_toplevel_window):
+###############################################################
+# To do:
+#
+# - when adding a new block, I need to be able to specify parameters
+#   whose labels adjust, similar to the sensors and actuators
+#
+#
+# - Plan:
+#
+#    - each block type should be able to create an empty default where
+#      any unknown init params are set to None
+#
+#    - the default block should have a py_param attribute along with a
+#      default_params attr
+#
+#    - the gui will use the py_params as the labels for the parameter
+#      boxes and then use the default_params (both from the empty
+#      default block) to populate the default values
+#
+#    - create a base class from actuator_or_sensor_chooser.py that has boxes
+#      that appear and disappear and whose labels adapt based on the number
+#      of py_params and the labels get set to the py_params and whose default
+#      values come from the empty blocks
+#
+#
+###############################################################
+
+
+class add_block_dialog(my_toplevel_window, window_with_param_widgets_that_appear_and_disappear):
     def __init__(self, parent, title="Add Block Dialog"):
-        super().__init__(parent, title=title, geometry="600x400")
+        super().__init__(parent, title=title, geometry="700x600")
         self.selected_block_type = None
         self.input_block_name = None
         self.input2_block_name = None
         self.input3_block_name = None
         self.parent = parent
         self.bd = self.parent.bd
+        self.max_params = 8
         self.make_widgets()
 
 
@@ -127,14 +156,67 @@ class add_block_dialog(my_toplevel_window):
         self.make_combo_and_var_grid_nw("sensors", row=currow, col=mycol)
         currow += 1
         print("currow = %s" % currow)
-        self.go_button.grid(row=20, columnspan=2, column=0, padx=5, pady=5)
+        self.make_label_and_grid_sw("Sensor 2", row=currow, col=mycol,  attr="sensor2_label")
+        currow += 1
+        print("currow = %s" % currow)
+        self.make_combo_and_var_grid_nw("sensor2", row=currow, col=mycol)
+        currow += 1
+        print("currow = %s" % currow)
 
-        self.act_and_sense_list = ['sensors_label','actuators_label','sensors_combobox', 'actuators_combobox']
+        # create numbered parameter widgets for showing and hiding boxes
+        # that allow block parameters to be set
+        for i in range(self.max_params):
+            j = i+1
+            # how do I do this as two columns?
+            if j % 2 == 1:
+                # this is an add # widget
+                mycol = 0
+            else:
+                mycol = 1
+                
+            label_attr = "param%i_label" % j
+            text = "param%i" % j
+            self.make_label_and_grid_sw(text, currow, mycol, attr=label_attr)
+            basename = "param%i" % j
+            self.make_entry_and_var_grid_nw(basename, currow+1, mycol)
+
+            if j % 2 == 0:
+                # increment the row for even # widgets
+                # - increment by 2 because we added labels and boxes
+                currow += 2
+
+
+        self.go_button.grid(row=30, columnspan=2, column=0, padx=5, pady=5)
+
+        self.actuator_widget_list = ['actuators_label', 'actuators_combobox']
+        self.sensor1_widget_list = ['sensors_label','sensors_combobox']
+        self.act_and_sense_list = self.actuator_widget_list + self.sensor1_widget_list
+        self.sensor2_widget_list = ['sensor2_label','sensor2_combobox']
+        self.hide_act_and_sense_combos()
+        
 
     def hide_act_and_sense_combos(self):
-        for attr in self.act_and_sense_list:
+        fulllist = self.act_and_sense_list + self.sensor2_widget_list
+        for attr in fulllist:
             widget = getattr(self, attr)
             widget.grid_remove()
+
+
+    def _show_from_attr_name_list(self, attr_list):
+        for attr in attr_list:
+            widget = getattr(self, attr)
+            widget.grid()
+
+
+    def _hide_from_attr_name_list(self, attr_list):
+        for attr in attr_list:
+            widget = getattr(self, attr)
+            widget.grid_remove()
+
+
+    def hide_actuator_widgets(self):
+        self._hide_from_attr_name_list(self.actuator_widget_list)
+
 
 
     def show_act_and_sense_combos(self):
@@ -143,6 +225,20 @@ class add_block_dialog(my_toplevel_window):
             widget.grid()
 
 
+    def show_sensor2_widgets(self):
+        for attr in self.sensor2_widget_list:
+            widget = getattr(self, attr)
+            widget.grid()
+
+    def show_sensor1_widgets(self):
+        self._show_from_attr_name_list(self.sensor1_widget_list)
+
+
+    def hide_sensor2_widgets(self):
+        for attr in self.sensor2_widget_list:
+            widget = getattr(self, attr)
+            widget.grid_remove()
+            
 
     def on_input_selected(self, *args):
         selection = self.input_choice.curselection()
@@ -155,9 +251,49 @@ class add_block_dialog(my_toplevel_window):
             print("no selection")
 
 
+    def show_params_for_block_type(self, block_type):
+        myclass = pybd.block_classes_dict[block_type]
+        temp_block = myclass()
+        py_params = temp_block.py_params
+        default_params = {}
+        if hasattr(temp_block, "default_params"):
+            for key in py_params:
+                if key in temp_block.default_params:
+                    value = temp_block.default_params[key]
+                else:
+                    value = ''
+                default_params[key] = value
+        else:
+            empty_list = ['']*len(py_params)
+            default_params = dict(zip(py_params, empty_list))
+            
+        print("block py_params:")
+        for key, value in default_params.items():
+            print("%s : %s" % (key, value))
+
+        # - pop sensors and actuators from py_params before setting N_params
+        # - set defaults
+
+        # actuators and sensors are handled separately, so filter them out:
+        all_params = copy.copy(py_params)
+        mypoplist = ['actuator','sensor','sensor1','sensor2']
+        param_list = [item for item in all_params if item not in mypoplist]
+        
+        N_params = len(param_list)
+        N_unused = self.max_params - N_params
+        self.N_params = N_params
+        self.unhide_used_widgets(N_params)
+        self.hide_unsed_widgets(N_unused)
+        self.update_param_labels(param_list)
+        self.set_default_params(param_list, default_params)
+            
+
     def on_block_type_selected(self, *args):
         """This is the method that is called when the user chooses a
-        specific class for the block that is being added"""
+        specific class for the block that is being added.  Parameter
+        boxes update their labels and unused ones are hidden.  The
+        sensor and actuator combo boxes are hidden or shown and
+        populated."""
         selection = self.blockchoice.curselection()
         print("block type selection:")
         print(selection)
@@ -166,9 +302,15 @@ class add_block_dialog(my_toplevel_window):
             return None
         block_type = self.get_selected_block_type()
         print("block_type: %s" % block_type)
+        if block_type in pybd.plants_with_two_sensors_names:
+            # show sensor 2 selection option
+            self.show_sensor2_widgets()
+        else:
+            self.hide_sensor2_widgets()
         self.selected_block_type = block_type
         suggested_name = self.parent.bd.suggest_block_name(block_type)
         self.block_name.set(suggested_name)
+        self.show_params_for_block_type(block_type)
             
 
     def get_selected_block_type(self):
@@ -182,6 +324,8 @@ class add_block_dialog(my_toplevel_window):
 
 
     def go_pressed(self):
+        # Next step:
+        # - read parameters from the numbered param boxes for kwargs
         assert self.selected_block_type is not None, "block_type has not been set"
         print("you pressed go")
         block_type = self.selected_block_type
@@ -208,7 +352,6 @@ class add_block_dialog(my_toplevel_window):
                 kwargs[key] = input_block
                 key2 = key + '_name'
                 kwargs[key2] = input_block_name 
-
         
         block_name = self.block_name.get()
         block_class = getattr(pybd, block_type)
@@ -217,17 +360,44 @@ class add_block_dialog(my_toplevel_window):
         # get actuator and sensor if it is a plant
         print("plant classes: %s" % pybd.plant_class_names)
         if block_type in pybd.plant_class_names:
+            # we need to handle plant classes with no actuator and those with two sensors
             print("this is a plant")
-            actuator_name = self.actuators_var.get()
-            print("actuator_name: %s" % actuator_name)
-            sensor_name = self.sensors_var.get()
-            print("sensor_name: %s" % sensor_name)
-            myactuator = self.bd.get_actuator_by_name(actuator_name)
-            mysensor = self.bd.get_sensor_by_name(sensor_name)
-            kwargs['actuator'] = myactuator
-            kwargs['sensor'] = mysensor
 
-            
+            # possible cases:
+            # - actuator or no actuator
+            # - one sensor or two
+            #     - must have at least one sensor to be a plant
+            if block_type not in pybd.plants_with_no_actuators_names:
+                # it has an actuator
+                actuator_name = self.actuators_var.get()
+                print("actuator_name: %s" % actuator_name)
+                myactuator = self.bd.get_actuator_by_name(actuator_name)
+                kwargs['actuator'] = myactuator
+
+            if block_type in pybd.plants_with_two_sensors_names:
+                # it has two sensors
+                sensor1_name = self.sensors_var.get()
+                print("sensor1_name: %s" % sensor1_name)
+                sensor2_name = self.sensor2_var.get()
+                print("sensor2_name: %s" % sensor2_name)
+                sensor1 = self.bd.get_sensor_by_name(sensor1_name)                
+                kwargs['sensor1'] = sensor1
+                sensor2 = self.bd.get_sensor_by_name(sensor2_name)                
+                kwargs['sensor2'] = sensor2                
+            else:
+                # it has only one sensor
+                sensor_name = self.sensors_var.get()
+                print("sensor_name: %s" % sensor_name)
+                mysensor = self.bd.get_sensor_by_name(sensor_name)
+                kwargs['sensor'] = mysensor
+
+
+
+        # get additional kwargs from param boxes here:
+        other_kwargs = self.get_params_kwargs(self.N_params)
+        ## print("other_kwargs:")
+        ## print(other_kwargs)
+        kwargs.update(other_kwargs) 
         print("creating block in go_pressed")
         print("kwargs:")
         print(kwargs)
@@ -243,19 +413,21 @@ class add_block_dialog(my_toplevel_window):
 
 
     def set_actuator_and_sensor_lists(self):
-        self.actuator_names = self.bd.actuator_name_list
-        self.sensor_names = self.bd.sensor_name_list
-        N_act = len(self.actuator_names)
-        N_sense = len(self.sensor_names)
         # - can I warn if there are no actuators and filter certain plants out of the list?
         # - how do you handle multiple sensors?
-        if N_act*N_sense == 0:
-            msg = "You cannot create a plant until an actuator and a sensor have been defined."
-            showinfo(title='Information',
-                     message=msg)
-        else:
-            self.actuators_combobox['values'] = self.actuator_names
-            self.sensors_combobox['values'] = self.sensor_names
+        if not hasattr(self, "actuator_names"):
+            self.check_actuators_and_sensors()
+            
+        self.actuators_combobox['values'] = self.actuator_names
+        self.sensors_combobox['values'] = self.sensor_names
+        self.sensor2_combobox['values'] = self.sensor_names
+
+
+    def check_actuators_and_sensors(self):
+        self.actuator_names = self.bd.actuator_name_list
+        self.sensor_names = self.bd.sensor_name_list
+        self.N_act = len(self.actuator_names)
+        self.N_sense = len(self.sensor_names)
 
 
     def category_selected(self, event):
@@ -263,6 +435,7 @@ class add_block_dialog(my_toplevel_window):
         type of block (plant, input, controller, ...), this method
         populates the block_choice_list box with corresponding class
         names."""
+        self.check_actuators_and_sensors()
         chosen_cat = self.selected_category.get()
         print("category_selected: %s" % chosen_cat)
         new_list = pybd.block_category_dict[chosen_cat]
@@ -274,10 +447,33 @@ class add_block_dialog(my_toplevel_window):
         # Add items in the Listbox
         #lb.insert("end","item1","item2","item3","item4","item5")
 
-        self.block_choice_list.set(new_list)
+        # if no actuators have been defined, we need to filter out
+        # some plants, if plant is the chosen_cat
+
         if chosen_cat == "plant":
-            self.show_act_and_sense_combos()
+            if self.N_sense == 0:
+                msg = "You cannot create a plant until a sensor have been defined.  Some plants also require an actuator to be defined."
+                showinfo(title='Information',
+                         message=msg)
+                return
+            elif self.N_act == 0 and self.N_sense > 0:
+                # allow only plants without explicit actuators
+                msg = "Showing only plants that do not require an actuator to be defined."
+                showinfo(title='Information',
+                         message=msg)
+                # filter plant names
+                new_list = pybd.plants_with_no_actuators_names
+                self.hide_actuator_widgets()
+                self.show_sensor1_widgets()
+
+            # if neither of the above cases is true, than both
+            # actuators and sensors are defined and all plants should
+            # be shown
+            else:
+                self.show_act_and_sense_combos()
+                
             self.set_actuator_and_sensor_lists()
         else:
             self.hide_act_and_sense_combos()
 
+        self.block_choice_list.set(new_list)

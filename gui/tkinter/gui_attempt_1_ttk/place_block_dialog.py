@@ -23,7 +23,7 @@ class place_block_dialog(tk.Toplevel):
         super().__init__(parent)
         self.selected_block_type = None
         self.parent = parent
-        self.geometry('800x600')
+        self.geometry('500x600')
         self.title(title)
         self.make_widgets()
 
@@ -136,10 +136,21 @@ class place_block_dialog(tk.Toplevel):
         self.make_combo_and_var_grid_nw("relative_direction", 7, curcol)
         self.relative_direction_combobox['values'] = ['right','left','above','below']
 
+        # xshift and yshift for relative placement
+        self.xshift_label = self.make_label_and_grid_sw("x shift", 8, curcol)
+        self.make_entry_and_var_grid_nw("xshift", 9, curcol)
+        self.yshift_label = self.make_label_and_grid_sw("y shift", 10, curcol)
+        self.make_entry_and_var_grid_nw("yshift", 11, curcol)
+                
         self.relative_widgets = [self.label5, self.label6, self.relative_block_combobox, \
-                                 self.relative_direction_combobox]
+                                 self.relative_direction_combobox, \
+                                 self.xshift_label, self.xshift_entry, \
+                                 self.yshift_label, self.yshift_entry, \
+                                 ]
 
+        
 
+        
         # go button
         self.go_button = ttk.Button(self, text='Place Block', command=self.go_pressed)
         self.grid_widget(self.go_button, 15, curcol)
@@ -179,8 +190,21 @@ class place_block_dialog(tk.Toplevel):
             rel_block_name = self.relative_block_var.get()
             rel_block = self.parent.get_block_by_name(rel_block_name)
             rel_pos = self.relative_direction_var.get()
+            xshift = self.xshift_var.get()
+            if not xshift:
+                xshift = 0
+            else:
+                xshift = float(xshift)
+                
+            yshift = self.yshift_var.get()
+            if not yshift:
+                yshift = 0
+            else:
+                yshift = float(yshift)
+                
             block.placement_type = "relative"
-            block.place_relative(rel_block=rel_block, rel_pos=rel_pos, rel_distance=4, xshift=0, yshift=0)
+            block.place_relative(rel_block=rel_block, rel_pos=rel_pos, rel_distance=4, \
+                                 xshift=xshift, yshift=yshift)
 
         block_place_str = block.get_placememt_str()
         print("block_place_str: %s" % block_place_str)
