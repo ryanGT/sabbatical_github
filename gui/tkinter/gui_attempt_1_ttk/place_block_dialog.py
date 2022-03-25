@@ -23,7 +23,7 @@ class place_block_dialog(tk.Toplevel):
         super().__init__(parent)
         self.selected_block_type = None
         self.parent = parent
-        self.geometry('500x600')
+        self.geometry('400x600')
         self.title(title)
         self.make_widgets()
 
@@ -136,14 +136,19 @@ class place_block_dialog(tk.Toplevel):
         self.make_combo_and_var_grid_nw("relative_direction", 7, curcol)
         self.relative_direction_combobox['values'] = ['right','left','above','below']
 
+
+        self.rel_dist_label = self.make_label_and_grid_sw("Relative Distance", 8, curcol)
+        self.make_entry_and_var_grid_nw("rel_dist", 9, curcol)
+
         # xshift and yshift for relative placement
-        self.xshift_label = self.make_label_and_grid_sw("x shift", 8, curcol)
-        self.make_entry_and_var_grid_nw("xshift", 9, curcol)
-        self.yshift_label = self.make_label_and_grid_sw("y shift", 10, curcol)
-        self.make_entry_and_var_grid_nw("yshift", 11, curcol)
+        self.xshift_label = self.make_label_and_grid_sw("x shift", 10, curcol)
+        self.make_entry_and_var_grid_nw("xshift", 11, curcol)
+        self.yshift_label = self.make_label_and_grid_sw("y shift", 12, curcol)
+        self.make_entry_and_var_grid_nw("yshift", 13, curcol)
                 
         self.relative_widgets = [self.label5, self.label6, self.relative_block_combobox, \
                                  self.relative_direction_combobox, \
+                                 self.rel_dist_label, self.rel_dist_entry, \
                                  self.xshift_label, self.xshift_entry, \
                                  self.yshift_label, self.yshift_entry, \
                                  ]
@@ -157,9 +162,18 @@ class place_block_dialog(tk.Toplevel):
 
 
         # setup for relative placement default
-        self.placement_type_var.set("relative")
+        self.set_defaults()
         self.hide_abs_widgets()
         self.unhide_relative_widgets()
+
+
+    def set_defaults(self):
+        self.placement_type_var.set("relative")
+        self.relative_direction_var.set("right")
+        self.rel_dist_var.set("4")
+        self.xshift_var.set("0")
+        self.yshift_var.set("0")        
+
         
 
     def set_block_to_place(self, block_name):
@@ -190,6 +204,7 @@ class place_block_dialog(tk.Toplevel):
             rel_block_name = self.relative_block_var.get()
             rel_block = self.parent.get_block_by_name(rel_block_name)
             rel_pos = self.relative_direction_var.get()
+            rel_dist = float(self.rel_dist_var.get())
             xshift = self.xshift_var.get()
             if not xshift:
                 xshift = 0
@@ -203,7 +218,7 @@ class place_block_dialog(tk.Toplevel):
                 yshift = float(yshift)
                 
             block.placement_type = "relative"
-            block.place_relative(rel_block=rel_block, rel_pos=rel_pos, rel_distance=4, \
+            block.place_relative(rel_block=rel_block, rel_pos=rel_pos, rel_distance=rel_dist, \
                                  xshift=xshift, yshift=yshift)
 
         block_place_str = block.get_placememt_str()
@@ -255,4 +270,5 @@ class place_block_dialog(tk.Toplevel):
         elif place_type == "relative":
             self.hide_abs_widgets()
             self.unhide_relative_widgets()
+            self.set_defaults()
             

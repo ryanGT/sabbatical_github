@@ -491,7 +491,7 @@ class pybd_gui(tk.Tk):
                         # Fatal Python Error: PyEval_RestoreThread: NULL tstate
 
 
-    def block_selected(self, event):
+    def block_selected(self, event=0):
         # get selected indices
         selected_indices = self.blocklistbox.curselection()
         if not selected_indices:
@@ -602,13 +602,38 @@ class pybd_gui(tk.Tk):
         self.toolbar = NavigationToolbar2Tk(self.canvas, self.toolbarFrame)
 
 
+        mywidth=5
+        
         self.button_frame1 = ttk.Frame(self)
-        self.quit_button = ttk.Button(self.button_frame1, text="Quit", command=self._quit)
-        self.quit_button.grid(column=0, row=0, **self.options)
+        self.quit_button = ttk.Button(self.button_frame1, text="Quit", width=mywidth, \
+                                      command=self._quit)
+        self.quit_button.grid(column=0, row=0,  **self.options)
 
-        self.draw_button = ttk.Button(self.button_frame1, text="Draw", command=self.on_draw_btn)
+        self.draw_button = ttk.Button(self.button_frame1, text="Draw", width=mywidth, \
+                                      command=self.on_draw_btn)
         self.draw_button.grid(column=1, row=0, **self.options)
 
+        # x and y lims for the plot
+        xlim_label = ttk.Label(self.button_frame1, text="xlims:")
+        self.xmin_var = tk.StringVar(value="0")
+        self.xmin_box = ttk.Entry(self.button_frame1, width=mywidth, textvariable=self.xmin_var)
+        self.xmax_var = tk.StringVar(value="5")
+        self.xmax_box = ttk.Entry(self.button_frame1, width=mywidth, textvariable=self.xmax_var)
+        xlim_label.grid(column=2, row=0, padx=5, pady=5, sticky='E')
+        self.xmin_box.grid(column=3, row=0, padx=5, pady=5)#, sticky='E')
+        self.xmax_box.grid(column=4, row=0, padx=5, pady=5)#,sticky='E')
+
+        ylim_label = ttk.Label(self.button_frame1, text="ylims:")
+        self.ymin_var = tk.StringVar(value="-5")
+        self.ymin_box = ttk.Entry(self.button_frame1, width=mywidth, textvariable=self.ymin_var)
+        self.ymax_var = tk.StringVar(value="5")
+        self.ymax_box = ttk.Entry(self.button_frame1, width=mywidth, textvariable=self.ymax_var)
+        ylim_label.grid(column=5, row=0, padx=5, pady=5, sticky='E')
+        self.ymin_box.grid(column=6, row=0, padx=5, pady=5)#, sticky='E')
+        self.ymax_box.grid(column=7, row=0, padx=5, pady=5)#,sticky='E')
+        self.zoom_btn = ttk.Button(self.button_frame1, text="Zoom", width=mywidth, command=self.on_zoom_btn)
+        self.zoom_btn.grid(column=8, row=0, padx=5, pady=5)#,sticky='E')
+        
         ## self.xlim_label = ttk.Label(self.button_frame1, text="xlim:")
         ## self.xlim.grid(row=0,column=2,sticky='E')
         ## self.xlim_var = tk.StringVar()
@@ -698,6 +723,17 @@ class pybd_gui(tk.Tk):
         self.make_sensors_frame()
 
 
+    def on_zoom_btn(self, event=None):
+        xmin = float(self.xmin_var.get())
+        xmax = float(self.xmax_var.get())
+        ymin = float(self.ymin_var.get())
+        ymax = float(self.ymax_var.get())
+        self.ax.set_xlim([xmin,xmax])
+        self.ax.set_ylim([ymin,ymax])
+        self.bd.axis_off()        
+        self.canvas.draw()
+
+
     def check_block_selected(self, msg):
         selected_indices = self.blocklistbox.curselection()
         if not selected_indices:
@@ -707,23 +743,39 @@ class pybd_gui(tk.Tk):
         # everything is fine:
         return 1
 
+
+    def get_selected_block_index(self):
+        selected_indices = self.blocklistbox.curselection()
+        if type(selected_indices) == list:
+            return selected_indices[0]
+        else:
+            return selected_indices
+
+
     def get_selected_block_name(self, msg):
         if not self.check_block_selected(msg):
             return None
         else:
             selected_indices = self.blocklistbox.curselection()
+            print("selected_indices: %s" % selected_indices)
             block_name = self.blocklistbox.get(selected_indices)
             return block_name
 
 
     def on_set_input1(self, *args, **kwargs):
         print("in on_set_input1")
+        selected_index = self.get_selected_block_index()
         block_name = self.get_selected_block_name("you must select a block before setting its input(s)")
         if not block_name:
             return None
         block = self.get_block_by_name(block_name)
-        input_dialog = input_chooser(block, parent=self, geometry='300x200')
-        input_dialog.grab_set()
+        input_dialog = input_chooser(block, parent=self, geometry='300x200', \
+                                     selected_index=selected_index)
+        input_dialog.grab_set()#<-- this "unchooses" the block
+
+        # reset the block choice and show selected inputs:
+        print("back to main window")
+        self.blocklistbox.select_set(selected_index)
 
         #class input_chooser(my_toplevel_window):
         #    def __init__(self, block, parent, title="Input Chooser Dialog", \
@@ -736,10 +788,12 @@ class pybd_gui(tk.Tk):
 
     def on_set_input2(self, *args, **kwargs):
         block_name = self.get_selected_block_name("you must select a block before setting its input(s)")
+        selected_index = self.get_selected_block_index()
         if not block_name:
             return None
         block = self.get_block_by_name(block_name)
-        input2_dialog = input2_chooser(block, parent=self, geometry='300x200')
+        input2_dialog = input2_chooser(block, parent=self, geometry='300x200', \
+                                       selected_index=selected_index)
         input2_dialog.grab_set()
 
 
@@ -820,6 +874,11 @@ class pybd_gui(tk.Tk):
         ylims = self.bd.get_ylims()
         self.ax.set_xlim(xlims)
         self.ax.set_ylim(ylims)
+        self.xmin_var.set(str(xlims[0]))
+        self.xmax_var.set(str(xlims[1]))
+        self.ymin_var.set(str(ylims[0]))
+        self.ymax_var.set(str(ylims[1]))
+        
         self.bd.axis_off()        
         self.canvas.draw()
         
