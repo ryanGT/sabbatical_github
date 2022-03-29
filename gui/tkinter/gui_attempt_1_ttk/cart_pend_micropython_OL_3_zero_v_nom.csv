@@ -1,0 +1,13 @@
+actuators
+
+sensors
+i2c_sensor,line_sense
+i2c_sensor,pend_enc
+
+blocks
+block_type,variable_name,label,arduino_class,input_block1_name,input_block2_name,width,height,placement_type,abs_x,abs_y,rel_block_name,rel_pos,rel_distance,xshift,yshift,param1,param2,param3,param4,param5
+int_constant_block,v_nom,0,int_constant_block,,,1.5,1.5,relative,,,U_pulse,right,4,0,3,value:0,,,,
+addition_block,add,+,addition_block,v_nom,U_pulse,1.5,1.5,relative,,,U_pulse,right,8,0,0,,,,,
+subtraction_block,subtract,-,subtraction_block,v_nom,U_pulse,1.5,1.5,relative,,,add,below,4,-1,0,,,,,
+cart_pendulum_upy,G,G,class_not_specified,add,subtract,3,2,relative,,,add,right,4,0,0,sensor1_name:line_sense,sensor2_name:pend_enc,send_address:7,read_address1:7,read_address2:8
+pulse_input,U_pulse,$U_{pulse}(s)$,pulse_input,,,3,2,absolute,0.0,0.0,,,,,,on_time:0.1,off_time:0.5,amp:100,,

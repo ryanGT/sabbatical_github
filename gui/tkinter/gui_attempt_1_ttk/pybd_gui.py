@@ -32,6 +32,18 @@ The helper dialogs are:
 
 ############################################
 #
+# Features needed:
+#
+# - the ability to edit block parameters, including the name and label
+#    - how would I tell which parameters are changed?
+#    - how would I handle changing a block's name in the block_diagram?
+# - the ability to add and edit wire waypoints
+#
+#
+############################################
+
+############################################
+#
 # Next Steps:
 #
 # ----------------
@@ -127,6 +139,7 @@ The helper dialogs are:
 import tkinter
 import tkinter as tk
 from tkinter import ttk
+from tkinter.messagebox import askyesno
 
 #from matplotlib.backends.backend_tkagg import (
 #    FigureCanvasTkAgg, NavigationToolbar2Tk)
@@ -148,7 +161,7 @@ from input_chooser import input_chooser, input2_chooser
 #from tkinter import simpledialog
 
 from actuator_or_sensor_chooser import actuator_chooser, sensor_chooser
-
+from edit_blocks_dialog import edit_blocks_dialog
 
 import py_block_diagram as pybd
 import os, txt_mixin
@@ -192,17 +205,32 @@ class pybd_gui(tk.Tk):
         self.menu_codegen = tk.Menu(self.menubar)        
         self.menubar.add_cascade(menu=self.menu_file, label='File')
         self.menubar.add_cascade(menu=self.menu_edit, label='Edit')
-        self.menubar.add_cascade(menu=self.menu_codegen, label='Code Generation')        
+        self.menubar.add_cascade(menu=self.menu_codegen, label='Code Generation')
+        self.menu_edit.add_command(label="Delete Block", command=self.on_delete_block)
         self.menu_file.add_command(label='Save', command=self.on_save_menu)
         self.menu_file.add_command(label='Load', command=self.on_load_menu)        
         #menu_file.add_command(label='Open...', command=openFile)
         self.menu_file.add_command(label='Quit', command=self._quit)
-        self.menu_codegen.add_command(label='Set Arduino Template File', command=self.set_arduino_template)
-        self.menu_codegen.add_command(label='Get Arduino Template File', command=self.get_arduino_template)
-        self.menu_codegen.add_command(label='Set Arduino Output Path', \
-                                      command=self.set_arduino_output_folder)
-        self.menu_codegen.add_command(label='Generate Arduino Code', command=self.arduino_codegen)                
 
+
+        self.arduino_menu = tk.Menu(self.menu_codegen)
+        self.menu_codegen.add_cascade(menu=self.arduino_menu, label='Arduino Code Generation')
+        self.arduino_menu.add_command(label='Set Arduino Template File', command=self.set_arduino_template)
+        self.arduino_menu.add_command(label='Get Arduino Template File', command=self.get_arduino_template)
+        self.arduino_menu.add_command(label='Set Arduino Output Path', \
+                                      command=self.set_arduino_output_folder)
+        self.arduino_menu.add_command(label='Generate Arduino Code', command=self.arduino_codegen)
+
+
+        self.python_gen_menu = tk.Menu(self.menu_codegen)
+        self.menu_codegen.add_cascade(menu=self.python_gen_menu, label='Python Code Generation')
+        self.python_gen_menu.add_command(label='Set Python Template File', \
+                                         command=self.set_python_gen_template)
+        self.python_gen_menu.add_command(label='Get Python Template File', \
+                                         command=self.get_python_gen_template)
+        self.python_gen_menu.add_command(label='Set Python Output Path', \
+                                      command=self.set_python_gen_output_folder)
+        self.python_gen_menu.add_command(label='Generate Python Code', command=self.python_codegen)          
         #self.bind("<Key>", self.key_pressed)
         self.bind('<Control-q>', self._quit)
         self.bind('<Control-s>', self.on_save_menu)
@@ -313,6 +341,22 @@ class pybd_gui(tk.Tk):
         # self.arduino_template_path #<--- put me on a dialog showinfo
         showinfo(title='Information',
                 message='Arduino template file path: %s' % self.arduino_template_path)
+
+
+    def set_python_gen_template(self, *args, **kwargs):
+        print("set_python_gen_template")
+
+
+    def get_python_gen_template(self, *args, **kwargs):
+        print("get_python_gen_template")
+
+
+    def set_python_gen_output_folder(self, *args, **kwargs):
+        print("set_python_gen_output_folder")
+
+
+    def python_codegen(self, *args, **kwargs):
+        print("python_codegen")
 
         
     def make_label(self, text, root=None):
@@ -457,7 +501,19 @@ class pybd_gui(tk.Tk):
         print (filename)
         if filename:
             self.bd.save_model_to_csv(filename)
-            
+
+
+    def on_delete_block(self, *args, **kwargs):
+        msg = "You must select a block to delete first."
+        block_name = self.get_selected_block_name(msg)
+
+        answer = askyesno("Confirm Delete", \
+                          "Are you sure that you want to delete the block %s?" % block_name)
+
+        if answer:
+            block = self.get_block_by_name(block_name)
+            self.bd.delete_block(block)
+            self.block_list_var.set(self.bd.block_name_list)
 
     def get_block_name_list(self):
         #block_list = self.bd._build_block_list()
@@ -705,6 +761,10 @@ class pybd_gui(tk.Tk):
         self.placement_btn = ttk.Button(self.frame1, text='Place', command=self.on_place_btn)
         self.placement_btn.grid(column=cur_col, row=10, pady=(2,5))
 
+        self.edit_btn = ttk.Button(self.frame1, text='Edit Block', command=self.on_edit_btn)
+        self.edit_btn.grid(column=cur_col, row=11, pady=(2,5))
+        
+
         col1_list = [self.input1_label, self.input1_box, self.set_intput1_btn, \
                      self.input2_label, self.input2_box, self.set_intput2_btn]
 
@@ -906,6 +966,27 @@ class pybd_gui(tk.Tk):
         place_dialog.set_block_to_place(block_name)
         place_dialog.grab_set()
 
+
+    def on_edit_btn(self, *args, **kwargs):
+        print("in on_edit_btn")
+        mydialog = edit_blocks_dialog(self)
+
+        # if a block is selected, set the selection in the edit_blocks_dialog
+        selected_indices = self.blocklistbox.curselection()
+        if selected_indices:
+            selected_block_name = self.blocklistbox.get(selected_indices)
+            mydialog.block_selector_var.set(selected_block_name)
+            mydialog.on_block_selected()
+            
+        mydialog.grab_set()
+
+        
+        
+        # approach:
+        # - get current params
+        # - show an edit dialog
+        # - probably should allow choosing any existing block
+        #     - default to the selected block (if any)
         
 #root = tkinter.Tk()
 #root.wm_title("Embedding in Tk")

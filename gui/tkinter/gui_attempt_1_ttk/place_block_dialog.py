@@ -21,7 +21,6 @@ pad_options = {'padx': 5, 'pady': 5}
 class place_block_dialog(tk.Toplevel):
     def __init__(self, parent, title="Place Block Dialog"):
         super().__init__(parent)
-        self.selected_block_type = None
         self.parent = parent
         self.geometry('400x600')
         self.title(title)
@@ -168,17 +167,31 @@ class place_block_dialog(tk.Toplevel):
 
 
     def set_defaults(self):
+        print("setting defaults")
         self.placement_type_var.set("relative")
         self.relative_direction_var.set("right")
         self.rel_dist_var.set("4")
         self.xshift_var.set("0")
         self.yshift_var.set("0")        
 
+
+    def set_widgets_to_block(self, block):
+        print("setting widgets to block values")
+        self.placement_type_var.set(block.placement_type)
+        self.relative_block_var.set(block.rel_block_name)
+        self.relative_direction_var.set(block.rel_pos)
+        self.rel_dist_var.set(str(block.rel_distance))
+        self.xshift_var.set(str(block.xshift))
+        self.yshift_var.set(str(block.yshift))
         
 
     def set_block_to_place(self, block_name):
         self.block_to_place_var.set(block_name)
-
+        block = self.parent.get_block_by_name(block_name)
+        if block.placement_type:
+            self.set_widgets_to_block(block)
+        else:
+            self.set_defaults()
 
     def go_pressed(self, *args, **kwargs):
         place_type = self.placement_type_var.get()
