@@ -34,9 +34,10 @@ The helper dialogs are:
 #
 # Features needed:
 #
-# - the ability to edit block parameters, including the name and label
-#    - how would I tell which parameters are changed?
-#    - how would I handle changing a block's name in the block_diagram?
+# - auto-save and auto-load gui/bd params
+#     - template path
+#     - autogen output path
+#     - how do I show these params to the user?
 # - the ability to add and edit wire waypoints
 #
 #
@@ -85,6 +86,9 @@ The helper dialogs are:
 #
 #
 # Resovled:
+# - the ability to edit block parameters, including the name and label
+#    - how would I tell which parameters are changed?
+#    - how would I handle changing a block's name in the block_diagram?
 # - generate code menu functions
 # - make the set input buttons work
 # - make the load csv method handle the new format with actuators and sensors
@@ -157,6 +161,7 @@ from tkinter.messagebox import showinfo
 from add_block_dialog import add_block_dialog
 from place_block_dialog import place_block_dialog
 from input_chooser import input_chooser, input2_chooser
+from multi_block_selector import multi_block_selector
 
 #from tkinter import simpledialog
 
@@ -202,16 +207,19 @@ class pybd_gui(tk.Tk):
         self['menu'] = self.menubar
         self.menu_file = tk.Menu(self.menubar)
         self.menu_edit = tk.Menu(self.menubar)
+        self.menu_block_diagram = tk.Menu(self.menubar)
         self.menu_codegen = tk.Menu(self.menubar)        
         self.menubar.add_cascade(menu=self.menu_file, label='File')
         self.menubar.add_cascade(menu=self.menu_edit, label='Edit')
+        self.menubar.add_cascade(menu=self.menu_block_diagram, label='Block Diagram')        
         self.menubar.add_cascade(menu=self.menu_codegen, label='Code Generation')
         self.menu_edit.add_command(label="Delete Block", command=self.on_delete_block)
         self.menu_file.add_command(label='Save', command=self.on_save_menu)
         self.menu_file.add_command(label='Load', command=self.on_load_menu)        
         #menu_file.add_command(label='Open...', command=openFile)
         self.menu_file.add_command(label='Quit', command=self._quit)
-
+        self.menu_block_diagram.add_command(label="Set Print Blocks", command=self.on_set_print_blocks)
+        
 
         self.arduino_menu = tk.Menu(self.menu_codegen)
         self.menu_codegen.add_cascade(menu=self.arduino_menu, label='Arduino Code Generation')
@@ -365,8 +373,8 @@ class pybd_gui(tk.Tk):
 
     def set_python_gen_output_path(self, *args, **kwargs):
         print("set_python_gen_output_path")
-        filename = tk.filedialog.askopenfilename(title = "Select Python Output Path",\
-                                         filetypes = (("python files","*.py"),("all files","*.*")))
+        filename = tk.filedialog.asksaveasfilename(title = "Select Python Output Path",\
+                                                   filetypes = (("python files","*.py"),("all files","*.*")))
         print (filename)
         if filename:
             self.python_output_path = filename
@@ -535,7 +543,17 @@ class pybd_gui(tk.Tk):
             # actuators and sensors
             self.actuators_var.set(self.bd.actuator_name_list)
             self.sensors_var.set(self.bd.sensor_name_list)
-            
+
+
+    def on_set_print_blocks(self, *args, **kwargs):
+        # Approach:
+        # - select which blocks are for printing from a listbox widget
+        # - send the corresponding block list to self.bd
+        #     - might have to look up the blocks by name
+        mydialog = multi_block_selector(title="Select Print Blocks", parent=self)
+        mydialog.grab_set()
+
+        
     
     def on_save_menu(self, *args, **kwargs):
         print("in menu save")

@@ -94,7 +94,8 @@ class my_toplevel_window(tk.Toplevel):
         setattr(self, widget_attr, mywidget)
 
 
-    def make_listbox_and_var(self, basename, row, col, root=None, height=6, grid_opts={}):
+    def make_listbox_and_var(self, basename, row, col, root=None, height=6, grid_opts={}, \
+                             selectmode='single'):
         if root is None:
             root = self
 
@@ -103,7 +104,7 @@ class my_toplevel_window(tk.Toplevel):
         mywidget = tk.Listbox(root, \
                               listvariable=myvar, \
                               height=height, \
-                              #selectmode='extended'
+                              selectmode=selectmode, \
                               )
         self.grid_box_nw(mywidget, row, col, **grid_opts)
         tail = "_listbox"
