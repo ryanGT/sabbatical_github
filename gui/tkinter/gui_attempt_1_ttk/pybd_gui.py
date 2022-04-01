@@ -229,7 +229,7 @@ class pybd_gui(tk.Tk):
         self.python_gen_menu.add_command(label='Get Python Template File', \
                                          command=self.get_python_gen_template)
         self.python_gen_menu.add_command(label='Set Python Output Path', \
-                                      command=self.set_python_gen_output_folder)
+                                      command=self.set_python_gen_output_path)
         self.python_gen_menu.add_command(label='Generate Python Code', command=self.python_codegen)          
         #self.bind("<Key>", self.key_pressed)
         self.bind('<Control-q>', self._quit)
@@ -335,7 +335,7 @@ class pybd_gui(tk.Tk):
 
     def get_arduino_template(self, *args, **kwargs):
         """Show the current path to the Arduino codegen template file
-        on a showinfo dialog.  This just lets the use check the
+        on a showinfo dialog.  This just lets the user check the
         variable path."""
         print("in get_arduino_template function")
         # self.arduino_template_path #<--- put me on a dialog showinfo
@@ -344,19 +344,62 @@ class pybd_gui(tk.Tk):
 
 
     def set_python_gen_template(self, *args, **kwargs):
+        """Use a file dialog to allow the user to set the path to the
+        Python template file that will be used in code generation."""
         print("set_python_gen_template")
+        filename = tk.filedialog.askopenfilename(title = "Select Python Template File",\
+                                                 filetypes = (("python files","*.py"),("all files","*.*")))
+        print (filename)
+        if filename:
+            self.python_template_path = filename
 
 
     def get_python_gen_template(self, *args, **kwargs):
+        """Show the current path to the Pythonn codegen template file
+        on a showinfo dialog.  This just lets the user check the
+        variable path."""
         print("get_python_gen_template")
+        showinfo(title='Information',
+                 message='Python template file path: %s' % self.python_template_path)
 
 
-    def set_python_gen_output_folder(self, *args, **kwargs):
-        print("set_python_gen_output_folder")
+    def set_python_gen_output_path(self, *args, **kwargs):
+        print("set_python_gen_output_path")
+        filename = tk.filedialog.askopenfilename(title = "Select Python Output Path",\
+                                         filetypes = (("python files","*.py"),("all files","*.*")))
+        print (filename)
+        if filename:
+            self.python_output_path = filename
 
 
     def python_codegen(self, *args, **kwargs):
+        ## from pybd.block_diagram:
+        ##
+        ## def generate_python_code(self, output_name, \
+        ##                  template_path, \
+        ##                  output_folder='', \
+        ##                  N=1000, \
+        ##                  micropyprint=True):
+
         print("python_codegen")
+
+        if hasattr(self, "python_output_path"):
+            output_path = self.python_output_path
+            output_folder, output_name = os.path.split(self.python_output_path)
+            if not os.path.exists(output_folder):
+                os.mkdir(output_folder)
+        else:
+            msg = "You must specify the python output path before code can be generated."
+            showinfo(title='Information',
+                     message=msg)
+
+
+        ## Test me:
+        self.bd.generate_python_code(output_name, \
+                                     template_path=self.python_template_path, \
+                                     output_folder=output_folder, \
+                                     )
+
 
         
     def make_label(self, text, root=None):
