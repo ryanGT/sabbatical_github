@@ -29,11 +29,20 @@ The helper dialogs are:
 
 """
 
+
 ############################################
 #
 # Next Steps:
 #
 # ----------------
+#
+# - what does my gui need to be fully ready for student use?
+# - what would it take for the gui to generate micropython code?
+#
+# ## Plan:
+#    - try generating the micropython line following BD and see what is needed
+#         - how to handle two sensors and no actuator
+#
 #
 # - why does the feedback wire on my summing junction look terrible?
 # - figure out how to zoom the block diagram sketch well
@@ -429,6 +438,9 @@ class pybd_gui(tk.Tk):
             new_bd = pybd.load_model_from_csv(filename)
             self.bd = new_bd
             self.block_list_var.set(self.bd.block_name_list)
+            # actuators and sensors
+            self.actuators_var.set(self.bd.actuator_name_list)
+            self.sensors_var.set(self.bd.sensor_name_list)
             
     
     def on_save_menu(self, *args, **kwargs):

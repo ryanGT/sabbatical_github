@@ -134,7 +134,7 @@ class actuator_or_sensor_chooser(my_toplevel_window):
         # - when reading values, how do I know which ones are floats?
         #     - can I get the data types from defaults?
         msg = "cannot create actuators or sensors if self.parent doesn't have a block diagram"
-        assert hasattr(self.parent, "block_diagram"), msg
+        assert hasattr(self.parent, "bd"), msg
         assert self.parent.bd is not None, msg
         param_list = self.get_params_list()
         
