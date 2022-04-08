@@ -157,6 +157,8 @@ import numpy as np
 
 from tkinter import ttk
 from tkinter.messagebox import showinfo
+from tkinter.messagebox import askyesno
+
 
 from add_block_dialog import add_block_dialog
 from place_block_dialog import place_block_dialog
@@ -167,6 +169,7 @@ from multi_block_selector import multi_block_selector
 
 from actuator_or_sensor_chooser import actuator_chooser, sensor_chooser
 from edit_blocks_dialog import edit_blocks_dialog
+from loop_assigner import loop_number_assigner
 
 import py_block_diagram as pybd
 import os, txt_mixin
@@ -215,11 +218,12 @@ class pybd_gui(tk.Tk):
         self.menubar.add_cascade(menu=self.menu_codegen, label='Code Generation')
         self.menu_edit.add_command(label="Delete Block", command=self.on_delete_block)
         self.menu_file.add_command(label='Save', command=self.on_save_menu)
+        self.menu_file.add_command(label='Save As', command=self.on_save_as_menu)        
         self.menu_file.add_command(label='Load', command=self.on_load_menu)        
         #menu_file.add_command(label='Open...', command=openFile)
         self.menu_file.add_command(label='Quit', command=self._quit)
         self.menu_block_diagram.add_command(label="Set Print Blocks", command=self.on_set_print_blocks)
-        
+        self.menu_block_diagram.add_command(label="Set Loop Numbers", command=self.on_set_loop_numbers)
 
         self.arduino_menu = tk.Menu(self.menu_codegen)
         self.menu_codegen.add_cascade(menu=self.arduino_menu, label='Arduino Code Generation')
@@ -263,7 +267,9 @@ class pybd_gui(tk.Tk):
         Arduino code will be saved."""
 
         # params for saving
-        self.param_list = ['arduino_template_path','arduino_output_folder']
+        self.param_list = ['arduino_template_path','arduino_output_folder', \
+                           'python_template_path','python_output_path', \
+                           'csv_path']
         """List of parameters to save to the configuration file as
         'key:value' string pairs."""
         self.params_path = "gui_params_pybd.txt"
@@ -271,6 +277,12 @@ class pybd_gui(tk.Tk):
         in pybd_gui.param_list, such as
         `pybd_gui.arduino_template_path`."""
         self.load_params()
+
+
+    def on_set_loop_numbers(self, *args, **kwargs):
+        mydialog = loop_number_assigner(parent=self, max_loops=3)
+        mydialog.grab_set()
+
 
 
     def load_params(self):
@@ -282,6 +294,13 @@ class pybd_gui(tk.Tk):
         mydict = pybd.break_string_pairs_to_dict(mylist)
         for key, value in mydict.items():
             setattr(self, key, value)
+
+        if 'csv_path' in mydict:
+            #load the model from csv
+            print("loading: %s" % self.csv_path)
+            self.load_model_from_csv(self.csv_path)
+            # draw the BD
+            self.on_draw_btn()
             
 
     def save_params(self):
@@ -298,8 +317,10 @@ class pybd_gui(tk.Tk):
         session.  The parameters are listed in pybd_gui.param_list."""
         mydict = {}
         for key in self.param_list:
-            value = str(getattr(self, key))
-            mydict[key] = value
+            if hasattr(self, key):
+                value = str(getattr(self, key))
+                if value:
+                    mydict[key] = value
         return mydict
 
 
@@ -531,18 +552,23 @@ class pybd_gui(tk.Tk):
         print(repr(event.char))
 
 
+    def load_model_from_csv(self, csvpath):
+        new_bd = pybd.load_model_from_csv(csvpath)
+        self.bd = new_bd
+        self.block_list_var.set(self.bd.block_name_list)
+        # actuators and sensors
+        self.actuators_var.set(self.bd.actuator_name_list)
+        self.sensors_var.set(self.bd.sensor_name_list)
+
+
     def on_load_menu(self, *args, **kwargs):
         print("in menu laod")
         filename = tk.filedialog.askopenfilename(title = "Select Model to Load (CSV)",\
                                                  filetypes = (("csv files","*.csv"),("all files","*.*")))
         print (filename)
         if filename:
-            new_bd = pybd.load_model_from_csv(filename)
-            self.bd = new_bd
-            self.block_list_var.set(self.bd.block_name_list)
-            # actuators and sensors
-            self.actuators_var.set(self.bd.actuator_name_list)
-            self.sensors_var.set(self.bd.sensor_name_list)
+            self.load_model_from_csv(filename)
+            self.csv_path = filename
 
 
     def on_set_print_blocks(self, *args, **kwargs):
@@ -553,15 +579,22 @@ class pybd_gui(tk.Tk):
         mydialog = multi_block_selector(title="Select Print Blocks", parent=self)
         mydialog.grab_set()
 
-        
-    
-    def on_save_menu(self, *args, **kwargs):
-        print("in menu save")
+
+
+    def on_save_as_menu(self, *args, **kwargs):
         filename = tk.filedialog.asksaveasfilename(title = "Select filename",\
                                                    filetypes = (("csv files","*.csv"),("all files","*.*")))
         print (filename)
         if filename:
             self.bd.save_model_to_csv(filename)
+
+    
+    def on_save_menu(self, *args, **kwargs):
+        print("in menu save")
+        if hasattr(self, 'csv_path'):
+            self.bd.save_model_to_csv(self.csv_path)
+        else:
+            self.on_save_as_menu()
 
 
     def on_delete_block(self, *args, **kwargs):
@@ -599,9 +632,17 @@ class pybd_gui(tk.Tk):
         mydialog.grab_set()
         #print("%s, %s" % (mydialog.my_username, mydialog.my_password))
 
+
         
     def _quit(self, *args, **kwargs):
         print("in _quit")
+
+        answer = askyesno(title='Save Block Diagram',
+                        message='Do you want to save the block diagram to csv?')
+        if answer:
+            self.on_save_menu()
+                
+
         self.save_params()
         self.quit()     # stops mainloop
         self.destroy()  # this is necessary on Windows to prevent

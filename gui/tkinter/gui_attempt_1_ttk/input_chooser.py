@@ -13,15 +13,14 @@ import copy
 
 class input_chooser(my_toplevel_window):
     def __init__(self, block, parent, title="Input Chooser Dialog", \
-                 geometry='300x200', selected_index=0):        
+                 geometry='300x200'):        
         super().__init__(parent, title=title, geometry=geometry)
         self.bd = self.parent.bd
         self.columnconfigure(0, weight=4)
         self.block = block
         self.block_name = self.block.variable_name
         self.setfunc = self.block.set_input_block1
-        self.main_label_text = "Choose the input for block: %s" % self.block_name
-        self.selected_index = selected_index
+        self.main_label_text = "Choose the input for block: %s" % self.block_name 
         self.make_widgets()
 
 
@@ -47,9 +46,6 @@ class input_chooser(my_toplevel_window):
         print("input_name: %s" % input_name)
         input_block = self.bd.get_block_by_name(input_name)
         self.setfunc(input_block)
-        # restore selection on main dialog
-        self.parent.blocklistbox.select_set(self.selected_index)
-        self.parent.block_selected()
         self.destroy()
         # - get name from combobox
         # - get the selected block by name
@@ -60,13 +56,12 @@ class input_chooser(my_toplevel_window):
 
 class input2_chooser(input_chooser):
     def __init__(self, block, parent, title="Input 2 Chooser Dialog", \
-                 geometry='300x200', selected_index=0):      
+                 geometry='300x200'):        
         my_toplevel_window.__init__(self, parent, title=title, geometry=geometry)
         self.bd = self.parent.bd
         self.columnconfigure(0, weight=4)
         self.block = block
         self.block_name = self.block.variable_name
         self.setfunc = self.block.set_input_block2
-        self.main_label_text = "Choose input 2 for block: %s" % self.block_name
-        self.selected_index = selected_index
+        self.main_label_text = "Choose input 2 for block: %s" % self.block_name 
         self.make_widgets()

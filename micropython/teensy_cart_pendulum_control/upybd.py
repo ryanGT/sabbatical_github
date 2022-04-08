@@ -81,7 +81,8 @@ class block(object):
         
 
     def find_output(self, i):
-        """This is just making the loop counter act like a block"""
+        """This is just making the loop counter act like a block.
+        This should be overwritten by all derived blocks."""
         self.output_vector[i] = i
         return self.output_vector[i] 
 
@@ -89,6 +90,44 @@ class block(object):
     def read_output(self, i):
         return self.output_vector[i] 
 
+
+
+class loop_variable(block):
+    """This block exists to allow a variable to be passed between two
+    loops that run at different speeds.  My initial need is for the
+    cart/pendulum robot where the pendulum encoder loop will run at
+    250 or 500 Hz and the line following loop will run at 100 Hz.
+    Reading the line sensor takes 5-10 ms, so a slower loop time is
+    needed.  But slowing down the penedulum loop is assumed to be bad
+    from a time delay standpoint: if the pendulum can fall too far
+    between loops, balancing it will be much harder.
+
+    The value of the loop_variable will be set in one loop and read in
+    the other, so the loop index must be ignored in the read_output
+    method.
+
+    I am not yet sure how to handle storing data for graphing.  I
+    guess I should just assume this is done like any other block
+    running in the lower frequency loop."""
+    def __init__(self):
+        self.value = 0
+
+
+    def find_output(self, j):
+        """This is just making the loop counter act like a block.
+        This should be overwritten by all derived blocks."""
+        value = self.input_block1.read_output(j)
+        self.output_vector[j] = value
+        self.value = value#<-- set for reading in the read_output
+                          #method, regardless of loop index i or j (fast loop or slow)
+        return self.value
+
+
+    def read_output(self, i):
+        """The loop index i could be from either loop and must be
+        ignored.  But it must be accepted, because that is how all
+        blocks retrieve their input(s)."""
+        return self.value
 
 
 class i2c_sensor(block):
