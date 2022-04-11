@@ -1,3 +1,5 @@
 arduino_template_path:/Users/kraussry/sabbatical_github/arduino_oop_block_diagram/codegen/arduino_template1.ino
 arduino_output_folder:/Users/kraussry/sabbatical_github/gui/tkinter/gui_attempt_1_ttk/autogen1
+python_template_path:/Users/kraussry/sabbatical_github/micropython/teensy_cart_pendulum_control/main_template.py
+python_output_path:/Users/kraussry/sabbatical_github/micropython/teensy_cart_pendulum_control/cart_pend_OL/main.py
 csv_path:/Users/kraussry/sabbatical_github/gui/tkinter/gui_attempt_1_ttk/cart_pend_micropython/cart_pend_micropython_OL_3_zero_v_nom.csv

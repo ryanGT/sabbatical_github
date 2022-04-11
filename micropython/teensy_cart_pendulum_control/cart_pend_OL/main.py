@@ -9,8 +9,6 @@
 
 # 0 = pyboard, 1 = teensy41
 nISR = 0
-N = 1000#<-- probably longer
-print("N = %i" % N)
 
 import time
 
@@ -18,12 +16,9 @@ from machine import Timer
 from machine import Pin
 
 sw_pin = Pin(40, mode=Pin.OUT)
-led = Pin(13, mode=Pin.OUT) # enable GP16 as output to drive the SW_PIN
-led.off()
-
-p2 = Pin(21, mode=Pin.OUT)
-p3 = Pin(22, mode=Pin.OUT)
-p4 = Pin(23, mode=Pin.OUT)
+p2 = Pin(33, mode=Pin.OUT)
+p3 = Pin(34, mode=Pin.OUT)
+p4 = Pin(35, mode=Pin.OUT)
 
 
 isr_state = 0
@@ -72,28 +67,28 @@ prev_check = -1
 
 # blockinitcode
 line_sense = pybd.i2c_sensor()
-encoder = pybd.i2c_sensor()
-u_pulse_block = pybd.pulse_input(on_index=50, off_index=250, amp=100)
-G = pybd.cart_pendulum_upy(sensor1=line_sense, sensor2=encoder, send_address=7, read_address1=7, read_address2=8 ,i2c=i2c)
-v_nom_block = pybd.int_constant_block(value=0)
-add_block1 = pybd.addition_block()
-subtract_block1 = pybd.subtraction_block()
+pend_enc = pybd.i2c_sensor()
+v_nom = pybd.int_constant_block(value=0)
+add = pybd.addition_block()
+subtract = pybd.subtraction_block()
+G = pybd.cart_pendulum_upy(sensor1=line_sense, sensor2=pend_enc, send_address=7, read_address1=7, read_address2=8 ,i2c=i2c)
+U_pulse = pybd.pulse_input(on_index=50, off_index=250, amp=100)
 
 
 
 # make input connections here:
 # blocksecondaryinitcode
-u_pulse_block.init_vectors(N)
-G.set_input_block1(add_block1)
-G.set_input_block2(subtract_block1)
+v_nom.init_vectors(N)
+add.set_input_block1(v_nom)
+add.set_input_block2(U_pulse)
+add.init_vectors(N)
+subtract.set_input_block1(v_nom)
+subtract.set_input_block2(U_pulse)
+subtract.init_vectors(N)
+G.set_input_block1(add)
+G.set_input_block2(subtract)
 G.init_vectors(N)
-v_nom_block.init_vectors(N)
-add_block1.set_input_block1(v_nom_block)
-add_block1.set_input_block2(u_pulse_block)
-add_block1.init_vectors(N)
-subtract_block1.set_input_block1(v_nom_block)
-subtract_block1.set_input_block2(u_pulse_block)
-subtract_block1.init_vectors(N)
+U_pulse.init_vectors(N)
 
 
 
@@ -125,7 +120,9 @@ enc = 0
 
 nISR = 0
 
-tim = Timer(1, mode=Timer.PERIODIC, callback=tick, freq=500)
+myfreq = 250
+#myfreq = 500
+tim = Timer(1, mode=Timer.PERIODIC, callback=tick, freq=myfreq)
 
 
 t0 = time.ticks_us()
@@ -154,14 +151,20 @@ for i in range(N):
     isr_happened = 0
 
     # pythonloopcode
-    u_pulse_block.find_output(i)
-    v_nom_block.find_output(i)
-    add_block1.find_output(i)
-    subtract_block1.find_output(i)
-    G.send_commands(i)
+    v_nom.find_output(i)
+    add.find_output(i)
+    subtract.find_output(i)
     G.find_output(i)
+    U_pulse.find_output(i)
 
 
+    p4.on()
+    # pythonsecondaryloopcode
+    G.send_commands(i)
+
+
+
+    p4.off()
     p3.off()
 
 
@@ -184,29 +187,19 @@ tim.deinit()
 
 
 # printingcode
-print_blocks = [u_pulse_block, add_block1, subtract_block1, line_sense]
+print_blocks = [add, subtract, G, U_pulse]
 for i in range(N):
     rowstr = str(i)
     for block in print_blocks:
         if rowstr:
             rowstr += ', '
-        rowstr += str(block.output_vector[i])
+        rowstr += str(block.read_output(i))
     print(rowstr)
 
 
-## for row in data:
-##     #print("%i, %i, %i" % (row[0],row[1],row[2]))
-##     row_str = ""
-##     for i, elem in enumerate(row):
-##         if i > 0:
-##             row_str += ","
-##         row_str += str(elem)
-##     print(row_str)
-
-
-## n_echo = data[:,2]*256 + data[:,3]
-## dn = n_echo[1:] - n_echo[0:-1]
-## print("dn max = %i" % np.max(dn))
+dn = G.n_echo[1:] - G.n_echo[0:-1]
+print("dn max = %i" % np.max(dn))
+print("dn[1:] min = %i" % np.min(dn[1:]))
 
 ## for i, ent in enumerate(dn):
 ##     if ent != 1:
