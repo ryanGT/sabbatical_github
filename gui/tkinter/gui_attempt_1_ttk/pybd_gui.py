@@ -163,7 +163,7 @@ from tkinter.messagebox import askyesno
 from add_block_dialog import add_block_dialog
 from place_block_dialog import place_block_dialog
 from input_chooser import input_chooser, input2_chooser
-from multi_block_selector import multi_block_selector
+from multi_block_selector import print_block_selector
 
 #from tkinter import simpledialog
 
@@ -223,6 +223,8 @@ class pybd_gui(tk.Tk):
         #menu_file.add_command(label='Open...', command=openFile)
         self.menu_file.add_command(label='Quit', command=self._quit)
         self.menu_block_diagram.add_command(label="Set Print Blocks", command=self.on_set_print_blocks)
+        self.menu_block_diagram.add_command(label="Set Execution Order for Blocks", \
+                                            command=self.on_set_execution_order)
         self.menu_block_diagram.add_command(label="Set Loop Numbers", command=self.on_set_loop_numbers)
 
         self.arduino_menu = tk.Menu(self.menu_codegen)
@@ -277,6 +279,10 @@ class pybd_gui(tk.Tk):
         in pybd_gui.param_list, such as
         `pybd_gui.arduino_template_path`."""
         self.load_params()
+
+
+    def on_set_execution_order(self, *args, **kwargs):
+        self.bd.find_execution_order()
 
 
     def on_set_loop_numbers(self, *args, **kwargs):
@@ -417,6 +423,8 @@ class pybd_gui(tk.Tk):
             output_folder, output_name = os.path.split(self.python_output_path)
             if not os.path.exists(output_folder):
                 os.mkdir(output_folder)
+            print("output_path: %s" % output_path)
+            print("output_folder: %s" % output_folder)
         else:
             msg = "You must specify the python output path before code can be generated."
             showinfo(title='Information',
@@ -576,7 +584,7 @@ class pybd_gui(tk.Tk):
         # - select which blocks are for printing from a listbox widget
         # - send the corresponding block list to self.bd
         #     - might have to look up the blocks by name
-        mydialog = multi_block_selector(title="Select Print Blocks", parent=self)
+        mydialog = print_block_selector(title="Select Print Blocks", parent=self)
         mydialog.grab_set()
 
 
@@ -587,6 +595,8 @@ class pybd_gui(tk.Tk):
         print (filename)
         if filename:
             self.bd.save_model_to_csv(filename)
+            self.csv_path = filename
+            # also need to set the parameter
 
     
     def on_save_menu(self, *args, **kwargs):
@@ -936,8 +946,6 @@ class pybd_gui(tk.Tk):
         input_dialog.grab_set()#<-- this "unchooses" the block
 
         # reset the block choice and show selected inputs:
-        print("back to main window")
-        self.blocklistbox.select_set(selected_index)
 
         #class input_chooser(my_toplevel_window):
         #    def __init__(self, block, parent, title="Input Chooser Dialog", \

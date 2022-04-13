@@ -68,11 +68,16 @@ prev_check = -1
 # blockinitcode
 line_sense = pybd.i2c_sensor()
 pend_enc = pybd.i2c_sensor()
-v_nom = pybd.int_constant_block(value=0)
+v_nom = pybd.int_constant_block(value=200)
 add = pybd.addition_block()
 subtract = pybd.subtraction_block()
 G = pybd.cart_pendulum_upy(sensor1=line_sense, sensor2=pend_enc, send_address=7, read_address1=7, read_address2=8 ,i2c=i2c)
-U_pulse = pybd.pulse_input(on_index=50, off_index=250, amp=100)
+U_line_center = pybd.int_constant_block(value=3000)
+sum_junct_line = pybd.summing_junction()
+D_line = pybd.P_controller(Kp=0.05)
+sat = pybd.saturation_block(mymax=255)
+satP = pybd.saturation_block(mymax=255)
+satN = pybd.saturation_block(mymax=255)
 
 
 
@@ -80,15 +85,26 @@ U_pulse = pybd.pulse_input(on_index=50, off_index=250, amp=100)
 # blocksecondaryinitcode
 v_nom.init_vectors(N)
 add.set_input_block1(v_nom)
-add.set_input_block2(U_pulse)
+add.set_input_block2(sat)
 add.init_vectors(N)
 subtract.set_input_block1(v_nom)
-subtract.set_input_block2(U_pulse)
+subtract.set_input_block2(sat)
 subtract.init_vectors(N)
-G.set_input_block1(add)
-G.set_input_block2(subtract)
+G.set_input_block1(satP)
+G.set_input_block2(satN)
 G.init_vectors(N)
-U_pulse.init_vectors(N)
+U_line_center.init_vectors(N)
+sum_junct_line.input_block1 = U_line_center
+sum_junct_line.input_block2 = line_sense
+sum_junct_line.init_vectors(N)
+D_line.set_input_block1(sum_junct_line)
+D_line.init_vectors(N)
+sat.set_input_block1(D_line)
+sat.init_vectors(N)
+satP.set_input_block1(add)
+satP.init_vectors(N)
+satN.set_input_block1(subtract)
+satN.init_vectors(N)
 
 
 
@@ -152,10 +168,15 @@ for i in range(N):
 
     # pythonloopcode
     v_nom.find_output(i)
+    U_line_center.find_output(i)
+    G.find_output(i)
+    sum_junct_line.find_output(i)
+    D_line.find_output(i)
+    sat.find_output(i)
     add.find_output(i)
     subtract.find_output(i)
-    G.find_output(i)
-    U_pulse.find_output(i)
+    satP.find_output(i)
+    satN.find_output(i)
 
 
     p4.on()
@@ -187,7 +208,7 @@ tim.deinit()
 
 
 # printingcode
-print_blocks = [add, subtract, G, U_pulse]
+print_blocks = [sum_junct_line, D_line, sat, satP, satN, line_sense, pend_enc]
 for i in range(N):
     rowstr = str(i)
     for block in print_blocks:
