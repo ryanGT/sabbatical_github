@@ -60,8 +60,9 @@ from ulab import numpy as np
 import upybd as pybd
 
 # sysprecode
-N = 1000
-num_read = np.zeros(N)
+N1 = 1000
+N2 = 200
+num_read = np.zeros(N1)
 prev_check = -1
 
 
@@ -83,28 +84,6 @@ satN = pybd.saturation_block(mymax=255)
 
 # make input connections here:
 # blocksecondaryinitcode
-v_nom.init_vectors(N)
-add.set_input_block1(v_nom)
-add.set_input_block2(sat)
-add.init_vectors(N)
-subtract.set_input_block1(v_nom)
-subtract.set_input_block2(sat)
-subtract.init_vectors(N)
-G.set_input_block1(satP)
-G.set_input_block2(satN)
-G.init_vectors(N)
-U_line_center.init_vectors(N)
-sum_junct_line.input_block1 = U_line_center
-sum_junct_line.input_block2 = line_sense
-sum_junct_line.init_vectors(N)
-D_line.set_input_block1(sum_junct_line)
-D_line.init_vectors(N)
-sat.set_input_block1(D_line)
-sat.init_vectors(N)
-satP.set_input_block1(add)
-satP.init_vectors(N)
-satN.set_input_block1(subtract)
-satN.init_vectors(N)
 
 
 

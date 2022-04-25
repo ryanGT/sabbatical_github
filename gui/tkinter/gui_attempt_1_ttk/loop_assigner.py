@@ -21,7 +21,27 @@ class loop_number_assigner(my_toplevel_window):
         self.main_label_text = main_label_text
         self.max_loops = max_loops
         self.make_widgets()
+        self.show_existing_assignments()
 
+
+    def show_existing_assignments(self):
+        """If blocks have been previously assigned, show them in the
+        correct boxes."""
+        # Approach:
+        #
+        # - check each block to see if it has a valid loop number
+        # - send the block to that loop box if set
+        print("in show_existing_assignments")
+        for curname in self.all_block_names:
+            print("curname: %s" % curname)
+            block = self.bd.get_block_by_name(curname)
+            if hasattr(block, "loop_number"):
+                print("block.loop_number: %s" % block.loop_number)
+                if block.loop_number:
+                    self.send_blocks_to_loop(block.loop_number, [curname])
+            else:
+                print("no loop_number attr")
+        
 
     def make_widgets(self):
         mycol = 0
