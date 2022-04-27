@@ -11,6 +11,16 @@ import py_block_diagram as pybd
 
 import copy
 
+
+def get_selected_blocks(widget, block_inds):
+    block_names = []
+    for ind in block_inds:
+        curname = widget.get(ind)
+        block_names.append(curname)
+        
+    return block_names
+
+
 class loop_number_assigner(my_toplevel_window):
     def __init__(self, parent, title="Loop Number Assigner Dialog", \
                  geometry='500x450', max_loops=3, \
@@ -95,6 +105,11 @@ class loop_number_assigner(my_toplevel_window):
             currow += 1
 
 
+        self.unassign_btn = self.make_button_and_grid("Unassign", currow, mycol, \
+                                                      command=self.on_unassign_btn)
+        currow += 1
+
+
     def send_blocks_to_loop(self, loop_number, block_names):
         # Approach:
         #
@@ -120,8 +135,48 @@ class loop_number_assigner(my_toplevel_window):
             self.available_blocks.remove(curname)
             
         self.available_blocklist_var.set(self.available_blocks)
-        
 
+
+    def append_blocks_to_available(self, block_names):
+        for curname in block_names:
+            self.available_blocks.append(curname)
+            
+        self.available_blocklist_var.set(self.available_blocks)
+
+
+    def remove_blocks_from_list(self, basename, block_names):
+        print("block_names: %s" % block_names)
+        mylist = getattr(self, basename)
+        for name in block_names:
+            mylist.remove(name)
+
+        var_attr = basename + '_var'
+        var = getattr(self, var_attr)
+        var.set(mylist)
+        print("after removal:")
+        print("mylist: %s" % mylist)
+        widget_attr = basename + "_listbox"
+        widget = getattr(self, widget_attr)
+        widget.selection_clear(0, 'end')
+        
+        
+    def on_unassign_btn(self, *args, **kwargs):
+        print("in on_unassign_btn")
+        # Approach:
+        # - find any selected blocks in any listbox above
+        for i in range(self.max_loops):
+            j = i+1
+            basename_j = "loop_%i_blocks" % j
+            attr_j = basename_j + "_listbox"
+            widget_j = getattr(self, attr_j)
+            selected_blocks = widget_j.curselection()
+            if selected_blocks:
+                selected_names = get_selected_blocks(widget_j, selected_blocks)
+                print("selected_names: %s" % selected_names)
+                # now move those namnes from widget_j to the available_blocks listbox
+                self.append_blocks_to_available(selected_names)
+                self.remove_blocks_from_list(basename_j, selected_names)
+                
 
     def on_assign_btn(self, *args, **kwargs):
         # Approach:

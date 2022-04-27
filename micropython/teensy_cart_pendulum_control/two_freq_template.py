@@ -112,7 +112,7 @@ G.start_test()
 freq_ratio = 5
 
 
-for i in range(N):
+for i in range(N1):
     #pin_A15.on()
     while (isr_happened == 0):
         # wait for next interrupt
@@ -131,6 +131,9 @@ for i in range(N):
     # clear flag
     isr_happened = 0
 
+    # read sensors over i2c, the line sensor will likely not have changed:
+    # pythonloop1code
+    
     # execute slower loop at freq_ratio intervals
     # - if fast loop is running at 500 Hz, slow loop executes at
     #   500/freq_ratio
@@ -140,10 +143,12 @@ for i in range(N):
     if remainder == 0:
         # execute slower loop
         # pythonloop2code
+        # pythonsecondaryloop2code
 
-    # pythonloop1code
+
 
     p4.on()
+    # send plant commands:
     # pythonsecondaryloop1code
 
     
