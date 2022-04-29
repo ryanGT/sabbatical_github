@@ -59,59 +59,52 @@ from ulab import numpy as np
 
 import upybd as pybd
 
-
-# I will need N1 and N2 for the two loop init code
-
 # sysprecode
-N1 = 1000
-N2 = 200
-num_read = np.zeros(N1)
+N = 1000
+num_read = np.zeros(N)
 prev_check = -1
 
 
 # blockinitcode
 line_sense = pybd.i2c_sensor()
 pend_enc = pybd.i2c_sensor()
-v_nom = pybd.int_constant_block(value=200)
+v_nom = pybd.int_constant_block(value=300)
 add = pybd.addition_block()
 subtract = pybd.subtraction_block()
 G = pybd.cart_pendulum_upy(sensor1=line_sense, sensor2=pend_enc, send_address=7, read_address1=7, read_address2=8 ,i2c=i2c)
 U_line_center = pybd.int_constant_block(value=3000)
 sum_junct_line = pybd.summing_junction()
-D_line = pybd.P_controller(Kp=0.05)
-sat = pybd.saturation_block(mymax=255)
-satP = pybd.saturation_block(mymax=255)
-satN = pybd.saturation_block(mymax=255)
-v_turn = pybd.loop_variable()
+D_line = pybd.P_controller(Kp=0.1)
+sat = pybd.saturation_block(mymax=200)
+satP = pybd.saturation_block(mymax=400)
+satN = pybd.saturation_block(mymax=400)
 
 
 
 # make input connections here:
 # blocksecondaryinitcode
-v_nom.init_vectors(N1)
+v_nom.init_vectors(N)
 add.set_input_block1(v_nom)
-add.set_input_block2(v_turn)
-add.init_vectors(N1)
+add.set_input_block2(sat)
+add.init_vectors(N)
 subtract.set_input_block1(v_nom)
-subtract.set_input_block2(v_turn)
-subtract.init_vectors(N1)
+subtract.set_input_block2(sat)
+subtract.init_vectors(N)
 G.set_input_block1(satP)
 G.set_input_block2(satN)
-G.init_vectors(N1)
-satP.set_input_block1(add)
-satP.init_vectors(N1)
-satN.set_input_block1(subtract)
-satN.init_vectors(N1)
-U_line_center.init_vectors(N2)
+G.init_vectors(N)
+U_line_center.init_vectors(N)
 sum_junct_line.input_block1 = U_line_center
 sum_junct_line.input_block2 = line_sense
-sum_junct_line.init_vectors(N2)
+sum_junct_line.init_vectors(N)
 D_line.set_input_block1(sum_junct_line)
-D_line.init_vectors(N2)
+D_line.init_vectors(N)
 sat.set_input_block1(D_line)
-sat.init_vectors(N2)
-v_turn.set_input_block1(sat)
-v_turn.init_vectors(N2)
+sat.init_vectors(N)
+satP.set_input_block1(add)
+satP.init_vectors(N)
+satN.set_input_block1(subtract)
+satN.init_vectors(N)
 
 
 
@@ -153,10 +146,8 @@ t0 = time.ticks_us()
 # start test command here
 G.start_test()
 
-freq_ratio = 5
 
-
-for i in range(N1):
+for i in range(N):
     #pin_A15.on()
     while (isr_happened == 0):
         # wait for next interrupt
@@ -175,39 +166,21 @@ for i in range(N1):
     # clear flag
     isr_happened = 0
 
-    # read sensors over i2c, the line sensor will likely not have changed:
-    # pythonloop1code
+    # pythonloopcode
     v_nom.find_output(i)
+    U_line_center.find_output(i)
     G.find_output(i)
+    sum_junct_line.find_output(i)
+    D_line.find_output(i)
+    sat.find_output(i)
     add.find_output(i)
     subtract.find_output(i)
     satP.find_output(i)
     satN.find_output(i)
 
 
-    # execute slower loop at freq_ratio intervals
-    # - if fast loop is running at 500 Hz, slow loop executes at
-    #   500/freq_ratio
-    # - to achieve this, only do things when the remainder of i/freq_ratio is zeros
-    remainder = i % freq_ratio
-    j = int(i/freq_ratio)
-    if remainder == 0:
-        # execute slower loop
-        # pythonloop2code
-        U_line_center.find_output(j)
-        sum_junct_line.find_output(j)
-        D_line.find_output(j)
-        sat.find_output(j)
-        v_turn.find_output(j)
-
-        # pythonsecondaryloop2code
-
-
-
-
     p4.on()
-    # send plant commands:
-    # pythonsecondaryloop1code
+    # pythonsecondaryloopcode
     G.send_commands(i)
 
 
@@ -236,6 +209,7 @@ tim.deinit()
 
 # printingcode
 print_blocks = [sum_junct_line, D_line, sat, satP, satN, line_sense, pend_enc]
+print('#begin test')
 for i in range(N):
     rowstr = str(i)
     for block in print_blocks:
@@ -245,6 +219,8 @@ for i in range(N):
     print(rowstr)
 
 
+
+print("#end test")
 dn = G.n_echo[1:] - G.n_echo[0:-1]
 print("dn max = %i" % np.max(dn))
 print("dn[1:] min = %i" % np.min(dn[1:]))

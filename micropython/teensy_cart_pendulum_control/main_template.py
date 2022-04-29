@@ -155,6 +155,8 @@ tim.deinit()
 
 # printingcode
 
+
+print("#end test")
 dn = G.n_echo[1:] - G.n_echo[0:-1]
 print("dn max = %i" % np.max(dn))
 print("dn[1:] min = %i" % np.min(dn[1:]))

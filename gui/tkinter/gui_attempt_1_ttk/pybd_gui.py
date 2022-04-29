@@ -226,7 +226,7 @@ class pybd_gui(tk.Tk):
         self.menu_block_diagram.add_command(label="Set Execution Order for Blocks", \
                                             command=self.on_set_execution_order)
         self.menu_block_diagram.add_command(label="Set Loop Numbers", command=self.on_set_loop_numbers)
-
+        self.menu_block_diagram.add_command(label="Clear Loop Numbers", command=self.on_clear_loop_numbers)
         self.arduino_menu = tk.Menu(self.menu_codegen)
         self.menu_codegen.add_cascade(menu=self.arduino_menu, label='Arduino Code Generation')
         self.arduino_menu.add_command(label='Set Arduino Template File', command=self.set_arduino_template)
@@ -247,9 +247,12 @@ class pybd_gui(tk.Tk):
         self.python_gen_menu.add_command(label='Generate Python Code', command=self.python_codegen)          
         #self.bind("<Key>", self.key_pressed)
         self.bind('<Control-q>', self._quit)
+        self.bind('<q>', self._quit)
+        self.bind('<p>', self.python_codegen)        
         self.bind('<Control-s>', self.on_save_menu)
         self.bind('<Control-l>', self.on_load_menu)
         self.bind('<Control-a>', self.add_block)
+        self.bind('<a>', self.add_block)        
         self.bind('<Control-P>', self.on_place_btn)
         self.bind('<Alt-p>', self.on_place_btn)
         self.bind('<Control-d>', self.on_draw_btn)
@@ -283,6 +286,10 @@ class pybd_gui(tk.Tk):
 
     def on_set_execution_order(self, *args, **kwargs):
         self.bd.find_execution_order()
+
+
+    def on_clear_loop_numbers(self, *args, **kwargs):
+        self.bd.clear_loops()
 
 
     def on_set_loop_numbers(self, *args, **kwargs):
@@ -558,6 +565,12 @@ class pybd_gui(tk.Tk):
     def key_pressed(self, event):
         print("pressed:")
         print(repr(event.char))
+        print("keycode:")
+        print(event.keycode)
+        print("keysym:")
+        print(event.keysym)
+        print("keysym_num:")
+        print(event.keysym_num)
 
 
     def load_model_from_csv(self, csvpath):

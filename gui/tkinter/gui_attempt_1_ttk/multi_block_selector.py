@@ -40,21 +40,7 @@ class multi_block_selector(my_toplevel_window):
 
 
     def on_go_button(self, *args, **kwargs):
-        print("on_go_button pressed")
-        selected_indices = self.blocklist_listbox.curselection()
-        #print("selected_indices:")
-        block_name_list = []
-        for item in selected_indices:
-            curname = self.blocklist_listbox.get(item)
-            block_name_list.append(curname)
-        print("block_name_list:" + str(block_name_list))
-        self.bd.set_print_blocks_from_names(block_name_list)
-        self.destroy()
-        # - get name from combobox
-        # - get the selected block by name
-        # - call the set input method of self.block
-        # - handle second input if applicable
-
+        raise NotImplementedError
 
 
 
@@ -73,3 +59,20 @@ class print_block_selector(multi_block_selector):
         # append all sensor names (might need to revisit later)
         printable_blocks += self.bd.sensor_name_list
         self.all_block_names = printable_blocks
+
+
+    def on_go_button(self, *args, **kwargs):
+        print("on_go_button pressed")
+        selected_indices = self.blocklist_listbox.curselection()
+        #print("selected_indices:")
+        block_name_list = []
+        for item in selected_indices:
+            curname = self.blocklist_listbox.get(item)
+            block_name_list.append(curname)
+        print("block_name_list:" + str(block_name_list))
+        self.bd.set_print_blocks_from_names(block_name_list)
+        self.destroy()
+        # - get name from combobox
+        # - get the selected block by name
+        # - call the set input method of self.block
+        # - handle second input if applicable
