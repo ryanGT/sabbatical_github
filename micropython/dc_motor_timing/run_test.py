@@ -5,6 +5,7 @@ portname = "/dev/tty.usbmodem207831A44E532"
 #fn = "main_PD_control.py"
 #fn = "main.py"
 fn = "main.py"
+# how do I do this using mpremote?
 output = pyboard.execfile(fn, device=portname)
 mystr = output.decode()
 mylist = mystr.split('\r\n')

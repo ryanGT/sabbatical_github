@@ -21,9 +21,8 @@ pad_options = {'padx': 5, 'pady': 5}
 class place_block_dialog(tk.Toplevel):
     def __init__(self, parent, title="Place Block Dialog"):
         super().__init__(parent)
-        self.selected_block_type = None
         self.parent = parent
-        self.geometry('800x600')
+        self.geometry('400x600')
         self.title(title)
         self.make_widgets()
 
@@ -136,24 +135,63 @@ class place_block_dialog(tk.Toplevel):
         self.make_combo_and_var_grid_nw("relative_direction", 7, curcol)
         self.relative_direction_combobox['values'] = ['right','left','above','below']
 
+
+        self.rel_dist_label = self.make_label_and_grid_sw("Relative Distance", 8, curcol)
+        self.make_entry_and_var_grid_nw("rel_dist", 9, curcol)
+
+        # xshift and yshift for relative placement
+        self.xshift_label = self.make_label_and_grid_sw("x shift", 10, curcol)
+        self.make_entry_and_var_grid_nw("xshift", 11, curcol)
+        self.yshift_label = self.make_label_and_grid_sw("y shift", 12, curcol)
+        self.make_entry_and_var_grid_nw("yshift", 13, curcol)
+                
         self.relative_widgets = [self.label5, self.label6, self.relative_block_combobox, \
-                                 self.relative_direction_combobox]
+                                 self.relative_direction_combobox, \
+                                 self.rel_dist_label, self.rel_dist_entry, \
+                                 self.xshift_label, self.xshift_entry, \
+                                 self.yshift_label, self.yshift_entry, \
+                                 ]
 
+        
 
+        
         # go button
         self.go_button = ttk.Button(self, text='Place Block', command=self.go_pressed)
         self.grid_widget(self.go_button, 15, curcol)
 
 
         # setup for relative placement default
-        self.placement_type_var.set("relative")
+        self.set_defaults()
         self.hide_abs_widgets()
         self.unhide_relative_widgets()
+
+
+    def set_defaults(self):
+        print("setting defaults")
+        self.placement_type_var.set("relative")
+        self.relative_direction_var.set("right")
+        self.rel_dist_var.set("4")
+        self.xshift_var.set("0")
+        self.yshift_var.set("0")        
+
+
+    def set_widgets_to_block(self, block):
+        print("setting widgets to block values")
+        self.placement_type_var.set(block.placement_type)
+        self.relative_block_var.set(block.rel_block_name)
+        self.relative_direction_var.set(block.rel_pos)
+        self.rel_dist_var.set(str(block.rel_distance))
+        self.xshift_var.set(str(block.xshift))
+        self.yshift_var.set(str(block.yshift))
         
 
     def set_block_to_place(self, block_name):
         self.block_to_place_var.set(block_name)
-
+        block = self.parent.get_block_by_name(block_name)
+        if block.placement_type:
+            self.set_widgets_to_block(block)
+        else:
+            self.set_defaults()
 
     def go_pressed(self, *args, **kwargs):
         place_type = self.placement_type_var.get()
@@ -179,8 +217,22 @@ class place_block_dialog(tk.Toplevel):
             rel_block_name = self.relative_block_var.get()
             rel_block = self.parent.get_block_by_name(rel_block_name)
             rel_pos = self.relative_direction_var.get()
+            rel_dist = float(self.rel_dist_var.get())
+            xshift = self.xshift_var.get()
+            if not xshift:
+                xshift = 0
+            else:
+                xshift = float(xshift)
+                
+            yshift = self.yshift_var.get()
+            if not yshift:
+                yshift = 0
+            else:
+                yshift = float(yshift)
+                
             block.placement_type = "relative"
-            block.place_relative(rel_block=rel_block, rel_pos=rel_pos, rel_distance=4, xshift=0, yshift=0)
+            block.place_relative(rel_block=rel_block, rel_pos=rel_pos, rel_distance=rel_dist, \
+                                 xshift=xshift, yshift=yshift)
 
         block_place_str = block.get_placememt_str()
         print("block_place_str: %s" % block_place_str)
@@ -231,4 +283,5 @@ class place_block_dialog(tk.Toplevel):
         elif place_type == "relative":
             self.hide_abs_widgets()
             self.unhide_relative_widgets()
+            self.set_defaults()
             

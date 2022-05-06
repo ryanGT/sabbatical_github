@@ -32,16 +32,36 @@ The helper dialogs are:
 
 ############################################
 #
+# Features needed:
+#
+# - auto-save and auto-load gui/bd params
+#     - template path
+#     - autogen output path
+#     - how do I show these params to the user?
+# - the ability to add and edit wire waypoints
+#
+#
+############################################
+
+############################################
+#
 # Next Steps:
 #
 # ----------------
 #
+# - **allow parameters to be specified using the add_block_dialog**
 # - what does my gui need to be fully ready for student use?
 # - what would it take for the gui to generate micropython code?
+# - what do I need to do to do line following with micropython using the gui?
+#     - do "dumb" line following at 250 Hz
+#     - start reading pendulum
+#     - do vib supression
+#     - add check for new line sensor reading to the template
 #
 # ## Plan:
 #    - try generating the micropython line following BD and see what is needed
-#         - how to handle two sensors and no actuator
+#         - how to handle **two sensors** and no actuator <----
+#         - suggested name for cart_pend plant should be G
 #
 #
 # - why does the feedback wire on my summing junction look terrible?
@@ -66,6 +86,9 @@ The helper dialogs are:
 #
 #
 # Resovled:
+# - the ability to edit block parameters, including the name and label
+#    - how would I tell which parameters are changed?
+#    - how would I handle changing a block's name in the block_diagram?
 # - generate code menu functions
 # - make the set input buttons work
 # - make the load csv method handle the new format with actuators and sensors
@@ -120,6 +143,7 @@ The helper dialogs are:
 import tkinter
 import tkinter as tk
 from tkinter import ttk
+from tkinter.messagebox import askyesno
 
 #from matplotlib.backends.backend_tkagg import (
 #    FigureCanvasTkAgg, NavigationToolbar2Tk)
@@ -133,15 +157,19 @@ import numpy as np
 
 from tkinter import ttk
 from tkinter.messagebox import showinfo
+from tkinter.messagebox import askyesno
+
 
 from add_block_dialog import add_block_dialog
 from place_block_dialog import place_block_dialog
 from input_chooser import input_chooser, input2_chooser
+from multi_block_selector import print_block_selector
 
 #from tkinter import simpledialog
 
 from actuator_or_sensor_chooser import actuator_chooser, sensor_chooser
-
+from edit_blocks_dialog import edit_blocks_dialog
+from loop_assigner import loop_number_assigner
 
 import py_block_diagram as pybd
 import os, txt_mixin
@@ -182,25 +210,49 @@ class pybd_gui(tk.Tk):
         self['menu'] = self.menubar
         self.menu_file = tk.Menu(self.menubar)
         self.menu_edit = tk.Menu(self.menubar)
+        self.menu_block_diagram = tk.Menu(self.menubar)
         self.menu_codegen = tk.Menu(self.menubar)        
         self.menubar.add_cascade(menu=self.menu_file, label='File')
         self.menubar.add_cascade(menu=self.menu_edit, label='Edit')
-        self.menubar.add_cascade(menu=self.menu_codegen, label='Code Generation')        
+        self.menubar.add_cascade(menu=self.menu_block_diagram, label='Block Diagram')        
+        self.menubar.add_cascade(menu=self.menu_codegen, label='Code Generation')
+        self.menu_edit.add_command(label="Delete Block", command=self.on_delete_block)
         self.menu_file.add_command(label='Save', command=self.on_save_menu)
+        self.menu_file.add_command(label='Save As', command=self.on_save_as_menu)        
         self.menu_file.add_command(label='Load', command=self.on_load_menu)        
         #menu_file.add_command(label='Open...', command=openFile)
         self.menu_file.add_command(label='Quit', command=self._quit)
-        self.menu_codegen.add_command(label='Set Arduino Template File', command=self.set_arduino_template)
-        self.menu_codegen.add_command(label='Get Arduino Template File', command=self.get_arduino_template)
-        self.menu_codegen.add_command(label='Set Arduino Output Path', \
+        self.menu_block_diagram.add_command(label="Set Print Blocks", command=self.on_set_print_blocks)
+        self.menu_block_diagram.add_command(label="Set Execution Order for Blocks", \
+                                            command=self.on_set_execution_order)
+        self.menu_block_diagram.add_command(label="Set Loop Numbers", command=self.on_set_loop_numbers)
+        self.menu_block_diagram.add_command(label="Clear Loop Numbers", command=self.on_clear_loop_numbers)
+        self.arduino_menu = tk.Menu(self.menu_codegen)
+        self.menu_codegen.add_cascade(menu=self.arduino_menu, label='Arduino Code Generation')
+        self.arduino_menu.add_command(label='Set Arduino Template File', command=self.set_arduino_template)
+        self.arduino_menu.add_command(label='Get Arduino Template File', command=self.get_arduino_template)
+        self.arduino_menu.add_command(label='Set Arduino Output Path', \
                                       command=self.set_arduino_output_folder)
-        self.menu_codegen.add_command(label='Generate Arduino Code', command=self.arduino_codegen)                
+        self.arduino_menu.add_command(label='Generate Arduino Code', command=self.arduino_codegen)
 
+
+        self.python_gen_menu = tk.Menu(self.menu_codegen)
+        self.menu_codegen.add_cascade(menu=self.python_gen_menu, label='Python Code Generation')
+        self.python_gen_menu.add_command(label='Set Python Template File', \
+                                         command=self.set_python_gen_template)
+        self.python_gen_menu.add_command(label='Get Python Template File', \
+                                         command=self.get_python_gen_template)
+        self.python_gen_menu.add_command(label='Set Python Output Path', \
+                                      command=self.set_python_gen_output_path)
+        self.python_gen_menu.add_command(label='Generate Python Code', command=self.python_codegen)          
         #self.bind("<Key>", self.key_pressed)
         self.bind('<Control-q>', self._quit)
+        self.bind('<q>', self._quit)
+        self.bind('<p>', self.python_codegen)        
         self.bind('<Control-s>', self.on_save_menu)
         self.bind('<Control-l>', self.on_load_menu)
         self.bind('<Control-a>', self.add_block)
+        self.bind('<a>', self.add_block)        
         self.bind('<Control-P>', self.on_place_btn)
         self.bind('<Alt-p>', self.on_place_btn)
         self.bind('<Control-d>', self.on_draw_btn)
@@ -220,7 +272,9 @@ class pybd_gui(tk.Tk):
         Arduino code will be saved."""
 
         # params for saving
-        self.param_list = ['arduino_template_path','arduino_output_folder']
+        self.param_list = ['arduino_template_path','arduino_output_folder', \
+                           'python_template_path','python_output_path', \
+                           'csv_path']
         """List of parameters to save to the configuration file as
         'key:value' string pairs."""
         self.params_path = "gui_params_pybd.txt"
@@ -228,6 +282,20 @@ class pybd_gui(tk.Tk):
         in pybd_gui.param_list, such as
         `pybd_gui.arduino_template_path`."""
         self.load_params()
+
+
+    def on_set_execution_order(self, *args, **kwargs):
+        self.bd.find_execution_order()
+
+
+    def on_clear_loop_numbers(self, *args, **kwargs):
+        self.bd.clear_loops()
+
+
+    def on_set_loop_numbers(self, *args, **kwargs):
+        mydialog = loop_number_assigner(parent=self, max_loops=3)
+        mydialog.grab_set()
+
 
 
     def load_params(self):
@@ -239,6 +307,13 @@ class pybd_gui(tk.Tk):
         mydict = pybd.break_string_pairs_to_dict(mylist)
         for key, value in mydict.items():
             setattr(self, key, value)
+
+        if 'csv_path' in mydict:
+            #load the model from csv
+            print("loading: %s" % self.csv_path)
+            self.load_model_from_csv(self.csv_path)
+            # draw the BD
+            self.on_draw_btn()
             
 
     def save_params(self):
@@ -255,8 +330,10 @@ class pybd_gui(tk.Tk):
         session.  The parameters are listed in pybd_gui.param_list."""
         mydict = {}
         for key in self.param_list:
-            value = str(getattr(self, key))
-            mydict[key] = value
+            if hasattr(self, key):
+                value = str(getattr(self, key))
+                if value:
+                    mydict[key] = value
         return mydict
 
 
@@ -300,12 +377,73 @@ class pybd_gui(tk.Tk):
 
     def get_arduino_template(self, *args, **kwargs):
         """Show the current path to the Arduino codegen template file
-        on a showinfo dialog.  This just lets the use check the
+        on a showinfo dialog.  This just lets the user check the
         variable path."""
         print("in get_arduino_template function")
         # self.arduino_template_path #<--- put me on a dialog showinfo
         showinfo(title='Information',
                 message='Arduino template file path: %s' % self.arduino_template_path)
+
+
+    def set_python_gen_template(self, *args, **kwargs):
+        """Use a file dialog to allow the user to set the path to the
+        Python template file that will be used in code generation."""
+        print("set_python_gen_template")
+        filename = tk.filedialog.askopenfilename(title = "Select Python Template File",\
+                                                 filetypes = (("python files","*.py"),("all files","*.*")))
+        print (filename)
+        if filename:
+            self.python_template_path = filename
+
+
+    def get_python_gen_template(self, *args, **kwargs):
+        """Show the current path to the Pythonn codegen template file
+        on a showinfo dialog.  This just lets the user check the
+        variable path."""
+        print("get_python_gen_template")
+        showinfo(title='Information',
+                 message='Python template file path: %s' % self.python_template_path)
+
+
+    def set_python_gen_output_path(self, *args, **kwargs):
+        print("set_python_gen_output_path")
+        filename = tk.filedialog.asksaveasfilename(title = "Select Python Output Path",\
+                                                   filetypes = (("python files","*.py"),("all files","*.*")))
+        print (filename)
+        if filename:
+            self.python_output_path = filename
+
+
+    def python_codegen(self, *args, **kwargs):
+        ## from pybd.block_diagram:
+        ##
+        ## def generate_python_code(self, output_name, \
+        ##                  template_path, \
+        ##                  output_folder='', \
+        ##                  N=1000, \
+        ##                  micropyprint=True):
+
+        print("python_codegen")
+
+        if hasattr(self, "python_output_path"):
+            output_path = self.python_output_path
+            output_folder, output_name = os.path.split(self.python_output_path)
+            if not os.path.exists(output_folder):
+                os.mkdir(output_folder)
+            print("output_path: %s" % output_path)
+            print("output_folder: %s" % output_folder)
+        else:
+            msg = "You must specify the python output path before code can be generated."
+            showinfo(title='Information',
+                     message=msg)
+
+
+        ## Test me:
+        self.bd.generate_python_code(output_name, \
+                                     template_path=self.python_template_path, \
+                                     output_folder=output_folder, \
+                                     )
+
 
         
     def make_label(self, text, root=None):
@@ -427,6 +565,21 @@ class pybd_gui(tk.Tk):
     def key_pressed(self, event):
         print("pressed:")
         print(repr(event.char))
+        print("keycode:")
+        print(event.keycode)
+        print("keysym:")
+        print(event.keysym)
+        print("keysym_num:")
+        print(event.keysym_num)
+
+
+    def load_model_from_csv(self, csvpath):
+        new_bd = pybd.load_model_from_csv(csvpath)
+        self.bd = new_bd
+        self.block_list_var.set(self.bd.block_name_list)
+        # actuators and sensors
+        self.actuators_var.set(self.bd.actuator_name_list)
+        self.sensors_var.set(self.bd.sensor_name_list)
 
 
     def on_load_menu(self, *args, **kwargs):
@@ -435,22 +588,49 @@ class pybd_gui(tk.Tk):
                                                  filetypes = (("csv files","*.csv"),("all files","*.*")))
         print (filename)
         if filename:
-            new_bd = pybd.load_model_from_csv(filename)
-            self.bd = new_bd
-            self.block_list_var.set(self.bd.block_name_list)
-            # actuators and sensors
-            self.actuators_var.set(self.bd.actuator_name_list)
-            self.sensors_var.set(self.bd.sensor_name_list)
-            
-    
-    def on_save_menu(self, *args, **kwargs):
-        print("in menu save")
+            self.load_model_from_csv(filename)
+            self.csv_path = filename
+
+
+    def on_set_print_blocks(self, *args, **kwargs):
+        # Approach:
+        # - select which blocks are for printing from a listbox widget
+        # - send the corresponding block list to self.bd
+        #     - might have to look up the blocks by name
+        mydialog = print_block_selector(title="Select Print Blocks", parent=self)
+        mydialog.grab_set()
+
+
+
+    def on_save_as_menu(self, *args, **kwargs):
         filename = tk.filedialog.asksaveasfilename(title = "Select filename",\
                                                    filetypes = (("csv files","*.csv"),("all files","*.*")))
         print (filename)
         if filename:
             self.bd.save_model_to_csv(filename)
-            
+            self.csv_path = filename
+            # also need to set the parameter
+
+    
+    def on_save_menu(self, *args, **kwargs):
+        print("in menu save")
+        if hasattr(self, 'csv_path'):
+            self.bd.save_model_to_csv(self.csv_path)
+        else:
+            self.on_save_as_menu()
+
+
+    def on_delete_block(self, *args, **kwargs):
+        msg = "You must select a block to delete first."
+        block_name = self.get_selected_block_name(msg)
+
+        answer = askyesno("Confirm Delete", \
+                          "Are you sure that you want to delete the block %s?" % block_name)
+
+        if answer:
+            block = self.get_block_by_name(block_name)
+            self.bd.delete_block(block)
+            self.block_list_var.set(self.bd.block_name_list)
 
     def get_block_name_list(self):
         #block_list = self.bd._build_block_list()
@@ -475,16 +655,24 @@ class pybd_gui(tk.Tk):
         mydialog.grab_set()
         #print("%s, %s" % (mydialog.my_username, mydialog.my_password))
 
+
         
     def _quit(self, *args, **kwargs):
         print("in _quit")
+
+        answer = askyesno(title='Save Block Diagram',
+                        message='Do you want to save the block diagram to csv?')
+        if answer:
+            self.on_save_menu()
+                
+
         self.save_params()
         self.quit()     # stops mainloop
         self.destroy()  # this is necessary on Windows to prevent
                         # Fatal Python Error: PyEval_RestoreThread: NULL tstate
 
 
-    def block_selected(self, event):
+    def block_selected(self, event=0):
         # get selected indices
         selected_indices = self.blocklistbox.curselection()
         if not selected_indices:
@@ -595,13 +783,38 @@ class pybd_gui(tk.Tk):
         self.toolbar = NavigationToolbar2Tk(self.canvas, self.toolbarFrame)
 
 
+        mywidth=5
+        
         self.button_frame1 = ttk.Frame(self)
-        self.quit_button = ttk.Button(self.button_frame1, text="Quit", command=self._quit)
-        self.quit_button.grid(column=0, row=0, **self.options)
+        self.quit_button = ttk.Button(self.button_frame1, text="Quit", width=mywidth, \
+                                      command=self._quit)
+        self.quit_button.grid(column=0, row=0,  **self.options)
 
-        self.draw_button = ttk.Button(self.button_frame1, text="Draw", command=self.on_draw_btn)
+        self.draw_button = ttk.Button(self.button_frame1, text="Draw", width=mywidth, \
+                                      command=self.on_draw_btn)
         self.draw_button.grid(column=1, row=0, **self.options)
 
+        # x and y lims for the plot
+        xlim_label = ttk.Label(self.button_frame1, text="xlims:")
+        self.xmin_var = tk.StringVar(value="0")
+        self.xmin_box = ttk.Entry(self.button_frame1, width=mywidth, textvariable=self.xmin_var)
+        self.xmax_var = tk.StringVar(value="5")
+        self.xmax_box = ttk.Entry(self.button_frame1, width=mywidth, textvariable=self.xmax_var)
+        xlim_label.grid(column=2, row=0, padx=5, pady=5, sticky='E')
+        self.xmin_box.grid(column=3, row=0, padx=5, pady=5)#, sticky='E')
+        self.xmax_box.grid(column=4, row=0, padx=5, pady=5)#,sticky='E')
+
+        ylim_label = ttk.Label(self.button_frame1, text="ylims:")
+        self.ymin_var = tk.StringVar(value="-5")
+        self.ymin_box = ttk.Entry(self.button_frame1, width=mywidth, textvariable=self.ymin_var)
+        self.ymax_var = tk.StringVar(value="5")
+        self.ymax_box = ttk.Entry(self.button_frame1, width=mywidth, textvariable=self.ymax_var)
+        ylim_label.grid(column=5, row=0, padx=5, pady=5, sticky='E')
+        self.ymin_box.grid(column=6, row=0, padx=5, pady=5)#, sticky='E')
+        self.ymax_box.grid(column=7, row=0, padx=5, pady=5)#,sticky='E')
+        self.zoom_btn = ttk.Button(self.button_frame1, text="Zoom", width=mywidth, command=self.on_zoom_btn)
+        self.zoom_btn.grid(column=8, row=0, padx=5, pady=5)#,sticky='E')
+        
         ## self.xlim_label = ttk.Label(self.button_frame1, text="xlim:")
         ## self.xlim.grid(row=0,column=2,sticky='E')
         ## self.xlim_var = tk.StringVar()
@@ -673,6 +886,10 @@ class pybd_gui(tk.Tk):
         self.placement_btn = ttk.Button(self.frame1, text='Place', command=self.on_place_btn)
         self.placement_btn.grid(column=cur_col, row=10, pady=(2,5))
 
+        self.edit_btn = ttk.Button(self.frame1, text='Edit Block', command=self.on_edit_btn)
+        self.edit_btn.grid(column=cur_col, row=11, pady=(2,5))
+        
+
         col1_list = [self.input1_label, self.input1_box, self.set_intput1_btn, \
                      self.input2_label, self.input2_box, self.set_intput2_btn]
 
@@ -691,6 +908,17 @@ class pybd_gui(tk.Tk):
         self.make_sensors_frame()
 
 
+    def on_zoom_btn(self, event=None):
+        xmin = float(self.xmin_var.get())
+        xmax = float(self.xmax_var.get())
+        ymin = float(self.ymin_var.get())
+        ymax = float(self.ymax_var.get())
+        self.ax.set_xlim([xmin,xmax])
+        self.ax.set_ylim([ymin,ymax])
+        self.bd.axis_off()        
+        self.canvas.draw()
+
+
     def check_block_selected(self, msg):
         selected_indices = self.blocklistbox.curselection()
         if not selected_indices:
@@ -700,23 +928,37 @@ class pybd_gui(tk.Tk):
         # everything is fine:
         return 1
 
+
+    def get_selected_block_index(self):
+        selected_indices = self.blocklistbox.curselection()
+        if type(selected_indices) == list:
+            return selected_indices[0]
+        else:
+            return selected_indices
+
+
     def get_selected_block_name(self, msg):
         if not self.check_block_selected(msg):
             return None
         else:
             selected_indices = self.blocklistbox.curselection()
+            print("selected_indices: %s" % selected_indices)
             block_name = self.blocklistbox.get(selected_indices)
             return block_name
 
 
     def on_set_input1(self, *args, **kwargs):
         print("in on_set_input1")
+        selected_index = self.get_selected_block_index()
         block_name = self.get_selected_block_name("you must select a block before setting its input(s)")
         if not block_name:
             return None
         block = self.get_block_by_name(block_name)
-        input_dialog = input_chooser(block, parent=self, geometry='300x200')
-        input_dialog.grab_set()
+        input_dialog = input_chooser(block, parent=self, geometry='300x200', \
+                                     selected_index=selected_index)
+        input_dialog.grab_set()#<-- this "unchooses" the block
+
+        # reset the block choice and show selected inputs:
 
         #class input_chooser(my_toplevel_window):
         #    def __init__(self, block, parent, title="Input Chooser Dialog", \
@@ -729,10 +971,12 @@ class pybd_gui(tk.Tk):
 
     def on_set_input2(self, *args, **kwargs):
         block_name = self.get_selected_block_name("you must select a block before setting its input(s)")
+        selected_index = self.get_selected_block_index()
         if not block_name:
             return None
         block = self.get_block_by_name(block_name)
-        input2_dialog = input2_chooser(block, parent=self, geometry='300x200')
+        input2_dialog = input2_chooser(block, parent=self, geometry='300x200', \
+                                       selected_index=selected_index)
         input2_dialog.grab_set()
 
 
@@ -813,6 +1057,11 @@ class pybd_gui(tk.Tk):
         ylims = self.bd.get_ylims()
         self.ax.set_xlim(xlims)
         self.ax.set_ylim(ylims)
+        self.xmin_var.set(str(xlims[0]))
+        self.xmax_var.set(str(xlims[1]))
+        self.ymin_var.set(str(ylims[0]))
+        self.ymax_var.set(str(ylims[1]))
+        
         self.bd.axis_off()        
         self.canvas.draw()
         
@@ -840,6 +1089,27 @@ class pybd_gui(tk.Tk):
         place_dialog.set_block_to_place(block_name)
         place_dialog.grab_set()
 
+
+    def on_edit_btn(self, *args, **kwargs):
+        print("in on_edit_btn")
+        mydialog = edit_blocks_dialog(self)
+
+        # if a block is selected, set the selection in the edit_blocks_dialog
+        selected_indices = self.blocklistbox.curselection()
+        if selected_indices:
+            selected_block_name = self.blocklistbox.get(selected_indices)
+            mydialog.block_selector_var.set(selected_block_name)
+            mydialog.on_block_selected()
+            
+        mydialog.grab_set()
+
+        
+        
+        # approach:
+        # - get current params
+        # - show an edit dialog
+        # - probably should allow choosing any existing block
+        #     - default to the selected block (if any)
         
 #root = tkinter.Tk()
 #root.wm_title("Embedding in Tk")

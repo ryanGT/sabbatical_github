@@ -13,9 +13,11 @@ import copy
 
 class input_chooser(my_toplevel_window):
     def __init__(self, block, parent, title="Input Chooser Dialog", \
-                 geometry='300x200'):        
+                 geometry='300x200', selected_index=0):
         super().__init__(parent, title=title, geometry=geometry)
         self.bd = self.parent.bd
+        self.selected_index = selected_index
+
         self.columnconfigure(0, weight=4)
         self.block = block
         self.block_name = self.block.variable_name
@@ -28,10 +30,15 @@ class input_chooser(my_toplevel_window):
         mycol = 0
         self.make_label_and_grid_sw(self.main_label_text, 0, mycol)
         self.make_combo_and_var_grid_nw("input_chooser", 1, mycol)
-        self.all_block_names = self.bd.block_name_list
-        myind = self.all_block_names.index(self.block_name)
+        self.all_block_names = self.bd.find_single_output_blocks_and_sensors()
+        print("all_block_names:")
+        pybd.print_list(self.all_block_names)
+
         self.other_block_names = copy.copy(self.all_block_names)
-        self.other_block_names.pop(myind)
+        #remove the block from possible inputs if it is in the list
+        if self.block_name in self.all_block_names:
+            myind = self.all_block_names.index(self.block_name)
+            self.other_block_names.pop(myind)
         self.input_chooser_combobox['values'] =  self.other_block_names
         #self.input_chooser_combobox.bind('<<ComboboxSelected>>', self.input_combo_selected)
         
@@ -44,8 +51,12 @@ class input_chooser(my_toplevel_window):
         print("on_go_button pressed")
         input_name = self.input_chooser_var.get()
         print("input_name: %s" % input_name)
-        input_block = self.bd.get_block_by_name(input_name)
+        if input_name in self.bd.block_dict:
+            input_block = self.bd.get_block_by_name(input_name)
+        elif input_name in self.bd.sensors_dict:
+            input_block = self.bd.get_sensor_by_name(input_name)
         self.setfunc(input_block)
+        self.parent.blocklistbox.select_set(self.selected_index)
         self.destroy()
         # - get name from combobox
         # - get the selected block by name
@@ -56,9 +67,10 @@ class input_chooser(my_toplevel_window):
 
 class input2_chooser(input_chooser):
     def __init__(self, block, parent, title="Input 2 Chooser Dialog", \
-                 geometry='300x200'):        
+                 geometry='300x200', selected_index=0):   
         my_toplevel_window.__init__(self, parent, title=title, geometry=geometry)
         self.bd = self.parent.bd
+        self.selected_index = selected_index
         self.columnconfigure(0, weight=4)
         self.block = block
         self.block_name = self.block.variable_name

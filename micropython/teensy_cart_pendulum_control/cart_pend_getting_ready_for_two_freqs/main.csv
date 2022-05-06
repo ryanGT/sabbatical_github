@@ -1,0 +1,22 @@
+actuators
+
+sensors
+i2c_sensor,line_sense
+i2c_sensor,pend_enc
+
+blocks
+block_type,variable_name,label,arduino_class,input_block1_name,input_block2_name,width,height,placement_type,abs_x,abs_y,rel_block_name,rel_pos,rel_distance,xshift,yshift,param1,param2,param3,param4,param5,param6,param7,param8,param9,param10
+int_constant_block,v_nom,200,int_constant_block,,,1.5,1.5,relative,,,sat,above,6,2,0,value:200,loop_number:1,,,,,,,,
+addition_block,add,+,addition_block,v_nom,v_turn,1.5,1.5,relative,,,v_turn,right,5,0,2,loop_number:1,,,,,,,,,
+subtraction_block,subtract,-,subtraction_block,v_nom,v_turn,1.5,1.5,relative,,,add,below,4,0,0,loop_number:1,,,,,,,,,
+cart_pendulum_upy,G,G,class_not_specified,satN,satP,3,2,relative,,,v_turn,right,16,0,0,sensor1_name:line_sense,sensor2_name:pend_enc,send_address:7,read_address1:7,read_address2:8,loop_number:1,,,,
+int_constant_block,U_line_center,3000,int_constant_block,,,1.5,1.5,absolute,0.0,0.0,,,,,,value:3000,loop_number:2,,,,,,,,
+summing_junction,sum_junct_line,,summing_junction,U_line_center,line_sense,2,2,relative,,,U_line_center,right,4,0,0,loop_number:2,,,,,,,,,
+P_controller,D_line,P,P_control_block,sum_junct_line,,3,2,relative,,,sum_junct_line,right,4,0,0,Kp:0.1,loop_number:2,,,,,,,,
+saturation_block,sat,sat,saturation_block,D_line,,3,2,relative,,,D_line,right,4,0,0,loop_number:2,,,,,,,,,
+saturation_block,satP,satP,saturation_block,add,,3,2,relative,,,add,right,4,0,0,loop_number:1,,,,,,,,,
+saturation_block,satN,satN,saturation_block,subtract,,3,2,relative,,,subtract,right,4,0,0,loop_number:1,,,,,,,,,
+loop_variable,v_turn,v_turn,,sat,,3,2,relative,,,sat,right,4,0,0,loop_number:2,,,,,,,,,
+
+print blocks
+sum_junct_line,D_line,sat,satP,satN,line_sense,pend_enc

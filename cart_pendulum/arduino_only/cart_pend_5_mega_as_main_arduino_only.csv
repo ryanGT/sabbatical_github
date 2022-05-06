@@ -1,0 +1,26 @@
+actuators
+
+sensors
+
+blocks
+block_type,variable_name,label,arduino_class,input_block1_name,input_block2_name,width,height,placement_type,abs_x,abs_y,rel_block_name,rel_pos,rel_distance,xshift,yshift,param1,param2,param3,param4,param5,param6,param7,param8,param9,param10
+int_constant_block,U_cl,3500,int_constant_block,,,4,1.5,absolute,0,0,,,,,,value:3500,,,,,,,,,
+summing_junction,sum1_block,,summing_junction,U_cl,line_sense,2,2,relative,,,U_cl,right,4,0,0,,,,,,,,,,
+PD_controller,PD_block,PD,PD_control_block,sum1_block,,3,2,relative,,,sum1_block,right,4,0,0,Kp:0.1,Kd:0.01,,,,,,,,
+sat2_adjustable_block,sat2_block,sat2,sat2_adjustable_block,PD_block,,3,2,relative,,,PD_block,right,4,0,0,mymax:150,,,,,,,,,
+int_constant_block,v_nom_block,200,int_constant_block,,,1.5,1.5,relative,,,sat2_block,right,4,-4,6,value:200,,,,,,,,,
+addition_block,add_block1,+,addition_block,add_pend,sat2_block,1.5,1.5,relative,,,sat2_block,right,4,3,1,,,,,,,,,,
+subtraction_block,subtract_block1,-,subtraction_block,add_pend,sat2_block,1.5,1.5,relative,,,sat2_block,right,4,0,-2,,,,,,,,,,
+sat2_adjustable_block,satP,satP,sat2_adjustable_block,add_block1,,3,2,relative,,,add_block1,right,4,0,0,mymax:400,,,,,,,,,
+sat2_adjustable_block,satN,satN,sat2_adjustable_block,subtract_block1,,3,2,relative,,,subtract_block1,right,4,0,0,mymax:400,,,,,,,,,
+plant_with_double_actuator_two_sensors,G_block,Robot,plant_with_double_actuator_two_sensors,satP,satN,3,2,relative,,,sat2_block,right,16,0,0,,,,,,,,,,
+output_block,Y,line position,,,,6,2,relative,,,line_sense,right,8,0,0,,,,,,,,,,
+output_block,Y2,pend. encoder,,,,3,2,relative,,,pend_enc,right,8,0,0,,,,,,,,,,
+int_constant_block,U_pend,0,int_constant_block,,,1.5,1.5,relative,,,U_cl,above,15,-3,0,value:0,,,,,,,,,
+summing_junction,sum2,,summing_junction,U_pend,pend_enc,2,2,relative,,,U_pend,right,4,0,0,,,,,,,,,,
+PD_controller,D_pend,PD,PD_control_block,sum2,,3,2,relative,,,sum2,right,4,0,0,Kp:3,Kd:0.1,,,,,,,,
+sat2_adjustable_block,pend_sat,sat2,sat2_adjustable_block,D_pend,,3,2,relative,,,D_pend,right,4,0,0,mymax:200,,,,,,,,,
+addition_block,add_pend,+,addition_block,pend_sat,v_nom_block,1.5,1.5,relative,,,pend_sat,right,4,0,-3,,,,,,,,,,
+
+print blocks
+sum1_block,PD_block,sat2_block,satP,satN,pend_enc,line_sense
