@@ -8,6 +8,16 @@
 #tim.callback(tick)
 
 # 0 = pyboard, 1 = teensy41
+print("hello from upy")
+import uos
+from machine import SDCard
+sd = SDCard()
+uos.mount(sd, '/sd')
+
+#sdpath = "/sd/line_test_01.txt"
+#f = open(sdpath,'wb')
+#f.write("#data loging in loop on upy\n")
+
 nISR = 0
 
 import time
@@ -140,6 +150,16 @@ myfreq = 250
 #myfreq = 500
 tim = Timer(1, mode=Timer.PERIODIC, callback=tick, freq=myfreq)
 
+print_blocks = [sum_junct_line, D_line, sat, satP, satN, line_sense, pend_enc]
+Ncols = len(print_blocks)
+row_array = np.zeros(Ncols, dtype=np.int16)
+
+## def mylog(line):
+##     line += '\n'
+##     f.write(line)
+
+#mylog('#begin test')
+
 
 t0 = time.ticks_us()
 
@@ -178,13 +198,23 @@ for i in range(N):
     satP.find_output(i)
     satN.find_output(i)
 
-
-    p4.on()
     # pythonsecondaryloopcode
     G.send_commands(i)
 
+    p4.on()
 
-
+    rowstr = str(i)
+    for j, block in enumerate(print_blocks):
+        if rowstr:
+            rowstr += ','
+        rowstr += str(block.read_output(i))
+    #rowstr = ','.join(row_array)
+    #ba = row_array.tobytes()# + '\n'
+    #mylog(ba)
+    #print(ba)
+    #print(row_array)
+    print(rowstr)
+    
     p4.off()
     p3.off()
 
@@ -208,24 +238,28 @@ tim.deinit()
 
 
 # printingcode
-print_blocks = [sum_junct_line, D_line, sat, satP, satN, line_sense, pend_enc]
-print('#begin test')
-for i in range(N):
-    rowstr = str(i)
-    for block in print_blocks:
-        if rowstr:
-            rowstr += ', '
-        rowstr += str(block.read_output(i))
-    print(rowstr)
+## print_blocks = [sum_junct_line, D_line, sat, satP, satN, line_sense, pend_enc]
+## def mylog(line):
+##     line += '\n'
+##     f.write(line)
+    
+## mylog('#begin test')
+## for i in range(N):
+##     rowstr = str(i)
+##     for block in print_blocks:
+##         if rowstr:
+##             rowstr += ', '
+##         rowstr += str(block.read_output(i))
+##     mylog(rowstr)
 
 
 
-print("#end test")
+#mylog("#end test")
 dn = G.n_echo[1:] - G.n_echo[0:-1]
-print("dn max = %i" % np.max(dn))
-print("dn[1:] min = %i" % np.min(dn[1:]))
+#mylog("dn max = %i" % np.max(dn))
+#mylog("dn[1:] min = %i" % np.min(dn[1:]))
 
 ## for i, ent in enumerate(dn):
 ##     if ent != 1:
 ##         print("bad dn: %i, %i" % (i, ent))
-
+#f.close()

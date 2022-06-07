@@ -16,6 +16,7 @@ int ISR_state;
 int squarewave_pin = A7;
 int position;
 
+bool sent_data = false;
 bool send_ser = false;
 byte calibrated = 0;
 int n, nIn;
@@ -225,6 +226,7 @@ void sendEvent() {
   //    digitalWrite(handshake_pin, HIGH);
   //}
   mypause = 0;
+  sent_data = true;
   digitalWrite(sendPin, LOW);    
 }
 
@@ -269,7 +271,7 @@ void pinISR()
     dt_micro_msb = getsecondbyte(dt_micro);
     outArray[6] = dt_micro_msb;
     outArray[7] = dt_micro_msb;
-    digitalWrite(controlPin, LOW);    
+    digitalWrite(controlPin, LOW);
   }
   set_speeds(v1, v2);
   //analogWrite(pwmA, v1);
@@ -289,7 +291,22 @@ void loop()
   /*   Serial.print(v2); */
   /*   mynewline(); */
   /* } */
+  if ( sent_data ){
+    sent_data = false;
+    //Serial.println("I sent data");
+  }
   if ( new_data ){
+    /* Serial.print("new data, inArray = "); */
+    /* for (int k=0; k<7; k++){ */
+    /*   Serial.print(inArray[k]); */
+    /*   if (k<6){ */
+    /* 	Serial.print(","); */
+    /*   } */
+    /*   else{ */
+    /* 	Serial.print('\n'); */
+    /*   } */
+    /* } */
+
     new_data = false;
     //digitalWrite(i2cprocessPin, HIGH);  
 
@@ -308,6 +325,7 @@ void loop()
       v2 = 0;
     }
     else if (inArray[0] == 4){
+      Serial.println("received cal command");
       calibrate_line_sensor();
     }
     /* else if (inArray[0] == 3){ */

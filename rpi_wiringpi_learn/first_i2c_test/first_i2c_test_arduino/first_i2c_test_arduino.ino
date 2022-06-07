@@ -7,7 +7,7 @@ byte data_to_echo = 0;
 void setup() 
 {
   Wire.begin(SLAVE_ADDRESS);
-
+  Wire.setClock(400000);
   Wire.onReceive(receiveData);
   Wire.onRequest(sendData);
 }

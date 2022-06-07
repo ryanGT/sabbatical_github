@@ -285,6 +285,7 @@ class plant_with_two_i2c_inputs_and_two_i2c_sensors(plant, \
         self.read_address1 = read_address1
         self.read_address2 = read_address2
         self.read1_bytyes = 8
+        self.read2_bytyes = 2
         
         
     def init_vectors(self, N=1000):
@@ -294,6 +295,7 @@ class plant_with_two_i2c_inputs_and_two_i2c_sensors(plant, \
         self.sensor2.init_vectors(N)
         self.send_array = bytearray([3,0,0,0,0,0,0])
         self.read_array1 = bytearray(self.read1_bytyes)
+        self.read_array2 = bytearray(self.read2_bytyes)
         self.n_echo = create_zeros_int16(N)
         self.dt_micros = create_zeros_int16(N)
         self.n_loop = create_zeros_int16(N)
@@ -308,7 +310,8 @@ class plant_with_two_i2c_inputs_and_two_i2c_sensors(plant, \
         # - how do we find out?
         self.read_array1 = self.i2c.readfrom(self.read_address1, \
                                                  self.read1_bytyes)
-        # add read_array2 here later
+        self.read_array2 = self.i2c.readfrom(self.read_address2, \
+                                                 self.read2_bytyes)
 
 
         
@@ -336,7 +339,8 @@ class plant_with_two_i2c_inputs_and_two_i2c_sensors(plant, \
         self._read()
         self.process_data(i)
         
-
+pos_max = 2**15-1
+twos_shift = 2**16
 
 class cart_pendulum_upy(plant_with_two_i2c_inputs_and_two_i2c_sensors):
     def check_cal(self):
@@ -362,6 +366,11 @@ class cart_pendulum_upy(plant_with_two_i2c_inputs_and_two_i2c_sensors):
         ##   outArray[7] = dt_micro_msb;
         self.n_loop[i] = self.read_array1[1]
         self.sensor1.output_vector[i] = 256*self.read_array1[2] + self.read_array1[3]# not worried about sign here
+        enc = 256*self.read_array2[0] + self.read_array2[1]
+        if enc > pos_max:
+            enc -= twos_shift
+        self.sensor2.output_vector[i] = enc
+        
         self.n_echo[i] = 256*self.read_array1[4] + self.read_array1[5]
         self.dt_micros[i] = 256*self.read_array1[6] + self.read_array1[7]
         # process sensor2 data here next
