@@ -18,6 +18,9 @@ int squarewave_pin = 40;
 int serial_pin = 33;
 int loop_pin = 34;
 int loop_pin2 = 35;
+int loop_pin3 = 36;
+int loop_pin4 = 37;
+int loop_pin5 = 38;
 
 int position;
 
@@ -187,6 +190,7 @@ void send_cal_command(){
 
 
 void menu(){
+  digitalWrite(serial_pin, LOW);
   Serial.println("top of menu");
   char mychar;
   calibrated = check_cal();
@@ -208,6 +212,8 @@ void menu(){
 
   Serial.println("enter any character to start a test");
   mychar = get_char();
+  myTimer.begin(timerISR, 2000);
+  digitalWrite(serial_pin, HIGH);
   t0 = micros();
   nISR = 0;
   ISR_Happened = 0;// clear flag and wait for next time step
@@ -218,7 +224,9 @@ void menu(){
 void setup()
 {
   Wire2.begin();        // join i2c bus (address optional for master)
-  Serial.begin(115200);
+  Wire2.setClock(400000);
+  //Serial.begin(115200);
+  Serial.begin(230400);
 
   //bdsyswelcomecode
   Serial.println("Cart Pendulum Line Follow 4");
@@ -228,6 +236,9 @@ void setup()
   pinMode(serial_pin, OUTPUT);
   pinMode(loop_pin, OUTPUT);
   pinMode(loop_pin2, OUTPUT);
+  pinMode(loop_pin3, OUTPUT);
+  pinMode(loop_pin4, OUTPUT);
+  pinMode(loop_pin5, OUTPUT);
   
   //!// encoder pin on interrupt 0 (pin 2)
 
@@ -248,7 +259,7 @@ void setup()
 
   //Serial.print("pendulum/cart v. 1.1.0 RT Serial");
   //Serial.print("\n");
-  myTimer.begin(timerISR, 2000);
+  //myTimer.begin(timerISR, 2000);
   pinMode(squarewave_pin, OUTPUT);
 
   calibrated = 0;
@@ -286,6 +297,7 @@ void loop()
     digitalWrite(loop_pin, HIGH);
     ISR_Happened = 0;
     cur_t = micros();
+    //Serial.println(cur_t);
     t = cur_t-t0;
     if (t < 0){
       t += 65536;
@@ -295,6 +307,12 @@ void loop()
     dt = t_sec - prev_t;
     if (t_sec > t_stop){
       G_block.stop_motors();
+      delay(100);
+      G_block.stop_motors();
+      Serial.print("#end test, stopping motors");
+      digitalWrite(serial_pin, LOW);
+      myTimer.end();
+      delay(2000);
       menu();
     }
 
@@ -304,13 +322,22 @@ void loop()
    U_cl.find_output();
    v_nom_block.find_output();
    U_pend.find_output();
-
+   digitalWrite(loop_pin, LOW);
+   digitalWrite(loop_pin2, HIGH);
+   
    G_block.find_output(t_sec);
+   digitalWrite(loop_pin2, LOW);
+   digitalWrite(loop_pin3, HIGH);
+
    sum1_block.find_output(t_sec);
    PD_block.find_output(t_sec);
    sat2_block.find_output(t_sec);
    sum2.find_output(t_sec);
+   
    D_pend.find_output(t_sec);
+   digitalWrite(loop_pin3, LOW);
+   digitalWrite(loop_pin4, HIGH);
+   
    pend_sat.find_output(t_sec);
    add_pend.find_output();
    add_block1.find_output();
@@ -318,31 +345,32 @@ void loop()
    satP.find_output(t_sec);
    satN.find_output(t_sec);
    
-   digitalWrite(loop_pin, LOW);
-   digitalWrite(loop_pin2, HIGH);   
+
    G_block.send_commands(nISR);
+   digitalWrite(loop_pin4, LOW);
+   digitalWrite(loop_pin5, HIGH);   
 
 
    //HB.send_command(motor_speed);
    // print data
    /* digitalWrite(serial_pin, HIGH); */
-   /* Serial.print(t_ms); */
-   /* //bdsysprintcode */
-   /* print_comma_then_int(sum1_block.read_output()); */
-   /* print_comma_then_int(PD_block.read_output()); */
-   /* print_comma_then_int(sat2_block.read_output()); */
-   /* print_comma_then_int(satP.read_output()); */
-   /* print_comma_then_int(satN.read_output()); */
-   /* print_comma_then_int(pend_enc.read_output()); */
-   /* print_comma_then_int(line_sense.read_output()); */
+   Serial.print(t_ms);
+   //bdsysprintcode
+   print_comma_then_int(sum1_block.read_output());
+   print_comma_then_int(PD_block.read_output());
+   print_comma_then_int(sat2_block.read_output());
+   print_comma_then_int(satP.read_output());
+   print_comma_then_int(satN.read_output());
+   print_comma_then_int(pend_enc.read_output());
+   print_comma_then_int(line_sense.read_output());
 
 
 
-   /* mynewline(); */
+   mynewline();
    /* digitalWrite(serial_pin, LOW); */
    
    prev_t = t_sec;
-   digitalWrite(loop_pin2, LOW);
+   digitalWrite(loop_pin5, LOW);
   }
 
 }
