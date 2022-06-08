@@ -1,0 +1,77 @@
+<h1 id="sabbatical-notes">Sabbatical Notes</h1>
+<h2 id="teensyduino-cartpendulum-work">Teensyduino Cart/Pendulum Work</h2>
+<ul>
+<li>main teensyduino folder:
+<ul>
+<li><a href="cart_pendulum/arduino_only/cart_pendulum_teensy_manual_edit">cart_pendulum/arduino_only/cart_pendulum_teensy_manual_edit</a></li>
+</ul></li>
+<li>Mega code for i2c usage:
+<ul>
+<li><a href="micropython/teensy_cart_pendulum_control/cart_mega_code_i2c">micropython/teensy_cart_pendulum_control/cart_mega_code_i2c</a></li>
+</ul></li>
+<li>Pendulum reader code:
+<ul>
+<li><a href="micropython/teensy_cart_pendulum_control/pendulum_reader_i2c_minion">micropython/teensy_cart_pendulum_control/pendulum_reader_i2c_minion</a></li>
+</ul></li>
+</ul>
+<h3 id="summary">Summary</h3>
+<ul>
+<li>seems to work ok at 500 Hz
+<ul>
+<li>working on final verification of that</li>
+</ul></li>
+</ul>
+<h3 id="notes">Notes</h3>
+<ul>
+<li>streaming the data over serial does not block the teensy for the entire transmission time
+<ul>
+<li>it puts the data in the serial buffer and only blocks if the buffer is full</li>
+<li>so, as long as the data can stream in less than 2ms, the buffer shouldn’t fill up</li>
+</ul></li>
+<li>there would still be benefit in converting from ascii test to two byte ints
+<ul>
+<li>is this a higher priority for me than Raspberry Pi real-time C execution to elimintate the teensy?</li>
+</ul></li>
+</ul>
+<h2 id="raspberry-pi-c-work">Raspberry Pi C work</h2>
+<h3 id="overview">Overview</h3>
+<ul>
+<li>working on getting i2c working in C on the Raspberry Pi</li>
+<li>if this works, the RPi would control the timing and be the main device for control calculations and data logging
+<ul>
+<li>since the data would already be on the RPi, this eliminates the need to stream the data back to the RPi
+<ul>
+<li>the RPi has plenty of RAM and would log the data to a csv file on the SD card</li>
+</ul></li>
+</ul></li>
+<li>using pigpio for now
+<ul>
+<li>some debate about pigpio vs. wiringpi</li>
+<li>pigpio worked well in python</li>
+<li>wiringpi is sort of not officially supported anymore</li>
+<li>wiringpi does not seem to support block i2c writing</li>
+</ul></li>
+</ul>
+<h3 id="pigpio-i2c-issues">pigpio i2c issues</h3>
+<ul>
+<li>documentation does not seem to be great</li>
+<li>basically using my working python code as a roadmap:
+<ul>
+<li>use <a href="https://abyz.me.uk/rpi/pigpio/cif.html#i2cOpen">i2cOpen</a> to open the connection
+<ul>
+<li>which bus am I using on the RPi?</li>
+<li>what addr is the mega i2c code listening on?
+<ul>
+<li><code>0x07</code></li>
+</ul></li>
+<li>what addr is the pendulum reader listening on?</li>
+</ul></li>
+<li>will also need <a href="https://abyz.me.uk/rpi/pigpio/cif.html#i2cWriteByte">i2cWriteByte</a></li>
+<li>will probably also need <a href="https://abyz.me.uk/rpi/pigpio/cif.html#i2cReadDevice">i2cReadDevice</a> and <a href="https://abyz.me.uk/rpi/pigpio/cif.html#i2cWriteDevice">i2cWriteDevice</a></li>
+<li>and finally <a href="https://abyz.me.uk/rpi/pigpio/cif.html#i2cClose">i2cClose</a></li>
+<li>how do I set the baudrate?
+<ul>
+<li>I believe this is handle as an RPi config option in <code>/boot/config.txt</code> or something</li>
+</ul></li>
+</ul></li>
+</ul>
