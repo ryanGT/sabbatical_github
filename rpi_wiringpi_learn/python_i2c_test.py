@@ -63,13 +63,13 @@ for i in range(N):
     # start new test
     pi.i2c_write_byte(m_ino, i+15)
 
-    time.sleep(0.1)
+    time.sleep(0.01)
     
     response = pi.i2c_read_byte(m_ino)
     #n = 0
     num_read[i] = response
 
-    time.sleep(0.1)
+    time.sleep(0.01)
     
 t1 = time.time()
 dt = t1-t0
