@@ -66,3 +66,15 @@
 - RPi code: [rpi_C_pigpio/i2c_learn/c_square_wave_pigpio_i2c_learn.c](rpi_C_pigpio/i2c_learn/c_square_wave_pigpio_i2c_learn.c)
 - Mega code: [rpi_C_pigpio/i2c_learn/cart_mega_code_i2c_learn/cart_mega_code_i2c_learn.ino](rpi_C_pigpio/i2c_learn/cart_mega_code_i2c_learn/cart_mega_code_i2c_learn.ino)
 
+
+
+
+## Working on i2c baudrate
+
+### Clock check command:
+
+`sudo cat /sys/kernel/debug/clk/clk_summary`
+
+### Proof of concept articls
+
+[https://raspberrypi.stackexchange.com/questions/108896/what-is-rpis-i2c-maximum-speed](https://raspberrypi.stackexchange.com/questions/108896/what-is-rpis-i2c-maximum-speed)
