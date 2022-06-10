@@ -18,6 +18,7 @@ void setup()
   Wire.onReceive(receiveData);
   Wire.onRequest(sendData);
   Serial.begin(115200);
+  Serial.println("i2c stuff");
 }
 
 void loop() {
@@ -30,6 +31,7 @@ void loop() {
       }
       Serial.print(inArray[q]);
     }
+    Serial.print('\n');
   }
 
 }

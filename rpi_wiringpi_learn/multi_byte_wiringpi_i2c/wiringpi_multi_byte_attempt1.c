@@ -2,6 +2,11 @@
 #include <wiringPi.h>
 #include <wiringPiI2C.h>
 #include <stdio.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <linux/i2c-dev.h>
+#include <i2c/smbus.h>
+#include <unistd.h>
 
 #define DEVICE_ID 0x08
 
@@ -40,7 +45,7 @@ int main (int argc, char **argv)
     pinMode(3, OUTPUT);
     printf("sending data\n");
     for (int q=0; q<out_bytes; q++){
-      outArray[q] = q;
+      outArray[q] = (q+1)*2;
     }
     // Send data to arduino
     write(fd, outArray, out_bytes);
