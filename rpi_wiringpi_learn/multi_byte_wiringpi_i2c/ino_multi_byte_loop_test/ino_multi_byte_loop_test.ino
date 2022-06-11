@@ -21,7 +21,8 @@ void setup()
   Wire.setClock(400000);
   Wire.onReceive(receiveData);
   Wire.onRequest(sendData);
-  Serial.begin(115200);
+  //Serial.begin(115200);
+  Serial.begin(230400);
   Serial.println("i2c stuff");
 }
 
@@ -39,7 +40,7 @@ void loop() {
     /*   Serial.print(inArray[q]); */
     /* } */
     i_received = 256*inArray[0] + inArray[1];
-    Serial.print("i = ");
+    //Serial.print("i = ");
     Serial.print(i_received);
     Serial.print('\n');
   }

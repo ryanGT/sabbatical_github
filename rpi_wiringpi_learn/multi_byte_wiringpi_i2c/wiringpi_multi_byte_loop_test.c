@@ -78,7 +78,7 @@ int main (int argc, char **argv)
       outArray[0] = imsb;
       outArray[1] = ilsb;
       write(fd, outArray, out_bytes);
-      delay(10);
+      delay(20);
     }
     
     t2 = micros();
