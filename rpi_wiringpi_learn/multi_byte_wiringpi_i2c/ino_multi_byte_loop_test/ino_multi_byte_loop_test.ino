@@ -11,6 +11,7 @@ byte outArray[out_bytes];
 
 unsigned long t1, t2;
 int dt_read;
+int i_received;
 
 bool new_data;
 
@@ -27,16 +28,19 @@ void setup()
 void loop() {
   if ( new_data ){
     new_data = false;
-    Serial.println("new data:");
-    Serial.print("dt_read = ");
-    Serial.println(dt_read);
-    for (int q=0; q<in_bytes; q++){
-      if (q > 0){
-	Serial.print(", ");
-      }
-      outArray[q] = inArray[q] + 9;
-      Serial.print(inArray[q]);
-    }
+    //Serial.println("new data:");
+    //Serial.print("dt_read = ");
+    /* Serial.println(dt_read); */
+    /* for (int q=0; q<in_bytes; q++){ */
+    /*   if (q > 0){ */
+    /* 	Serial.print(", "); */
+    /*   } */
+    /*   outArray[q] = inArray[q] + 9; */
+    /*   Serial.print(inArray[q]); */
+    /* } */
+    i_received = 256*inArray[0] + inArray[1];
+    Serial.print("i = ");
+    Serial.print(i_received);
     Serial.print('\n');
   }
 
