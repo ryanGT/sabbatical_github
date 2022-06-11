@@ -2,3 +2,5 @@ sabbatical_research_journal/
 *.ipynb_checkpoints
 *__pycache__
 *.DS_Store
+*.o
+._*
