@@ -12,6 +12,8 @@ byte outArray[out_bytes];
 unsigned long t1, t2;
 int dt_read;
 int i_received;
+int myresponse;
+byte myr_lsb, myr_msb;
 
 bool new_data;
 
@@ -26,6 +28,13 @@ void setup()
   Serial.println("i2c stuff");
 }
 
+byte getsecondbyte(int input){
+  byte output;
+  output = (byte)(input >> 8);
+  return output;
+}
+
+
 void loop() {
   if ( new_data ){
     new_data = false;
@@ -39,10 +48,17 @@ void loop() {
     /*   outArray[q] = inArray[q] + 9; */
     /*   Serial.print(inArray[q]); */
     /* } */
+    outArray[0] = inArray[0];
+    outArray[1] = inArray[1];
     i_received = 256*inArray[0] + inArray[1];
+    myresponse = 10*i_received + 1;
+    myr_lsb = (byte)myresponse;
+    myr_msb = getsecondbyte(myresponse);
+    outArray[2] = myr_msb;
+    outArray[3] = myr_lsb;
     //Serial.print("i = ");
-    Serial.print(i_received);
-    Serial.print('\n');
+    //Serial.print(i_received);
+    //Serial.print('\n');
   }
 
 }
