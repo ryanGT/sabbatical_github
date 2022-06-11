@@ -22,12 +22,19 @@ int N=100;
 char inArray[in_bytes];
 char outArray[out_bytes];
 
+unsigned char ilsb, imsb;
+
 // compile cmd:
 // g++ -o wiringpi_multi_byte_attempt1.o wiringpi_multi_byte_attempt1.c -lwiringPi -li2c
 
 // performance cpu comand:
 // echo performance | sudo tee /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
 
+unsigned char getsecondbyte(int input){
+  unsigned char output;
+  output = (unsigned char)(input >> 8);
+  return output;
+}
 
 //uint32_t t1, t2, dt;
 
@@ -54,13 +61,26 @@ int main (int argc, char **argv)
     printf("sending data\n");
 
     int q;
-    
+    // load the outArray
     for (q=0; q<out_bytes; q++){
       outArray[q] = (q+1)*2;
     }
     // Send data to arduino
     t1 = micros();
-    write(fd, outArray, out_bytes);
+
+    // transmit data in a loop
+    int i;
+
+    for (i=0; i<1000; i++){
+      // break i into two bytes
+      ilsb = (unsigned char)i;
+      imsb = getsecondbyte(i);
+      outArray[0] = imsb;
+      outArray[1] = ilsb;
+      write(fd, outArray, out_bytes);
+      delay(10);
+    }
+    
     t2 = micros();
     dt_send = t2-t1;
     printf("data sent\n");

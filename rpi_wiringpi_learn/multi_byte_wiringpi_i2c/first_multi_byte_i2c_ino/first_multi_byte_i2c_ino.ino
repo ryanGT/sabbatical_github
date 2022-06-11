@@ -9,6 +9,9 @@ byte data_to_echo = 0;
 byte inArray[in_bytes];
 byte outArray[out_bytes];
 
+unsigned long t1, t2;
+int dt_read;
+
 bool new_data;
 
 void setup() 
@@ -25,10 +28,13 @@ void loop() {
   if ( new_data ){
     new_data = false;
     Serial.println("new data:");
+    Serial.print("dt_read = ");
+    Serial.println(dt_read);
     for (int q=0; q<in_bytes; q++){
       if (q > 0){
 	Serial.print(", ");
       }
+      outArray[q] = inArray[q] + 9;
       Serial.print(inArray[q]);
     }
     Serial.print('\n');
@@ -38,10 +44,13 @@ void loop() {
 
 void receiveData(int numBytes){
   //digitalWrite(receivePin, HIGH);  
+  t1 = micros();
   for(int i=0;i<numBytes;i++){
     inArray[i] = Wire.read();
   }
+  t2 = micros();
   new_data = true;
+  dt_read = t2-t1;
   //small delays here shouldn't be terrible because the data is already read
   // - measuring the time between receive events to detect glitches on the
   //   micropython side
@@ -62,5 +71,6 @@ void receiveData(int numBytes){
 
 void sendData()
 {
-  Wire.write(data_to_echo);
+  //Wire.write(data_to_echo);
+  Wire.write(outArray,sizeof(outArray));
 }
