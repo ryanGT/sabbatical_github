@@ -24,8 +24,6 @@ int two_byte_response[N];
 char inArray[in_bytes];
 char outArray[out_bytes];
 
-int N=1000;
-
 unsigned char ilsb, imsb;
 
 // compile cmd:
@@ -70,7 +68,8 @@ int main (int argc, char **argv)
       outArray[q] = (q+1)*2;
     }
     // Send data to arduino
-    t1 = micros();
+    //t1 = micros();
+    t1 = millis();
 
     // transmit data in a loop
     int i;
@@ -82,29 +81,30 @@ int main (int argc, char **argv)
       outArray[0] = imsb;
       outArray[1] = ilsb;
       write(fd, outArray, out_bytes);
-      delay(1);
+      delayMicroseconds(500);
       read(fd, inArray, in_bytes);
       i_echo[i] = 256*inArray[0] + inArray[1];
       two_byte_response[i] = 256*inArray[2] + inArray[3];
-      delay(1);
+      delayMicroseconds(500);
     }
     
-    t2 = micros();
+    //t2 = micros();
+    t2 = millis();
     dt_send = t2-t1;
     printf("data sent\n");
-    printf("loop time: %i\n", dt_send);
-    float ave_loop_time;
-    ave_loop_time = dt_send/N;
-    printf("ave_loop_time: %0.6g\n", ave_loop_time);
-    delay(500);
+    //delay(500);
 
 
 
     printf("received:\n");
     for (i=0; i<N; i++){
-      printf("i_echo = %i, two_byte_response = %i\n", i_echo[i], two_byte_response[i]); 
+      printf("%i, %i, %i\n", i, i_echo[i], two_byte_response[i]); 
     }
     printf("\n");
+    printf("loop time: %i milliseconds\n", dt_send);
+    float ave_loop_time;
+    ave_loop_time = ((float)dt_send)/N;
+    printf("ave_loop_time: %0.6g milliseconds\n", ave_loop_time);
     //fclose(fp);
     return 0;
 }

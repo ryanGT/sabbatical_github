@@ -57,8 +57,10 @@ void loop() {
     outArray[2] = myr_msb;
     outArray[3] = myr_lsb;
     //Serial.print("i = ");
-    //Serial.print(i_received);
-    //Serial.print('\n');
+    Serial.print(i_received);
+    Serial.print(",");
+    Serial.print(myresponse);
+    Serial.print('\n');
   }
 
 }
