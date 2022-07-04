@@ -227,7 +227,10 @@ void setup()
   Wire2.setClock(400000);
   //Serial.begin(115200);
   Serial.begin(230400);
-
+  while(!Serial){
+     delay(5);
+  } 
+  
   //bdsyswelcomecode
   Serial.println("Cart Pendulum Line Follow 4");
 
