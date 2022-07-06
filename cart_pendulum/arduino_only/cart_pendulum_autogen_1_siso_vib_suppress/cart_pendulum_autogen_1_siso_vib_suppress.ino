@@ -155,11 +155,11 @@ void setup()
 
   //bdsyssetupcode
    sum1_block.set_inputs(&U_cl, &G_block);
-   PD_block.set_input_block(&sum1_block);
-   sat_block.set_input_block(&PD_block);
+   PD_block.set_input_block1(&sum1_block);
+   sat_block.set_input_block1(&PD_block);
    if_block1.set_inputs(&gt_block, &sat_block, &const2);
-   gt_block.set_inputs(&lp_cnt_block, &const1);
-   G_block.set_input_block(&if_block1);
+   gt_block.set_input_blocks(&lp_cnt_block, &const1);
+   G_block.set_input_block1(&if_block1);
 
 
   //Serial.print("pendulum/cart v. 1.1.0 RT Serial");
