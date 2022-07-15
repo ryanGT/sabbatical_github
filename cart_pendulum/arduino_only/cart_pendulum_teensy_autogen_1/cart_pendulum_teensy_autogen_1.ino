@@ -151,8 +151,8 @@ pendulum_encoder pend_enc = pendulum_encoder();
 plant_with_i2c_double_actuator_and_two_sensors G_cart = plant_with_i2c_double_actuator_and_two_sensors(7, &line_sense, &pend_enc);
 addition_block add = addition_block();
 subtraction_block subtract = subtraction_block();
-pulse_input U_forward_pulse = pulse_input(0.1, 0.5, 200);
-pulse_input U_turn = pulse_input(0.1, 0.5, 100);
+pulse_input U_forward_pulse = pulse_input(0.2, 1.0, 200);
+pulse_input U_turn = pulse_input(1.5, 1.9, 150);
 
 
 
@@ -309,10 +309,10 @@ void loop()
 
     //bdsysloopcode
    G_cart.find_output();
-   add.find_output();
-   subtract.find_output();
    U_forward_pulse.find_output(t_sec);
    U_turn.find_output(t_sec);
+   add.find_output();
+   subtract.find_output();
    G_cart.send_commands(nISR);
 
 
@@ -321,6 +321,12 @@ void loop()
    /* digitalWrite(serial_pin, HIGH); */
    Serial.print(t_ms);
    //bdsysprintcode
+   print_comma_then_int(add.read_output());
+   print_comma_then_int(subtract.read_output());
+   print_comma_then_int(U_forward_pulse.read_output());
+   print_comma_then_int(U_turn.read_output());
+   print_comma_then_int(line_sense.read_output());
+   print_comma_then_int(pend_enc.read_output());
 
 
    mynewline();
