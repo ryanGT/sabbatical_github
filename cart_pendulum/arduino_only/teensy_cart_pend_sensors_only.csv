@@ -1,0 +1,10 @@
+actuators
+
+sensors
+custom_sensor,line_sense,arduino_class:line_sense_i2c,init_params:
+custom_sensor,pend_enc,arduino_class:pendulum_encoder,init_params:
+
+blocks
+
+print blocks
+

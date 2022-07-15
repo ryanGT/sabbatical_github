@@ -1,0 +1,12 @@
+actuators
+
+sensors
+custom_sensor,line_sense,arduino_class:line_sense_i2c,init_params:
+custom_sensor,pend_enc,arduino_class:pendulum_encoder,init_params:
+
+blocks
+block_type,variable_name,label,arduino_class,input_block1_name,input_block2_name,width,height,placement_type,abs_x,abs_y,rel_block_name,rel_pos,rel_distance,xshift,yshift,param1,param2,param3,param4,param5,param6,param7,param8,param9,param10
+plant_with_two_i2c_inputs_and_two_i2c_sensors,G,G,class_not_specified,,,3,2,,,,,,,,,sensor1_name:line_sense,sensor2_name:pend_enc,send_address:7,read_address1:7,read_address2:8,,,,,
+
+print blocks
+

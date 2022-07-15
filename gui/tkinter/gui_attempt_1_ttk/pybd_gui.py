@@ -351,6 +351,8 @@ class pybd_gui(tk.Tk):
         if not self.arduino_output_folder:
             self.set_arduino_output_folder()
         rest, output_name = os.path.split(self.arduino_output_folder)
+        print("arduino_output_folder = %s" % self.arduino_output_folder)
+        print("output_name = %s" % output_name)
         print("rest = %s" % rest)
         print("blocks: %s" % self.bd.block_name_list)
         self.bd.generate_arduino_code(output_name, \
@@ -1051,20 +1053,25 @@ class pybd_gui(tk.Tk):
         self.bd.update_block_list()
         block_list = self.bd.block_list
         print("block_list: %s" % block_list)
-        self.bd.ax = self.ax
-        self.bd.draw()
-        xlims = self.bd.get_xlims()
-        ylims = self.bd.get_ylims()
-        self.ax.set_xlim(xlims)
-        self.ax.set_ylim(ylims)
-        self.xmin_var.set(str(xlims[0]))
-        self.xmax_var.set(str(xlims[1]))
-        self.ymin_var.set(str(ylims[0]))
-        self.ymax_var.set(str(ylims[1]))
-        
-        self.bd.axis_off()        
-        self.canvas.draw()
-        
+        if len(block_list) > 0:
+            self.bd.ax = self.ax
+            self.bd.draw()
+            
+            try:
+                xlims = self.bd.get_xlims()
+                ylims = self.bd.get_ylims()
+                self.ax.set_xlim(xlims)
+                self.ax.set_ylim(ylims)
+                self.xmin_var.set(str(xlims[0]))
+                self.xmax_var.set(str(xlims[1]))
+                self.ymin_var.set(str(ylims[0]))
+                self.ymax_var.set(str(ylims[1]))
+            except:
+                print("axes limits not set")
+                
+            self.bd.axis_off()        
+            self.canvas.draw()
+            
         
     def fill_placement_entry(self, place_str):
         self.placement_var.set(place_str)
