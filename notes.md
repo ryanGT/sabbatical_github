@@ -77,4 +77,16 @@
 
 ### Proof of concept articls
 
+
+
 [https://raspberrypi.stackexchange.com/questions/108896/what-is-rpis-i2c-maximum-speed](https://raspberrypi.stackexchange.com/questions/108896/what-is-rpis-i2c-maximum-speed)
+
+
+
+## Teensy Cart Pendulum Control
+
+- getting close with autogen of open-loop
+- do I care about the order of printing?
+- does the teensy work with my tk serial gui?
+    - and can I generate a plot order or label txt file or something so that we
+      can auto-plot with labels?

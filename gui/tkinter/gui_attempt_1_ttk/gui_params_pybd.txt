@@ -1,3 +1,3 @@
 arduino_template_path:/Users/kraussry/sabbatical_github/cart_pendulum/arduino_only/cart_pendulum_teensy_template.ino
 arduino_output_folder:/Users/kraussry/sabbatical_github/cart_pendulum/arduino_only/cart_pendulum_teensy_autogen_1
-csv_path:/Users/kraussry/sabbatical_github/cart_pendulum/arduino_only/teensy_cart_pend_1.csv
+csv_path:/Users/kraussry/sabbatical_github/cart_pendulum/arduino_only/teensy_cart_pend_line_follow_P_control.csv

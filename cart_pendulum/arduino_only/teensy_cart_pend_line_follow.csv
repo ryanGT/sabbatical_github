@@ -1,0 +1,16 @@
+actuators
+
+sensors
+custom_sensor,line_sense,arduino_class:line_sense_i2c,init_params:
+custom_sensor,pend_enc,arduino_class:pendulum_encoder,init_params:
+
+blocks
+block_type,variable_name,label,arduino_class,input_block1_name,input_block2_name,width,height,placement_type,abs_x,abs_y,rel_block_name,rel_pos,rel_distance,xshift,yshift,param1,param2,param3,param4,param5,param6,param7,param8,param9,param10
+cart_pendulum,G_cart,$G_{cart}$,plant_with_i2c_double_actuator_and_two_sensors,add,subtract,3,2,absolute,0.0,0.0,,,,,,sensor1_name:line_sense,sensor2_name:pend_enc,send_address:7,,,,,,,
+addition_block,add,+,addition_block,U_forward_pulse,U_turn,1.5,1.5,relative,,,G_cart,left,4,0,2,,,,,,,,,,
+subtraction_block,subtract,-,subtraction_block,U_forward_pulse,U_turn,1.5,1.5,relative,,,G_cart,left,4,0,-2,,,,,,,,,,
+pulse_input,U_forward_pulse,$U_{forward}(s)$,pulse_input,,,3,2,relative,,,add,left,4,0,4,on_time:0.1,off_time:0.5,amp:200,,,,,,,
+pulse_input,U_turn,$U_{turn}(s)$,pulse_input,,,3,2,relative,,,subtract,left,4,0,2,on_time:0.1,off_time:0.5,amp:150,,,,,,,
+
+print blocks
+add,subtract,U_forward_pulse,U_turn,line_sense,pend_enc
