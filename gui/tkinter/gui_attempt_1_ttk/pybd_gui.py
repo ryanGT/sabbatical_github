@@ -160,7 +160,7 @@ from tkinter.messagebox import showinfo
 from tkinter.messagebox import askyesno
 
 
-from add_block_dialog import add_block_dialog
+from add_block_dialog import add_block_dialog, replace_block_dialog
 from place_block_dialog import place_block_dialog
 from input_chooser import input_chooser, input2_chooser
 from multi_block_selector import print_block_selector
@@ -217,6 +217,7 @@ class pybd_gui(tk.Tk):
         self.menubar.add_cascade(menu=self.menu_block_diagram, label='Block Diagram')        
         self.menubar.add_cascade(menu=self.menu_codegen, label='Code Generation')
         self.menu_edit.add_command(label="Delete Block", command=self.on_delete_block)
+        self.menu_edit.add_command(label="Replace Block", command=self.on_replace_block)
         self.menu_file.add_command(label='Save', command=self.on_save_menu)
         self.menu_file.add_command(label='Save As', command=self.on_save_as_menu)        
         self.menu_file.add_command(label='Load', command=self.on_load_menu)        
@@ -633,6 +634,22 @@ class pybd_gui(tk.Tk):
             block = self.get_block_by_name(block_name)
             self.bd.delete_block(block)
             self.block_list_var.set(self.bd.block_name_list)
+
+    def on_replace_block(self, *args, **kwargs):
+        """Assuming a block is selected, call the add block dialog to get the
+        new block to replace it with.
+
+        Actually, this won't exaclty work since the dialog needs to do most of
+        the stuff (I never really figured out how to call a dialog and then
+        finish stuff in the main gui after it is done.  So, the dialog calls
+        the methods of the main gui.  This means that a specific dialog for
+        replaceing a block is needed.  Hopefully it can inherit from the
+        add_block_dialog)"""
+        # get selected block
+        # call add block dialog
+        mydialog = replace_block_dialog(title="Replace Block", parent=self)
+        mydialog.grab_set()
+ 
 
     def get_block_name_list(self):
         #block_list = self.bd._build_block_list()

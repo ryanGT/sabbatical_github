@@ -17,6 +17,8 @@ from tkinter.messagebox import showinfo
 
 import py_block_diagram as pybd
 pad_options = {'padx': 5, 'pady': 5}
+xpad_options = {'padx': 5, 'pady': 0}
+ypad_options = {'padx': 0, 'pady': 5}
 
 from tkinter_utils import my_toplevel_window, window_with_param_widgets_that_appear_and_disappear
 
@@ -70,7 +72,7 @@ class add_block_dialog(my_toplevel_window, window_with_param_widgets_that_appear
         #print("parent: %s" % parent)
 
 
-    def make_widgets(self):
+    def make_widgets(self, startrow=0):
         #def body(self):
         #print("frame: %s" % frame)
         # print(type(frame)) # tkinter.Frame
@@ -113,7 +115,7 @@ class add_block_dialog(my_toplevel_window, window_with_param_widgets_that_appear
         column0_widgets = [self.label1, self.category_combobox, label2, self.blockchoice]
 
         for i, widget in enumerate(column0_widgets):
-            widget.grid(row=i, column=0, sticky='W', **pad_options)
+            widget.grid(row=startrow+i, column=0, sticky='W', **pad_options)
 
 
         currow = i+1
@@ -146,7 +148,7 @@ class add_block_dialog(my_toplevel_window, window_with_param_widgets_that_appear
         column1_widgets = [label_BN, self.block_name_box, label_input, \
                            self.input_choice]#, self.go_button]
         for i, widget in enumerate(column1_widgets):
-            widget.grid(row=i, column=1, sticky='W', **pad_options)
+            widget.grid(row=startrow+i, column=1, sticky='W', **pad_options)
 
         currow = i+1
         mycol = 1
@@ -323,9 +325,7 @@ class add_block_dialog(my_toplevel_window, window_with_param_widgets_that_appear
         return input_name
 
 
-    def go_pressed(self):
-        # Next step:
-        # - read parameters from the numbered param boxes for kwargs
+    def _create_new_block(self):
         assert self.selected_block_type is not None, "block_type has not been set"
         print("you pressed go")
         block_type = self.selected_block_type
@@ -402,6 +402,13 @@ class add_block_dialog(my_toplevel_window, window_with_param_widgets_that_appear
         print("kwargs:")
         print(kwargs)
         new_block = pybd.create_block(block_class, block_type, block_name, **kwargs)
+        return new_block
+
+
+    def go_pressed(self):
+        # Next step:
+        # - read parameters from the numbered param boxes for kwargs
+        new_block = self._create_new_block()
         self.parent.append_block_to_dict(block_name, new_block)
         #self.parent.password = self.my_password
         self.destroy()
@@ -477,3 +484,148 @@ class add_block_dialog(my_toplevel_window, window_with_param_widgets_that_appear
             self.hide_act_and_sense_combos()
 
         self.block_choice_list.set(new_list)
+
+
+
+class replace_block_dialog(add_block_dialog):
+    def __init__(self, parent, title="Replace Block Dialog"):
+        # Not sure how the tk super method actually works (would it be better
+        # to use the normal python method of calling the parent class' __init__
+        # method?):
+        super().__init__(parent, title=title)
+        # self.block_to_replace = block_to_replace
+        # I should also set the inputs and other things based on the
+        # block_to_replace passed in
+
+
+    def make_widgets(self):
+        # big idea: add a widget at the top to choose the 
+        # block to replace.  Then call the parent method with startrow=2
+        replacement_label = ttk.Label(self, text="Block to Replace")
+        replacement_label.grid(row=0, column=0, sticky='SW', **xpad_options)
+
+        self.replacement_block_list = self.parent.get_block_name_list()
+
+        self.replacement_block_name = tk.StringVar()
+        
+        self.replacement_combo = ttk.Combobox(self,
+                textvariable=self.replacement_block_name)
+        self.replacement_combo['values'] = self.replacement_block_list 
+
+        # prevent typing a value
+        self.replacement_combo['state'] = 'readonly'
+        self.replacement_combo.bind('<<ComboboxSelected>>',
+                self.on_replacement_selected)
+ 
+        self.replacement_combo.grid(row=1, column=0, sticky='NW', **xpad_options)
+        add_block_dialog.make_widgets(self, startrow=2)
+
+        self.go_button.config(text="Replace")
+    
+    def on_replacement_selected(self, *args, **kwargs):
+        # what needs to actually happen here?
+        # - copy any info from the block to replace into a kwargs dict
+        # - the new block should have the same input(s) and placement info
+        #   as the block it is replacing
+        # - is there anything else to copy over?
+        print("in on_replacement_selected")
+        # if the old block has inputs, set the input widget values here
+        self.old_block_name = self.replacement_block_name.get()
+        print("self.old_block_name = %s" % self.old_block_name)
+        self.old_block = self.parent.get_block_by_name(self.old_block_name)
+        #self.input_block1 = input_block1
+        if hasattr(self.old_block, "input_block1_name"):
+            input1_name = self.old_block.input_block1_name
+            if input1_name:
+                #selection_clear(0, END), then selection_set
+                mylist = self.input_choice.get(0, "end")
+                ind = int(mylist.index(input1_name))
+                self.input_choice.selection_set(ind)
+
+
+    def get_input_names(self):
+        input_kwargs = {}
+        for i in range(1,3):
+            attr = "input_block%i_name" % i
+            if hasattr(self.old_block, attr):
+                val = getattr(self.old_block, attr)
+                input_kwargs[attr] = val
+        self.input_kwargs = input_kwargs
+
+
+    def get_old_position_info(self):
+        placement_kwargs = {}
+        if hasattr(self.old_block, "placement_type") and self.old_block.placement_type:
+            pt = self.old_block.placement_type
+            placement_kwargs['placement_type'] = pt
+            if pt == 'absolute':
+                mykeys = ['abs_x','abs_y']
+            else:
+                mykeys = ['rel_block_name','rel_pos','rel_distance','xshift','yshift']
+            
+            for key in mykeys:
+                attr = getattr(self.old_block, key)
+                placement_kwargs[key] = attr
+
+        self.placement_kwargs = placement_kwargs
+        return self.placement_kwargs
+
+
+
+
+    def set_inputs(self, new_block):
+        for i in range(1,3):
+            attr = "input_block%i_name" % i
+            if attr in self.input_kwargs:
+                name = self.input_kwargs[attr]
+                if name:
+                    # the defaults inherited from block might nead to an empty
+                    # name
+                    in_block = self.parent.get_block_by_name(name)
+                    method_name = "set_input_block%i" % i
+                    if hasattr(new_block, method_name):
+                        mymethod = getattr(new_block, method_name)
+                        mymethod(in_block)
+     
+
+
+    def go_pressed(self):
+        # Next step:
+        # - read parameters from the numbered param boxes for kwargs
+        # - kwargs are handled by self._create_new_block, which mostly reads
+        #   from the widgets
+        # - if we want to pass kwargs from old block to new block, we should
+        #   probably pass those values to the widgets as an intermediate step
+        # - placement stuff needs to be handled separately
+        #
+        # Conceptual question: do I force the new block to have the same
+        # input(s) as the old block?
+        new_block = self._create_new_block()
+        self.get_input_names()
+        self.set_inputs(new_block)
+        self.get_old_position_info()
+        place_dict = copy.copy(self.placement_kwargs)
+        pt = place_dict.pop('placement_type')
+
+        if pt == 'absolute':
+            # get abs kwargs
+            new_block.place_absolute(**place_dict)
+        elif pt == 'relative':
+            rel_block_name = place_dict.pop('rel_block_name')
+            rel_block = self.parent.get_block_by_name(rel_block_name)
+            new_block.place_relative(rel_block, **place_dict)
+        else:
+            pt_str = pt.strip()
+            if pt_str:
+                raise ValueError("placement type not understood: %s" % pt_str)
+            
+        # - handle input(s)
+        # get_block_by_name
+        # set_input_block1
+        # set_input_block2
+        # - handled placement
+        # - find all references in self.parent.bd and replace them:
+        self.parent.bd.replace_block(self.old_block, new_block)
+        self.destroy()
+
+
