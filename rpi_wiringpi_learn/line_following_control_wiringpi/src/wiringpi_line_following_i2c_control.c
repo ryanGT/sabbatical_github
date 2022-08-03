@@ -8,7 +8,7 @@
 #include <i2c/smbus.h>
 #include <unistd.h>
 
-#define DEVICE_ID 0x08
+#define MEGA_ID 0x07
 
 uint32_t t0 = micros();
 uint32_t t, t1, t2, t3, prev_t;
@@ -46,7 +46,7 @@ int main (int argc, char **argv)
 {
   printf("at top of main\n");
   // Setup I2C communication
-    int fd = wiringPiI2CSetup(DEVICE_ID);
+    int fd = wiringPiI2CSetup(MEGA_ID);
     if (fd == -1) {
         std::cout << "Failed to init I2C communication.\n";
         return -1;

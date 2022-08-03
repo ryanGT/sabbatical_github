@@ -68,6 +68,27 @@
 
 
 
+## WiringPi i2c
+
+- I have things working using a multi-byte echo verification in a loop
+    - the RPI code is here: [rpi_wiringpi_learn/multi_byte_wiringpi_i2c/wiringpi_multi_byte_loop_test.c](rpi_wiringpi_learn/multi_byte_wiringpi_i2c/wiringpi_multi_byte_loop_test.c)
+    - the Arduino Uno code is here: [rpi_wiringpi_learn/multi_byte_wiringpi_i2c/ino_multi_byte_loop_test/ino_multi_byte_loop_test.ino](rpi_wiringpi_learn/multi_byte_wiringpi_i2c/ino_multi_byte_loop_test/ino_multi_byte_loop_test.ino)
+- the Arduino responds by multipying the reassembled int by 10 and adding 1:
+
+```
+    outArray[0] = inArray[0];
+    outArray[1] = inArray[1];
+    i_received = 256*inArray[0] + inArray[1];
+    myresponse = 10*i_received + 1;
+    myr_lsb = (byte)myresponse;
+    myr_msb = getsecondbyte(myresponse);
+    outArray[2] = myr_msb;
+    outArray[3] = myr_lsb;
+```
+
+### WiringPi RPI Cart/Pendulum Control
+
+
 
 ## Working on i2c baudrate
 

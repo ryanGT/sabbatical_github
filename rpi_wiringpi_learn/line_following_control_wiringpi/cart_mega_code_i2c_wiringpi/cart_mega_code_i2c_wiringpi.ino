@@ -151,7 +151,7 @@ void setup()
   Serial.begin(115200);
 
   //bdsyswelcomecode
-  Serial.println("Cart Pendulum Micropython v.1.0.0.0");
+  Serial.println("Mega i2c code for RPI WiringPi C");
 
   pinMode(squarewave_pin, OUTPUT);
 
