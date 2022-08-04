@@ -29,9 +29,9 @@ int mysat_rtbd(int vin){
 }
 
 
-byte getsecondbyte(int input){
-  byte output;
-  output = (byte)(input >> 8);
+uint8_t getsecondbyte(int input){
+  uint8_t output;
+  output = (uint8_t)(input >> 8);
   return output;
 }
 
@@ -283,8 +283,8 @@ void plant_with_i2c_double_actuator_and_two_sensors::send_commands(int i){
   int speed1, speed2;
   speed1 = input1->read_output();
   speed2 = input2->read_output();
-  byte msb1, lsb1, msb2, lsb2, ilsb, imsb;
-  byte buf[7];
+  uint8_t msb1, lsb1, msb2, lsb2, ilsb, imsb;
+  uint8_t buf[7];
 
   // on the mega side:
   // n_msb = inArray[1];
@@ -298,11 +298,11 @@ void plant_with_i2c_double_actuator_and_two_sensors::send_commands(int i){
 
 
   // break into separate3 bytes for i2c transmission
-  ilsb = (byte)i;
+  ilsb = (uint8_t)i;
   imsb = getsecondbyte(i);
-  lsb1 = (byte)speed1;
+  lsb1 = (uint8_t)speed1;
   msb1 = getsecondbyte(speed1);
-  lsb2 = (byte)speed2;
+  lsb2 = (uint8_t)speed2;
   msb2 = getsecondbyte(speed2);
 
   buf[0] = 3;
@@ -324,34 +324,34 @@ void plant_with_i2c_double_actuator_and_two_sensors::send_commands(int i){
   //   }
   // }
   
-  Wire2.beginTransmission(actuator_addr);   // send the address and the write cmnd
-  Wire2.send(buf,7);                      // send three bytes
-  Wire2.endTransmission(); 
+  Wire.beginTransmission(actuator_addr);   // send the address and the write cmnd
+  Wire.send(buf,7);                      // send three bytes
+  Wire.endTransmission(); 
 };
 
 void plant_with_i2c_double_actuator_and_two_sensors::stop_motors(){
-  byte buf[7];
+  uint8_t buf[7];
   int num_bytes=7;
   buf[0] = 3;
   for (int k=1; k<num_bytes; k++){
     buf[k] = 0;
   }
-  Wire2.beginTransmission(actuator_addr);   // send the address and the write cmnd
-  Wire2.send(buf,7);                      // send three bytes
-  Wire2.endTransmission(); 
+  Wire.beginTransmission(actuator_addr);   // send the address and the write cmnd
+  Wire.send(buf,7);                      // send three bytes
+  Wire.endTransmission(); 
 };
 
 
 void plant_with_i2c_double_actuator_and_two_sensors::send_cal_cmd(){
-  byte buf[7];
+  uint8_t buf[7];
   int num_bytes=7;
   buf[0] = 4;
   for (int k=1; k<num_bytes; k++){
     buf[k] = 0;
   }
-  Wire2.beginTransmission(actuator_addr);   // send the address and the write cmnd
-  Wire2.send(buf,7);                      // send three bytes
-  Wire2.endTransmission(); 
+  Wire.beginTransmission(actuator_addr);   // send the address and the write cmnd
+  Wire.send(buf,7);                      // send three bytes
+  Wire.endTransmission(); 
 };
 
 

@@ -16,7 +16,7 @@
 
 int mysat_rtbd(int vin);
 
-byte getsecondbyte(int input);
+uint8_t getsecondbyte(int input);
  
 void shift_array_rtbd(float new_in, float vect_in[], int len_vect);
   
