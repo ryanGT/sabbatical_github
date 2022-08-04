@@ -1,3 +1,4 @@
+#include "rpiblockdiagram.h"
 #include <iostream>
 #include <wiringPi.h>
 #include <wiringPiI2C.h>

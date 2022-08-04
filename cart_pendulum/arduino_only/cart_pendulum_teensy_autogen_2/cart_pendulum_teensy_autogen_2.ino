@@ -153,7 +153,7 @@ addition_block add = addition_block();
 subtraction_block subtract = subtraction_block();
 int_constant_block U_line = int_constant_block(3500);
 summing_junction sum_junct = summing_junction();
-P_control_block D = P_control_block(0.01);
+P_control_block D = P_control_block(0.1);
 saturation_block sat = saturation_block();
 step_input U_forward_step = step_input(0.1, 200);
 
