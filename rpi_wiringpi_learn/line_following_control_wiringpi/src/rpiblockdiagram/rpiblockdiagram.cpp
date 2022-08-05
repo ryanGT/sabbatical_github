@@ -272,8 +272,8 @@ plant_with_double_actuator_two_sensors::plant_with_double_actuator_two_sensors(d
   Sensor2 = mysense2;
 };
 
-plant_with_i2c_double_actuator_and_two_sensors::plant_with_i2c_double_actuator_and_two_sensors(int ACT_ADDR, sensor *mysense1, sensor *mysense2) : plant_with_double_actuator_two_sensors(NULL, mysense1, mysense2){
-  actuator_addr = ACT_ADDR;
+plant_with_i2c_double_actuator_and_two_sensors::plant_with_i2c_double_actuator_and_two_sensors(int myfd, sensor *mysense1, sensor *mysense2) : plant_with_double_actuator_two_sensors(NULL, mysense1, mysense2){
+  fd = myfd;
   Sensor1 = mysense1;
   Sensor2 = mysense2;
 }
@@ -324,9 +324,11 @@ void plant_with_i2c_double_actuator_and_two_sensors::send_commands(int i){
   //   }
   // }
   
-  Wire.beginTransmission(actuator_addr);   // send the address and the write cmnd
-  Wire.send(buf,7);                      // send three bytes
-  Wire.endTransmission(); 
+  //Wire.beginTransmission(actuator_addr);   // send the address and the write cmnd
+  //Wire.send(buf,7);                      // send three bytes
+  //Wire.endTransmission(); 
+  	
+  write(fd, buf, 7);
 };
 
 void plant_with_i2c_double_actuator_and_two_sensors::stop_motors(){
@@ -336,9 +338,10 @@ void plant_with_i2c_double_actuator_and_two_sensors::stop_motors(){
   for (int k=1; k<num_bytes; k++){
     buf[k] = 0;
   }
-  Wire.beginTransmission(actuator_addr);   // send the address and the write cmnd
-  Wire.send(buf,7);                      // send three bytes
-  Wire.endTransmission(); 
+   write(fd, buf, 7);
+  //Wire.beginTransmission(actuator_addr);   // send the address and the write cmnd
+  //Wire.send(buf,7);                      // send three bytes
+  //Wire.endTransmission(); 
 };
 
 
@@ -349,9 +352,10 @@ void plant_with_i2c_double_actuator_and_two_sensors::send_cal_cmd(){
   for (int k=1; k<num_bytes; k++){
     buf[k] = 0;
   }
-  Wire.beginTransmission(actuator_addr);   // send the address and the write cmnd
-  Wire.send(buf,7);                      // send three bytes
-  Wire.endTransmission(); 
+  write(fd, buf, 7);
+  //Wire.beginTransmission(actuator_addr);   // send the address and the write cmnd
+  //Wire.send(buf,7);                      // send three bytes
+  //Wire.endTransmission(); 
 };
 
 

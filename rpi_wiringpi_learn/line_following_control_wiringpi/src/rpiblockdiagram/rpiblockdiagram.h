@@ -243,12 +243,12 @@ public:
 class plant_with_i2c_double_actuator_and_two_sensors: public plant_with_double_actuator_two_sensors{
   //a plant that has a double actuator, such as a differential drive robot
 public:
-  int actuator_addr;
   sensor* Sensor1;
   sensor* Sensor2;
+  int fd;//file descriptor #
   int output1, output2;
   // a plant block should still have an input block pointer  
-  plant_with_i2c_double_actuator_and_two_sensors(int ACT_ADDR, sensor *mysense1, sensor *mysense2);
+  plant_with_i2c_double_actuator_and_two_sensors(int myfd, sensor *mysense1, sensor *mysense2);
   //int get_reading();
   //void send_commands();
   //int read_output(float t);
