@@ -437,7 +437,7 @@ int subtraction_block::find_output(){
   return(output);
 };
 
-if_block::if_block(block *bool_in=NULL, block *in1=NULL, block *in2=NULL){
+if_block::if_block(block *bool_in, block *in1, block *in2){
   bool_block = bool_in;
   input1 = in1;
   input2 = in2;  
@@ -463,7 +463,7 @@ int if_block::find_output(){
   return(output);
 };
 
-P_control_block::P_control_block(float KP, block *in=NULL){
+P_control_block::P_control_block(float KP, block *in){
     input = in;
     Kp = KP;
 };
@@ -475,7 +475,7 @@ int P_control_block::find_output(float t){
     return(output);
 };
 
-PD_control_block::PD_control_block(float KP, float KD, block *in=NULL){
+PD_control_block::PD_control_block(float KP, float KD, block *in){
     input = in;
     Kp = KP;
     Kd = KD;
@@ -508,7 +508,7 @@ void PD_control_block::save_values(float t){
 };
 
 
-digcomp_block::digcomp_block(float *b_vect, float *a_vect, int len_in, int len_out, block *in=NULL){
+digcomp_block::digcomp_block(float *b_vect, float *a_vect, int len_in, int len_out, block *in){
   _a_vect = a_vect;
   _b_vect = b_vect;
   //_len_in = sizeof(_b_vect)/sizeof(_b_vect[0]);
@@ -538,7 +538,7 @@ int digcomp_block::find_output(float t){
 }
 
 
-saturation_block::saturation_block(block *in=NULL){
+saturation_block::saturation_block(block *in){
   input = in;
 };
 
@@ -549,14 +549,14 @@ int saturation_block::find_output(float t){
 };
 
 
-sat2_adjustable_block::sat2_adjustable_block(int max_in=255, block *in=NULL){
+sat2_adjustable_block::sat2_adjustable_block(int max_in, block *in){
   mymax = max_in;
   mymin = -mymax;
   input = in;
 };
 
 
-sat2_adjustable_block::sat2_adjustable_block(int max_in=255, int min_in=-255, block *in=NULL){
+sat2_adjustable_block::sat2_adjustable_block(int max_in, int min_in, block *in){
   mymax = max_in;
   mymin = min_in;
   input = in;
