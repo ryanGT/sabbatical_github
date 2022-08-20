@@ -22,28 +22,30 @@ const int N=1000;
 int i_echo[N];
 int two_byte_response[N];
 int enc_fd, mega_fd;
+int position;
 #define in_bytes 8
 #define out_bytes 8
 uint8_t inArray[in_bytes];
 uint8_t outArray[out_bytes];
 #define enc_bytes 2
 uint8_t enc_array[enc_bytes];
-int N=1000;
 
 uint8_t ilsb, imsb;
+uint8_t calibrated;
 
+// compile cmd:
 // compile cmd:
 // g++ -o wiringpi_multi_byte_attempt1.o wiringpi_multi_byte_attempt1.c -lwiringPi -li2c
 
 // performance cpu comand:
 // echo performance | sudo tee /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
 
-uint8_t getsecondbyte(int input){
-  uint8_t output;
-  output = (uint8_t)(input >> 8);
-  return output;
-}
-
+//uint8_t getsecondbyte(int input){
+//  uint8_t output;
+//  output = (uint8_t)(input >> 8);
+//  return output;
+//}
+//
 
 int reassemblebytes(uint8_t msb, uint8_t lsb){
   int output;
@@ -112,13 +114,8 @@ uint8_t line_sensor_buf[line_bytes];
 int line_sense_addr=7;
 
 void read_line_sensor_i2c_buf(){
-  Wire2.requestFrom(line_sense_addr, line_bytes);    // request 2 bytes from slave device #8
-  while (Wire2.available()<line_bytes){
-    delayMicroseconds(5);
-  }
-  for (int k=0; k<line_bytes; k++){
-    line_sensor_buf[k] = Wire2.read();
-  }
+
+  read(mega_fd, line_sensor_buf, line_bytes);
 }
 
 
@@ -157,23 +154,20 @@ pulse_input U_turn = pulse_input(0.1, 0.5, 150);
 
 
 
-byte check_cal(){
+uint8_t check_cal(){
   read_line_sensor_i2c_buf();
   return line_sensor_buf[0];
 }
 
 
 void send_cal_command(){
-  Serial.println("sending cal command");
+  printf("sending cal command\n");
   G_cart.send_cal_cmd();
   delay(2000);
   for (int k=0; k<20; k++){
     delay(500);
     calibrated = check_cal();
-    Serial.print("k = ");
-    Serial.print(k);
-    Serial.print(", calibrated = ");
-    Serial.println(calibrated);
+    printf("k = %i, calibrated = %i\n", k, calibrated);
     if (calibrated == 1){
       break;
     }
@@ -213,47 +207,30 @@ int main (int argc, char **argv)
     pinMode(3, OUTPUT);
     printf("sending data\n");
 
-    int q;
-    // load the outArray
-    for (q=0; q<out_bytes; q++){
-      outArray[q] = (q+1)*2;
-    }
-    // Send data to arduino
-    t1 = micros();
 
-    // transmit data in a loop
-    int i;
-
-    for (i=0; i<N; i++){
-      // break i into two bytes
-      ilsb = (uint8_t)i;
-      imsb = getsecondbyte(i);
-      outArray[0] = imsb;
-      outArray[1] = ilsb;
-      write(fd, outArray, out_bytes);
-      delay(1);
-      read(fd, inArray, in_bytes);
-      i_echo[i] = 256*inArray[0] + inArray[1];
-      two_byte_response[i] = 256*inArray[2] + inArray[3];
-      delay(1);
-    }
-    
-    t2 = micros();
-    dt_send = t2-t1;
-    printf("data sent\n");
-    printf("loop time: %i\n", dt_send);
-    float ave_loop_time;
-    ave_loop_time = dt_send/N;
-    printf("ave_loop_time: %0.6g\n", ave_loop_time);
-    delay(500);
+  //bdsyssetupcode
+   printf("doing block setup\n");
+   G_cart.set_input_blocks(&add, &subtract);
+   add.set_input_blocks(&U_forward_pulse, &U_turn);
+   subtract.set_input_blocks(&U_forward_pulse, &U_turn);
 
 
+  //menu
+  calibrated = check_cal();
+  printf("in menu, calibrated = %i\n", calibrated);
 
-    printf("received:\n");
-    for (i=0; i<N; i++){
-      printf("i_echo = %i, two_byte_response = %i\n", i_echo[i], two_byte_response[i]); 
-    }
-    printf("\n");
-    //fclose(fp);
-    return 0;
+  char mychar;
+  	
+  if (calibrated == 0){
+    printf("press any character to calibrate\n");
+
+    mychar = getchar();
+    printf("you pressed: %c", mychar);
+    send_cal_command();
+  };
+  /*   // reset encoders and t0 at the start of a test */
+
+  printf("done with menu and/or calibration\n");
+
+  return 0;
 }

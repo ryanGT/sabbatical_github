@@ -310,7 +310,7 @@ void loop()
     new_data = false;
     //digitalWrite(i2cprocessPin, HIGH);  
 
-    //Serial.println("new data");
+    Serial.println("new data");
     if (inArray[0] == 1){
       // start new test
       // - what needs to happen here?
