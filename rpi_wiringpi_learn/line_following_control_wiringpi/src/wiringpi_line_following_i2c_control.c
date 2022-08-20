@@ -33,12 +33,16 @@ uint8_t enc_array[enc_bytes];
 uint8_t ilsb, imsb;
 uint8_t calibrated;
 
-// compile cmd:
-// compile cmd:
+// compile cmd (old):
+// compile cmd (old):
 // g++ -o wiringpi_multi_byte_attempt1.o wiringpi_multi_byte_attempt1.c -lwiringPi -li2c
 
 // performance cpu comand:
 // echo performance | sudo tee /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+
+// compiling and linking command with rpi library:
+//g++ -o wiringpi_line_following_i2c_control.o wiringpi_line_following_i2c_control.c rpiblockdiagram/rpiblockdiagram.o -lwiringPi -li2c
+
 
 //uint8_t getsecondbyte(int input){
 //  uint8_t output;
