@@ -255,6 +255,7 @@ public:
   void send_commands(int i);
   void stop_motors();
   void send_cal_cmd();  
+  void set_fd(int myfd);
   //int find_output(float t);//<-- just inherit these
   //int find_output();//<-- just inherit these
 };

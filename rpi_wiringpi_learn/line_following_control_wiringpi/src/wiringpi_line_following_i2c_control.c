@@ -150,6 +150,9 @@ class line_sense_i2c: public sensor{
 //bdsysinitcode
 line_sense_i2c line_sense = line_sense_i2c();
 pendulum_encoder pend_enc = pendulum_encoder();
+// note: in rpi wiringPi land, the first int input needs to be the file descriptor, 
+// which is not know yet
+// - it should be set to mega_fd later on in the main function (after it is opened)
 plant_with_i2c_double_actuator_and_two_sensors G_cart = plant_with_i2c_double_actuator_and_two_sensors(7, &line_sense, &pend_enc);
 addition_block add = addition_block();
 subtraction_block subtract = subtraction_block();
@@ -191,6 +194,7 @@ int main (int argc, char **argv)
         return -1;
     }
     std::cout << "Mega I2C communication successfully setup.\n";
+    G_cart.set_fd(mega_fd);
 
     enc_fd = wiringPiI2CSetup(UNO_ID);
     if (enc_fd == -1) {
