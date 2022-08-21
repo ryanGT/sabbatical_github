@@ -279,7 +279,7 @@ plant_with_i2c_double_actuator_and_two_sensors::plant_with_i2c_double_actuator_a
 }
 
 
-void set_fd(int myfd){
+void plant_with_i2c_double_actuator_and_two_sensors::set_fd(int myfd){
   fd = myfd;
 }
 
