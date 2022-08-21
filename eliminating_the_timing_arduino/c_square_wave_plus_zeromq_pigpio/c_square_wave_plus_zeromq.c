@@ -7,6 +7,8 @@
 
 #include <pigpio.h>
 
+// possible gcc flags:
+// gcc -Wall -pthread -o fprintf_pigpio_i2c_test.o fprintf_pigpio_i2c_test.c -lpigpio -lrt
 
 void alarmWakeup(int sig_num);
 

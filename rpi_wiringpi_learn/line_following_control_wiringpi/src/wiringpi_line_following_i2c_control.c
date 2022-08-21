@@ -1,4 +1,6 @@
 #include <iostream>
+#include <stdlib.h>
+#include <signal.h>
 #include <wiringPi.h>
 #include <wiringPiI2C.h>
 #include <stdio.h>
@@ -9,11 +11,21 @@
 #include <unistd.h>
 #include "rpiblockdiagram/rpiblockdiagram.h"
 
+void alarmWakeup(int sig_num);
+
+int pin = 21;
+int pin2 = 20;//look up a good choice here
+
+int ISRHappened = 0;
+int ISRstate = 0;
+int nISR = 0;
+int i;
 
 #define MEGA_ID 0x07
 #define UNO_ID 0x08
 
-uint32_t t0 = micros();
+uint32_t t0, tf, total_dt;
+float loop_time_ms;
 uint32_t t, t1, t2, t3, prev_t;
 uint16_t dt, dt_send, dt_receive;
 uint32_t send_total=0;
@@ -32,6 +44,11 @@ uint8_t enc_array[enc_bytes];
 
 uint8_t ilsb, imsb;
 uint8_t calibrated;
+
+
+// pin #'s
+int isr_sw_pin = 0;
+int loop_sw_pin = 1;
 
 // compile cmd (old):
 // compile cmd (old):
@@ -210,8 +227,14 @@ int main (int argc, char **argv)
     //fprintf(fp, "%s %s %s %d", "We", "are", "in", 2012);
 
     wiringPiSetup();
-    pinMode(0, OUTPUT);
-    pinMode(1, OUTPUT);
+    // what are the wiringPi pin #'s?  in what "mode"?
+    // - using the command `gpio readall` leads me to the following
+    //   conclusions on wiringPi pin #'s:
+    //   - 0 ==> BCM 17, physical 11
+    //   - 1 ==> BCM 18, physical 12
+    //   - 3 ==> BCM 22, physical 15
+    pinMode(isr_sw_pin, OUTPUT);
+    pinMode(loop_sw_pin, OUTPUT);
     pinMode(3, OUTPUT);
     printf("sending data\n");
 
@@ -240,5 +263,55 @@ int main (int argc, char **argv)
 
   printf("done with menu and/or calibration\n");
 
+  signal(SIGALRM, alarmWakeup);   
+  ualarm(2000, 2000);//500 
+
+  t0 = micros();
+
+  for (i=0;i<N;i++){
+     // main control loop for test
+     //
+     // Adapt this for a for loop where we wait until
+     // the flag has been set
+
+     // wait for timer ISR to set flag"
+     while (ISRHappened == 0){
+	delayMicroseconds(50);
+     }
+
+     // clear flag
+     ISRHappened = 0;
+	
+     digitalWrite(loop_sw_pin, 1);
+     printf("i = %i\n",nISR);
+     digitalWrite(loop_sw_pin, 0);
+  }
+
+  tf = micros();
+  total_dt = tf - t0;
+  loop_time_ms = total_dt/1000.0;
+  printf("loop time (ms) = %0.2f\n", loop_time_ms);
+
   return 0;
+}
+
+
+
+
+
+void alarmWakeup(int sig_num)
+{
+  if(sig_num == SIGALRM)
+    {
+      ISRHappened = 1;
+      nISR++;
+      if (ISRstate == 1){
+        ISRstate = 0;
+      }
+      else if (ISRstate == 0){
+        ISRstate = 1;
+      }
+      digitalWrite(isr_sw_pin, ISRstate);
+      //for(i=0; i<65535; i++); //do something
+    }
 }
