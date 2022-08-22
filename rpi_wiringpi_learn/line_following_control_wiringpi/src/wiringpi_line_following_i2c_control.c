@@ -26,7 +26,8 @@ int i;
 
 uint32_t t0, tf, total_dt;
 float loop_time_ms;
-uint32_t t, t1, t2, t3, prev_t;
+uint32_t t, t1, t2, t3, prev_t, cur_t;
+float t_ms, t_sec;
 uint16_t dt, dt_send, dt_receive;
 uint32_t send_total=0;
 float ave_send;
@@ -199,6 +200,14 @@ void send_cal_command(){
 }
 
 
+void print_comma_then_int(int myint){
+    printf(",%i",myint);
+}
+
+void mynewline(){
+    printf("\n");
+}
+
 //uint32_t t1, t2, dt;
 
 int main (int argc, char **argv)
@@ -279,11 +288,40 @@ int main (int argc, char **argv)
 	delayMicroseconds(50);
      }
 
+     // timing pin high
+     digitalWrite(loop_sw_pin, 1);
      // clear flag
      ISRHappened = 0;
-	
-     digitalWrite(loop_sw_pin, 1);
-     printf("i = %i\n",nISR);
+     cur_t = micros();
+     //Serial.println(cur_t);
+     t = cur_t-t0;
+     if (t < 0){
+       t += 65536;
+     }
+     t_ms = t/1000.0;
+     t_sec = t_ms/1000.0;
+ 
+     U_forward_pulse.find_output(t_sec);
+     U_turn.find_output(t_sec);
+     G_cart.find_output();
+     add.find_output();
+     subtract.find_output();
+     G_cart.send_commands(i);
+
+
+     
+     //bdsysprintcode
+     printf("%i,%0.2f",i,t_ms);
+     print_comma_then_int(add.read_output());
+     print_comma_then_int(subtract.read_output());
+     print_comma_then_int(U_forward_pulse.read_output());
+     print_comma_then_int(U_turn.read_output());
+     print_comma_then_int(line_sense.read_output());
+     print_comma_then_int(pend_enc.read_output());
+
+
+     mynewline();
+
      digitalWrite(loop_sw_pin, 0);
   }
 
@@ -291,7 +329,12 @@ int main (int argc, char **argv)
   total_dt = tf - t0;
   loop_time_ms = total_dt/1000.0;
   printf("loop time (ms) = %0.2f\n", loop_time_ms);
-
+      
+  
+  G_cart.stop_motors();
+  delay(100);
+  G_cart.stop_motors();
+ 
   return 0;
 }
 
