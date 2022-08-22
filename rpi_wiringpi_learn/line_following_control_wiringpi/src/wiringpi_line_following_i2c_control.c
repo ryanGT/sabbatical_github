@@ -88,8 +88,9 @@ int reassemblebytes(uint8_t msb, uint8_t lsb){
 int read_encoder_i2c(){
   int out;
 
-  read(enc_fd, enc_array, enc_bytes);
-  out = reassemblebytes(enc_array[0],enc_array[1]);
+  //read(enc_fd, enc_array, enc_bytes);
+  //out = reassemblebytes(enc_array[0],enc_array[1]);
+  out = 7;//not reading the encoder for now
   return(out);
 }
 
@@ -185,7 +186,7 @@ uint8_t check_cal(){
 }
 
 
-void send_cal_command(){
+int send_cal_command(){
   printf("sending cal command\n");
   G_cart.send_cal_cmd();
   delay(2000);
@@ -197,6 +198,7 @@ void send_cal_command(){
       break;
     }
   }
+  return(calibrated);
 }
 
 
@@ -220,15 +222,16 @@ int main (int argc, char **argv)
         return -1;
     }
     std::cout << "Mega I2C communication successfully setup.\n";
+    printf("mega_fd: %i\n", mega_fd);
     G_cart.set_fd(mega_fd);
 
-    enc_fd = wiringPiI2CSetup(UNO_ID);
-    if (enc_fd == -1) {
-        std::cout << "Encoder Uno failed to init I2C communication.\n";
-        return -1;
-    }
-    std::cout << "Encoder Uno I2C communication successfully setup.\n";
-
+//    enc_fd = wiringPiI2CSetup(UNO_ID);
+//    if (enc_fd == -1) {
+//        std::cout << "Encoder Uno failed to init I2C communication.\n";
+//        return -1;
+//    }
+//    std::cout << "Encoder Uno I2C communication successfully setup.\n";
+//
 
     //FILE * fp;
 
@@ -271,7 +274,11 @@ int main (int argc, char **argv)
   /*   // reset encoders and t0 at the start of a test */
 
   printf("done with menu and/or calibration\n");
-
+  calibrated = check_cal();
+  if (calibrated == 0){
+      printf("calibration failed, exiting");
+      return -1;
+  }
   signal(SIGALRM, alarmWakeup);   
   ualarm(2000, 2000);//500 
 
@@ -335,6 +342,7 @@ int main (int argc, char **argv)
   delay(100);
   G_cart.stop_motors();
  
+  close(mega_fd);
   return 0;
 }
 
