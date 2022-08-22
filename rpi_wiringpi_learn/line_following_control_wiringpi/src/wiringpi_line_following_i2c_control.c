@@ -175,8 +175,8 @@ pendulum_encoder pend_enc = pendulum_encoder();
 plant_with_i2c_double_actuator_and_two_sensors G_cart = plant_with_i2c_double_actuator_and_two_sensors(7, &line_sense, &pend_enc);
 addition_block add = addition_block();
 subtraction_block subtract = subtraction_block();
-pulse_input U_forward_pulse = pulse_input(0.1, 0.5, 200);
-pulse_input U_turn = pulse_input(0.1, 0.5, 150);
+pulse_input U_forward_pulse = pulse_input(0.1, 1.5, 200);
+pulse_input U_turn = pulse_input(0.1, 0.5, 5);
 
 
 

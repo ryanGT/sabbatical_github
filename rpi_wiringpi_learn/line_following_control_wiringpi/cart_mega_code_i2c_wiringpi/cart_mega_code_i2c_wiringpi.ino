@@ -175,7 +175,7 @@ void setup()
   motors.enableDrivers();
   motors.flipM1(true);
 
-  attachInterrupt(digitalPinToInterrupt(18), pinISR, CHANGE);
+  //attachInterrupt(digitalPinToInterrupt(18), pinISR, CHANGE);
 
   qtr.setTypeRC();
   qtr.setSensorPins((const uint8_t[]){29,31,33,35,37,39,41}, SensorCount);
@@ -323,6 +323,13 @@ void loop()
       stop_motors();
       v1 = 0;
       v2 = 0;
+    }
+
+    else if (inArray[0] == 3){
+      pinISR();
+      Serial.print(v1);
+      print_comma_then_int(v2);
+      mynewline();
     }
     else if (inArray[0] == 4){
       Serial.println("received cal command");
