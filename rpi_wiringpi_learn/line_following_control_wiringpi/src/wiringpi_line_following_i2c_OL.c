@@ -90,6 +90,9 @@ int read_encoder_i2c(){
 
   read(enc_fd, enc_array, enc_bytes);
   out = reassemblebytes(enc_array[0],enc_array[1]);
+  if (out > 32000){
+     out -= 65536;
+  } 
   //out = 7;//not reading the encoder for now
   return(out);
 }
@@ -225,13 +228,14 @@ int main (int argc, char **argv)
     printf("mega_fd: %i\n", mega_fd);
     G_cart.set_fd(mega_fd);
 
-//    enc_fd = wiringPiI2CSetup(UNO_ID);
-//    if (enc_fd == -1) {
-//        std::cout << "Encoder Uno failed to init I2C communication.\n";
-//        return -1;
-//    }
-//    std::cout << "Encoder Uno I2C communication successfully setup.\n";
-//
+    enc_fd = wiringPiI2CSetup(UNO_ID);
+    if (enc_fd == -1) {
+        std::cout << "Encoder Uno failed to init I2C communication.\n";
+        return -1;
+    }
+    std::cout << "Encoder Uno I2C communication successfully setup.\n";
+
+    printf("enc_fd: %i\n", enc_fd);   	
 
     //FILE * fp;
 
@@ -283,6 +287,8 @@ int main (int argc, char **argv)
   ualarm(2000, 2000);//500 
 
   t0 = micros();
+
+  printf("at top of for loop\n");
 
   for (i=0;i<N;i++){
      // main control loop for test
@@ -343,6 +349,7 @@ int main (int argc, char **argv)
   G_cart.stop_motors();
  
   close(mega_fd);
+  close(enc_fd);
   return 0;
 }
 

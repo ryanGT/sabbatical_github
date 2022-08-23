@@ -52,10 +52,13 @@ void setup() {
 void loop() {
   delay(5);
   digitalWrite(13, LOW);
-  Serial.print(n_sent);
-  Serial.print(",");
-  Serial.print(encoder_count);
-  Serial.print('\n');
+  if (sent_data){ 
+      sent_data = false;
+      Serial.print(n_sent);
+      Serial.print(",");
+      Serial.print(encoder_count);
+      Serial.print('\n');
+  }
   //Serial.println(encoder_count);
 }
 
@@ -76,6 +79,7 @@ void requestEvent() {
   Wire.write(msb); // respond with message of 6 bytes
   Wire.write(lsb); // respond with message of 6 bytes
   n_sent++;
+  sent_data = true;
 }
 
 void receiveEvent(int howMany)
