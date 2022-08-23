@@ -31,7 +31,7 @@ float t_ms, t_sec;
 uint16_t dt, dt_send, dt_receive;
 uint32_t send_total=0;
 float ave_send;
-const int N=1000;
+const int N=5000;
 int i_echo[N];
 int two_byte_response[N];
 int enc_fd, mega_fd;
