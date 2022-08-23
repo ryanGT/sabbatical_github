@@ -175,8 +175,10 @@ pendulum_encoder pend_enc = pendulum_encoder();
 plant_with_i2c_double_actuator_and_two_sensors G_cart = plant_with_i2c_double_actuator_and_two_sensors(7, &line_sense, &pend_enc);
 addition_block add = addition_block();
 subtraction_block subtract = subtraction_block();
-pulse_input U_forward_pulse = pulse_input(0.1, 1.5, 200);
-pulse_input U_turn = pulse_input(0.1, 0.5, 5);
+P_control_block D = P_control_block(0.1);
+saturation_block sat = saturation_block();
+step_input U_forward_step = step_input(0.1, 200);
+
 
 
 
@@ -254,8 +256,11 @@ int main (int argc, char **argv)
   //bdsyssetupcode
    printf("doing block setup\n");
    G_cart.set_input_blocks(&add, &subtract);
-   add.set_input_blocks(&U_forward_pulse, &U_turn);
-   subtract.set_input_blocks(&U_forward_pulse, &U_turn);
+   add.set_input_blocks(&U_forward_step, &sat);
+   subtract.set_input_blocks(&U_forward_step, &sat);
+   sum_junct.set_inputs(&U_line, &line_sense);
+   D.set_input_block1(&sum_junct);
+   sat.set_input_block1(&D);
 
 
   //menu
@@ -308,12 +313,16 @@ int main (int argc, char **argv)
      t_ms = t/1000.0;
      t_sec = t_ms/1000.0;
  
-     U_forward_pulse.find_output(t_sec);
-     U_turn.find_output(t_sec);
+     U_line.find_output();
+     U_forward_step.find_output(t_sec);
      G_cart.find_output();
+     sum_junct.find_output(t_sec);
+     D.find_output(t_sec);
+     sat.find_output(t_sec);
      add.find_output();
      subtract.find_output();
      G_cart.send_commands(i);
+
 
 
      
@@ -321,8 +330,10 @@ int main (int argc, char **argv)
      printf("%i,%0.2f",i,t_ms);
      print_comma_then_int(add.read_output());
      print_comma_then_int(subtract.read_output());
-     print_comma_then_int(U_forward_pulse.read_output());
-     print_comma_then_int(U_turn.read_output());
+     print_comma_then_int(U_line.read_output());
+     print_comma_then_int(U_forward_step.read_output());
+     print_comma_then_int(D.read_output());
+     print_comma_then_int(sat.read_output());
      print_comma_then_int(line_sense.read_output());
      print_comma_then_int(pend_enc.read_output());
 
