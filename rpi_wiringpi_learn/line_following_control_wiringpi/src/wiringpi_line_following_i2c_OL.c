@@ -88,9 +88,9 @@ int reassemblebytes(uint8_t msb, uint8_t lsb){
 int read_encoder_i2c(){
   int out;
 
-  //read(enc_fd, enc_array, enc_bytes);
-  //out = reassemblebytes(enc_array[0],enc_array[1]);
-  out = 7;//not reading the encoder for now
+  read(enc_fd, enc_array, enc_bytes);
+  out = reassemblebytes(enc_array[0],enc_array[1]);
+  //out = 7;//not reading the encoder for now
   return(out);
 }
 

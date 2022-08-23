@@ -17,6 +17,8 @@ volatile bool _EncoderBSet;
 volatile bool _EncoderASet;
 volatile long encoder_count = 0;
 
+bool sent_data = false;
+int n_sent = 0;
 
 #include <Wire.h>
 
@@ -25,7 +27,12 @@ void setup() {
   Wire.onRequest(requestEvent); // register event
   Wire.onReceive(receiveEvent);
 
-  //Serial.begin(230400);
+  Serial.begin(115200);
+
+  //bdsyswelcomecode
+  Serial.println("pendulum encoder minion i2c");
+
+ //Serial.begin(230400);
 
   pinMode(13, OUTPUT);
   digitalWrite(13, LOW);
@@ -43,8 +50,12 @@ void setup() {
 }
 
 void loop() {
-  delay(500);
+  delay(5);
   digitalWrite(13, LOW);
+  Serial.print(n_sent);
+  Serial.print(",");
+  Serial.print(encoder_count);
+  Serial.print('\n');
   //Serial.println(encoder_count);
 }
 
@@ -64,6 +75,7 @@ void requestEvent() {
   msb = getsecondbyte(encoder_count);
   Wire.write(msb); // respond with message of 6 bytes
   Wire.write(lsb); // respond with message of 6 bytes
+  n_sent++;
 }
 
 void receiveEvent(int howMany)
@@ -75,6 +87,7 @@ void receiveEvent(int howMany)
     //Serial.print(c);         // print the character
   }
   encoder_count = 0;
+  n_sent = 0;
 }
 
 
