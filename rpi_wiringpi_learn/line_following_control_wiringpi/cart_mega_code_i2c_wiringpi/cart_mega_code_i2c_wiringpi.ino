@@ -16,10 +16,12 @@ int ISR_state;
 int squarewave_pin = A7;
 int position;
 
+bool print_data = false;
+
 bool sent_data = false;
 bool send_ser = false;
 byte calibrated = 0;
-int n, nIn;
+int n, n_i2c;
 int nISR=30000;
 byte n_loop;
 int amp;
@@ -258,6 +260,7 @@ void pinISR()
     digitalWrite(controlPin, HIGH);
     n_msb = inArray[1];
     n_lsb = inArray[2];
+    n_i2c = 256*n_msb + n_lsb;
     v1_msb = inArray[3];
     v1_lsb = inArray[4];
     v1 = reassemblebytes(v1_msb,v1_lsb);
@@ -270,7 +273,7 @@ void pinISR()
     dt_micro_lsb = (byte)dt_micro;
     dt_micro_msb = getsecondbyte(dt_micro);
     outArray[6] = dt_micro_msb;
-    outArray[7] = dt_micro_msb;
+    outArray[7] = dt_micro_lsb;
     digitalWrite(controlPin, LOW);
   }
   set_speeds(v1, v2);
@@ -279,6 +282,7 @@ void pinISR()
   //accel = analogRead(analogPin);
   digitalWrite(isrPin, LOW);
 }
+
 
 void loop()
 {
@@ -310,7 +314,7 @@ void loop()
     new_data = false;
     //digitalWrite(i2cprocessPin, HIGH);  
 
-    Serial.println("new data");
+    //Serial.println("new data");
     if (inArray[0] == 1){
       // start new test
       // - what needs to happen here?
@@ -327,9 +331,15 @@ void loop()
 
     else if (inArray[0] == 3){
       pinISR();
-      Serial.print(v1);
-      print_comma_then_int(v2);
-      mynewline();
+      if (print_data){
+	//n_i2c, v1, v2, position, dt_micro
+      	Serial.print(n_i2c);
+      	print_comma_then_int(v1);
+      	print_comma_then_int(v2);
+      	print_comma_then_int(position);
+      	print_comma_then_int(dt_micro);
+      	mynewline();
+      }
     }
     else if (inArray[0] == 4){
       Serial.println("received cal command");

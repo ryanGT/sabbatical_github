@@ -145,7 +145,7 @@ void read_line_sensor_i2c_buf(){
 
 int read_line_position(){
   read_line_sensor_i2c_buf();
-  position = line_sensor_buf[2]*256 + line_sensor_buf[1];
+  position = line_sensor_buf[2]*256 + line_sensor_buf[3];
   return(position);
 }
 
