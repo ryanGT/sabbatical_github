@@ -177,7 +177,7 @@ addition_block add = addition_block();
 subtraction_block subtract = subtraction_block();
 int_constant_block U_line = int_constant_block(3500);
 summing_junction sum_junct = summing_junction();
-P_control_block D = P_control_block(0.01);
+P_control_block D = P_control_block(0.1);
 saturation_block sat = saturation_block();
 step_input U_forward_step = step_input(0.1, 200);
 
@@ -218,6 +218,7 @@ void mynewline(){
 int main (int argc, char **argv)
 {
   printf("at top of main\n");
+  printf("temp.c\n");
   // Setup I2C communication
     mega_fd = wiringPiI2CSetup(MEGA_ID);
     if (mega_fd == -1) {
@@ -237,13 +238,13 @@ int main (int argc, char **argv)
 
     printf("enc_fd: %i\n", enc_fd);
 
-    //FILE * fp;
+    FILE * fp;
 
-    //fp = fopen ("data.txt", "w");
+    fp = fopen ("data.txt", "w");
     //bdsyscsvlabels
 
-    //fprintf(fp, "%s\n", "i,t_ms,add,subtract,U_forward_step,line_sense,pend_enc");
-    printf("%s\n", "i,t_ms,add,subtract,U_forward_step,line_sense,pend_enc");
+    fprintf(fp, "%s\n", "i,t_ms,add,subtract,U_forward_step,line_sense,pend_enc");
+    //printf("%s\n", "i,t_ms,add,subtract,U_forward_step,line_sense,pend_enc");
     //fprintf(fp, "%s %s %s %d", "We", "are", "in", 2012);
 
     wiringPiSetup();
@@ -337,9 +338,10 @@ int main (int argc, char **argv)
 
      //bdsysprintcode
 
-     //fprintf(fp, "%i,%0.2f,%s,%s,%s,%s,%s\n",i,t_ms,add.read_output(),subtract.read_output(),U_forward_step.read_output(),line_sense.read_output(),pend_enc.read_output());
-     printf("%i,%0.2f,%s,%s,%s,%s,%s\n",i,t_ms,add.read_output(),subtract.read_output(),U_forward_step.read_output(),line_sense.read_output(),pend_enc.read_output());
+     fprintf(fp, "%i,%0.2f,%i,%i,%i,%i,%i\n",i,t_ms,add.read_output(),subtract.read_output(),U_forward_step.read_output(),line_sense.read_output(),pend_enc.read_output());
 
+     //printf("%i,%0.2f,%i,%i,%i,%i,%i\n",i,t_ms,add.read_output(),subtract.read_output(),U_forward_step.read_output(),line_sense.read_output(),pend_enc.read_output());
+     //printf("%i,%0.2f,%i\n",i,t_ms,add.read_output());//,subtract.read_output(),U_forward_step.read_output(),line_sense.read_output(),pend_enc.read_output());
 
      digitalWrite(loop_sw_pin, 0);
   }
@@ -356,7 +358,7 @@ int main (int argc, char **argv)
 
   close(mega_fd);
   close(enc_fd);
-  //fclose(fp);
+  fclose(fp);
   return 0;
 }
 
