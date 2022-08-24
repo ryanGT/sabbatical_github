@@ -246,7 +246,18 @@ class pybd_gui(tk.Tk):
         self.python_gen_menu.add_command(label='Set Python Output Path', \
                                       command=self.set_python_gen_output_path)
         self.python_gen_menu.add_command(label='Generate Python Code', command=self.python_codegen)          
-        #self.bind("<Key>", self.key_pressed)
+        self.rpi_menu = tk.Menu(self.menu_codegen)
+        self.menu_codegen.add_cascade(menu=self.rpi_menu, label='Raspberry Pi Code Generation')
+        self.rpi_menu.add_command(label='Set RPi Template File', command=self.set_rpi_template)
+        self.rpi_menu.add_command(label='Get RPi Template File',
+                command=self.get_rpi_template)
+        self.rpi_menu.add_command(label='Set RPi Output Path', \
+                                      command=self.set_rpi_gen_output_path)
+        self.rpi_menu.add_command(label='Generate RPi Code',
+                command=self.rpi_codegen)
+
+
+       #self.bind("<Key>", self.key_pressed)
         self.bind('<Control-q>', self._quit)
         self.bind('<q>', self._quit)
         self.bind('<p>', self.python_codegen)        
@@ -275,7 +286,7 @@ class pybd_gui(tk.Tk):
         # params for saving
         self.param_list = ['arduino_template_path','arduino_output_folder', \
                            'python_template_path','python_output_path', \
-                           'csv_path']
+                           'csv_path','rpi_template_path','rpi_output_path']
         """List of parameters to save to the configuration file as
         'key:value' string pairs."""
         self.params_path = "gui_params_pybd.txt"
@@ -366,6 +377,19 @@ class pybd_gui(tk.Tk):
         ##                           verbosity=0):
 
 
+    def rpi_codegen(self, *args, **kwargs):
+        """Generate the Arduino code by using the block diagram's
+        `generate_rpi_code` function."""
+        print("in rpi_codegen function")
+        if not self.rpi_output_path:
+            self.set_rpi_gen_output_path()
+        print("rpi_template_path: %s" % self.rpi_template_path)
+        print("rpi_output_path: %s" % self.rpi_output_path)
+        print("blocks: %s" % self.bd.block_name_list)
+        self.bd.generate_rpi_code(self.rpi_output_path, \
+                                  template_path=self.rpi_template_path)
+ 
+
     def set_arduino_template(self, *args, **kwargs):
         """Use a file dialog to allow the user to set the path to the
         Arduino template file that will be used in code generation."""
@@ -377,6 +401,27 @@ class pybd_gui(tk.Tk):
             self.arduino_template_path = filename
 
 
+    def set_rpi_template(self, *args, **kwargs):
+        """Use a file dialog to allow the user to set the path to the
+        rpi template file that will be used in code generation."""
+        print("in set_rpi_template function")
+        filename = tk.filedialog.askopenfilename(title = "Select Raspberry Pi Template File",\
+                                                 filetypes = (("C files","*.c"),("all files","*.*")))
+        print (filename)
+        if filename:
+            self.rpi_template_path = filename
+
+
+    def set_rpi_gen_output_path(self, *args, **kwargs):
+        print("set_rpi_gen_output_path")
+        filename = tk.filedialog.asksaveasfilename(title = "Select Raspberry Pi Output Path",\
+                                                   filetypes = (("c files","*.c"),("all files","*.*")))
+        print (filename)
+        if filename:
+            self.rpi_output_path = filename
+
+
+
 
     def get_arduino_template(self, *args, **kwargs):
         """Show the current path to the Arduino codegen template file
@@ -386,6 +431,16 @@ class pybd_gui(tk.Tk):
         # self.arduino_template_path #<--- put me on a dialog showinfo
         showinfo(title='Information',
                 message='Arduino template file path: %s' % self.arduino_template_path)
+
+    
+    def get_rpi_template(self, *args, **kwargs):
+        """Show the current path to the Arduino codegen template file
+        on a showinfo dialog.  This just lets the user check the
+        variable path."""
+        print("in get_rpi_template function")
+        # self.rpi_template_path #<--- put me on a dialog showinfo
+        showinfo(title='Information',
+                message='Raspberry template file path: %s' % self.rpi_template_path)
 
 
     def set_python_gen_template(self, *args, **kwargs):
