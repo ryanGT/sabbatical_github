@@ -408,6 +408,7 @@ class add_block_dialog(my_toplevel_window, window_with_param_widgets_that_appear
     def go_pressed(self):
         # Next step:
         # - read parameters from the numbered param boxes for kwargs
+        block_name = self.block_name.get()
         new_block = self._create_new_block()
         self.parent.append_block_to_dict(block_name, new_block)
         #self.parent.password = self.my_password

@@ -211,13 +211,17 @@ class pybd_gui(tk.Tk):
         self.menu_file = tk.Menu(self.menubar)
         self.menu_edit = tk.Menu(self.menubar)
         self.menu_block_diagram = tk.Menu(self.menubar)
+        self.menu_macros = tk.Menu(self.menubar)        
         self.menu_codegen = tk.Menu(self.menubar)        
         self.menubar.add_cascade(menu=self.menu_file, label='File')
         self.menubar.add_cascade(menu=self.menu_edit, label='Edit')
         self.menubar.add_cascade(menu=self.menu_block_diagram, label='Block Diagram')        
+        self.menubar.add_cascade(menu=self.menu_macros, label='Macros')
         self.menubar.add_cascade(menu=self.menu_codegen, label='Code Generation')
+
         self.menu_edit.add_command(label="Delete Block", command=self.on_delete_block)
         self.menu_edit.add_command(label="Replace Block", command=self.on_replace_block)
+        self.menu_edit.add_command(label="Clear Model",command=self.clear)
         self.menu_file.add_command(label='Save', command=self.on_save_menu)
         self.menu_file.add_command(label='Save As', command=self.on_save_as_menu)        
         self.menu_file.add_command(label='Load', command=self.on_load_menu)        
@@ -228,6 +232,9 @@ class pybd_gui(tk.Tk):
                                             command=self.on_set_execution_order)
         self.menu_block_diagram.add_command(label="Set Loop Numbers", command=self.on_set_loop_numbers)
         self.menu_block_diagram.add_command(label="Clear Loop Numbers", command=self.on_clear_loop_numbers)
+        self.menu_macros.add_command(label="Add cart/pendulum plant and sensors", \
+                command=self.add_G_cart_and_sensors)
+
         self.arduino_menu = tk.Menu(self.menu_codegen)
         self.menu_codegen.add_cascade(menu=self.arduino_menu, label='Arduino Code Generation')
         self.arduino_menu.add_command(label='Set Arduino Template File', command=self.set_arduino_template)
@@ -294,6 +301,48 @@ class pybd_gui(tk.Tk):
         in pybd_gui.param_list, such as
         `pybd_gui.arduino_template_path`."""
         self.load_params()
+
+
+    def add_G_cart_and_sensors(self, *args, **kwargs):
+        #sensors
+        #custom_sensor,line_sense,arduino_class:line_sense_i2c,init_params:
+        #custom_sensor,pend_enc,arduino_class:pendulum_encoder,init_params:
+        #
+        #blocks
+        #block_type,variable_name,label,arduino_class,input_block1_name,input_block2_name,width,height,placement_type,abs_x,abs_y,rel_block_name,rel_pos,rel_distance,xshift,yshift,param1,param2,param3,param4,param5,param6,param7,param8,param9,param10
+        #cart_pendulum,G,G_{cart},plant_with_i2c_double_actuator_and_two_sensors,,,3,2,,,,,,,,,sensor1_name:line_sense,sensor2_name:pend_enc,,,,,,,,
+        #
+        # Plan:
+        # - verify that the sensors and actuators are not already in the model
+        # - create the custom senstors
+        # - add the custom senstors to the model
+        # - create the plant block
+        # - add the plant block to the model
+        # - make sure everyone shows up in the gui as well as the model
+        line_sense_name = 'line_sense'
+        if line_sense_name not in self.bd.sensors_dict:
+            line_sense = pybd.custom_sensor(variable_name=line_sense_name, \
+                                            arduino_class='line_sense_i2c')
+            self.bd.append_sensor(line_sense)
+            # how to append to the gui widget?
+
+        pend_enc_name = 'pend_enc'
+        if pend_enc_name not in self.bd.sensors_dict:
+            pend_enc = pybd.custom_sensor(variable_name=pend_enc_name, \
+                                            arduino_class='pendulum_encoder')
+            self.bd.append_sensor(pend_enc) 
+
+        self.refresh_sensor_names()
+
+        G_cart_name = "G_cart"
+        if G_cart_name not in self.bd.block_dict:
+            # Note that this will fail if line_sense and pend_enc already exist
+            # and aren't created above:
+            G_cart = pybd.cart_pendulum(sensor1=line_sense, sensor2=pend_enc, \
+                                        variable_name='G_cart') 
+            self.append_block_to_dict(G_cart_name, G_cart)
+
+
 
 
     def on_set_execution_order(self, *args, **kwargs):
@@ -718,9 +767,9 @@ class pybd_gui(tk.Tk):
     
     def append_block_to_dict(self, block_name, new_block):
         self.bd.append_block_to_dict(block_name, new_block)
-        # update listbox
+        # update listbox 
         self.block_list_var.set(self.bd.block_name_list)
-        
+
         
     def add_block(self, *args, **kwargs):
         #showinfo(title='Information',
@@ -765,6 +814,22 @@ class pybd_gui(tk.Tk):
         place_str = block.get_placememt_str()
         print("place_str: %s" % place_str)
         self.fill_placement_entry(place_str)
+
+        # this seemed like a good idea at the time, but it is now 
+        # overly cute and complicated and a little cluttered
+        # - there should be no input widgets
+        # - all setting of inputs should be handled
+        #   through a menu
+        # - the input_chooser dialog should be redesigned to reflect this
+        #   design decision
+        #   - the showing and hiding of various input widgets can move to the 
+        #     input_chooser dialog
+        # - how do I cleanly handle cased like the if_block that have more than
+        #   two inputs?
+        #   - and especially where the other inputs have different names and
+        #     purposes
+        #   - it seems like the classes (at least the base classes) need a list
+        #     of input variables 
 
         if isinstance(block, pybd.source_block):
             self.hide_input_widgets()
@@ -1147,6 +1212,21 @@ class pybd_gui(tk.Tk):
         
     def fill_placement_entry(self, place_str):
         self.placement_var.set(place_str)
+
+
+    def clear(self, *args, **kwargs):
+        # refresh the gui and the model to an empty state
+        # - the model should have no blocks, sensors, or actuators
+        # - the gui boxes should all be empty
+        self.bd = pybd.block_diagram()
+        self.clear_boxes()
+        self.block_list_var.set([])
+        self.ax.clear()
+        self.bd.ax = self.ax
+        self.bd.axis_off()#<-- this doens't work because there is no axis        
+        self.canvas.draw()
+        self.refresh_sensor_names()
+        self.refresh_actuator_names()
 
         
     def clear_boxes(self, *args, **kwargs):

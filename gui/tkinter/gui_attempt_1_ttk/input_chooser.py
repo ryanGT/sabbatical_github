@@ -11,6 +11,22 @@ import py_block_diagram as pybd
 
 import copy
 
+
+
+# Updated approach:
+# 
+# - the current main gui tries to show or hide the set input 1 and set input 2
+#   buttons as appropriate or whatever, but it is clunky and doesn't work well
+#   and takes up too much space
+# - I want a new approach that has a set input(s) option from the menu
+# - the updated input chooser dialog will let me choose the block whose
+#   input(s) I am setting at the top
+# - based on the block selected, the input 2 options and possible other options 
+#   will be shown or hidden
+# - cases like an if_block with a third (or zeroth) input will be handled in 
+#   a way that is scalable and generalizable
+
+
 class input_chooser(my_toplevel_window):
     def __init__(self, block, parent, title="Input Chooser Dialog", \
                  geometry='300x200', selected_index=0):

@@ -1,0 +1,20 @@
+actuators
+
+sensors
+
+blocks
+block_type,variable_name,label,arduino_class,input_block1_name,input_block2_name,width,height,placement_type,abs_x,abs_y,rel_block_name,rel_pos,rel_distance,xshift,yshift,param1,param2,param3,param4,param5,param6,param7,param8,param9,param10
+int_constant_block,U_cl,0,int_constant_block,,,1.5,1.5,absolute,0,0,,,,,,value:0,,,,,,,,,
+summing_junction,sum1_block,,summing_junction,U_cl,G_block,2,2,relative,,,U_cl,right,4,0,0,,,,,,,,,,
+PD_controller,PD_block,PD,PD_control_block,sum1_block,,3,2,relative,,,sum1_block,right,4,0,0,Kp:3,Kd:0.1,,,,,,,,
+saturation_block,sat_block,sat,saturation_block,PD_block,,3,2,relative,,,PD_block,right,4,0,0,,,,,,,,,,
+if_block,if_block1,if,if_block,,,3,3,relative,,,sat_block,right,4,0,0,,,,,,,,,,
+int_constant_block,const2,0,int_constant_block,,,1.5,1.5,relative,,,if_block1,below,2,-3,0,value:0,,,,,,,,,
+greater_than_block,gt_block,>,greater_than_block,lp_cnt_block,const1,1.5,1.5,relative,,,if_block1,above,5,-5,0,,,,,,,,,,
+int_constant_block,const1,500,int_constant_block,,,1.5,1.5,relative,,,gt_block,left,4,0,-2,value:500,,,,,,,,,
+loop_count_block,lp_cnt_block,loop count,loop_count_block,,,5,2,relative,,,gt_block,left,4,0,2,,,,,,,,,,
+plant,G_block,Robot,plant,if_block1,,3,2,relative,,,if_block1,right,5,0,0,actuator_name:dual_motors,sensor_name:pend_enc,,,,,,,,
+output_block,Y,encoder,,,,4,2,relative,,,G_block,right,6,0,0,,,,,,,,,,
+
+print blocks
+lp_cnt_block,sat_block,gt_block,if_block1,G_block

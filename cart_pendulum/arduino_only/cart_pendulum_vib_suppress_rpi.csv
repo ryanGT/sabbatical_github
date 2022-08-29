@@ -1,0 +1,21 @@
+actuators
+
+sensors
+custom_sensor,line_sense,arduino_class:line_sense_i2c,init_params:
+custom_sensor,pend_enc,arduino_class:pendulum_encoder,init_params:
+
+blocks
+block_type,variable_name,label,arduino_class,input_block1_name,input_block2_name,width,height,placement_type,abs_x,abs_y,rel_block_name,rel_pos,rel_distance,xshift,yshift,param1,param2,param3,param4,param5,param6,param7,param8,param9,param10
+cart_pendulum,G_cart,$G_{cart}$,plant_with_i2c_double_actuator_and_two_sensors,if_then,if_then,3,2,absolute,0.0,0.0,,,,,,sensor1_name:line_sense,sensor2_name:pend_enc,send_address:7,,,,,,,
+if_block,if_then,if,if_block,adj_sat,zero_if_false,1.5,3,relative,,,G_cart,left,4,0,0,,,,,,,,,,
+sat2_adjustable_block,adj_sat,sat2,sat2_adjustable_block,D,,3,2,relative,,,if_then,left,4,0,0,mymax:400,,,,,,,,,
+int_constant_block,zero_if_false,0,int_constant_block,,,1.5,1.5,relative,,,if_then,left,3.0,0.0,-2.5,value:0,,,,,,,,,
+PD_controller,D,PD,PD_control_block,sum_junct,,3,2,relative,,,adj_sat,left,4,0,0,Kp:3,Kd:0.1,,,,,,,,
+summing_junction,sum_junct,,summing_junction,U_des_encoder_zero,pend_enc,2,2,relative,,,D,left,4,0,0,,,,,,,,,,
+int_constant_block,U_des_encoder_zero,0,int_constant_block,,,1.5,1.5,relative,,,sum_junct,left,4.0,0.0,0.0,value:0,,,,,,,,,
+loop_count_block,loop_count,i,loop_count_block,,,3,2,relative,,,loop_turn_on,above,4.0,0.0,0.0,,,,,,,,,,
+int_constant_block,loop_turn_on,500,int_constant_block,,,1.5,1.5,relative,,,D,above,4.0,0.0,0.0,value:500,,,,,,,,,
+greater_than_block,gt_block,>,greater_than_block,loop_count,loop_turn_on,1.5,1.5,relative,,,loop_count,right,4.0,0.0,-2.0,,,,,,,,,,
+
+print blocks
+
