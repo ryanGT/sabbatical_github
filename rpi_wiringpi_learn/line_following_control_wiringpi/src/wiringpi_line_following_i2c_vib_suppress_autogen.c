@@ -326,7 +326,7 @@ int main (int argc, char **argv)
      //bdsysloopcode
      zero_if_false.find_output();
      U_des_encoder_zero.find_output();
-     loop_count.find_output(t_sec);
+     loop_count.find_output(i);
      loop_turn_on.find_output();
      G_cart.find_output();
      sum_junct.find_output(t_sec);
