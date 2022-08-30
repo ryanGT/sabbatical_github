@@ -271,7 +271,8 @@ int main (int argc, char **argv)
 
 
   //menu
-  calibrated = check_cal();
+  //calibrated = check_cal();
+  calibrated = 3;
   printf("in menu, calibrated = %i\n", calibrated);
 
   char mychar;
@@ -286,7 +287,8 @@ int main (int argc, char **argv)
   /*   // reset encoders and t0 at the start of a test */
 
   printf("done with menu and/or calibration\n");
-  calibrated = check_cal();
+  //calibrated = check_cal();
+  calibrated = 3;
   if (calibrated == 0){
       printf("calibration failed, exiting");
       return -1;
