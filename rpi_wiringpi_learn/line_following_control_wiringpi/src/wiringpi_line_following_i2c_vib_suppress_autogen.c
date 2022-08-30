@@ -31,7 +31,7 @@ float t_ms, t_sec;
 uint16_t dt, dt_send, dt_receive;
 uint32_t send_total=0;
 float ave_send;
-const int N=1000;
+const int N=2000;
 int i_echo[N];
 int two_byte_response[N];
 int enc_fd, mega_fd;
@@ -180,7 +180,7 @@ PD_control_block D = PD_control_block(3, 0.1);
 summing_junction sum_junct = summing_junction();
 int_constant_block U_des_encoder_zero = int_constant_block(0);
 loop_count_block loop_count = loop_count_block();
-int_constant_block loop_turn_on = int_constant_block(500);
+int_constant_block loop_turn_on = int_constant_block(300);
 greater_than_block gt_block = greater_than_block();
 
 
