@@ -81,9 +81,9 @@ int reassemblebytes(uint8_t msb, uint8_t lsb){
 // an fd int that isn't constant and doesn't exist until main
 // runs
 //
-// - or can they be global ints that default to zero and then get
+// - or can they be global ints that default to zero and then get 
 //   set inside main before they are used?
-//   - is that better?
+//   - is that better? 
 
 int read_encoder_i2c(){
   int out;
@@ -92,7 +92,7 @@ int read_encoder_i2c(){
   out = reassemblebytes(enc_array[0],enc_array[1]);
   if (out > 32000){
      out -= 65536;
-  }
+  } 
   //out = 7;//not reading the encoder for now
   return(out);
 }
@@ -170,19 +170,6 @@ class line_sense_i2c: public sensor{
 };
 
 //bdsysinitcode
-line_sense_i2c line_sense = line_sense_i2c();
-pendulum_encoder pend_enc = pendulum_encoder();
-plant_with_i2c_double_actuator_and_two_sensors G_cart = plant_with_i2c_double_actuator_and_two_sensors(7, &line_sense, &pend_enc);
-if_block if_then = if_block();
-sat2_adjustable_block adj_sat = sat2_adjustable_block(400, -400);
-int_constant_block zero_if_false = int_constant_block(0);
-PD_control_block D = PD_control_block(3, 0.1);
-summing_junction sum_junct = summing_junction();
-int_constant_block U_des_encoder_zero = int_constant_block(0);
-loop_count_block loop_count = loop_count_block();
-int_constant_block loop_turn_on = int_constant_block(500);
-greater_than_block gt_block = greater_than_block();
-
 
 
 uint8_t check_cal(){
@@ -237,14 +224,12 @@ int main (int argc, char **argv)
     }
     std::cout << "Encoder Uno I2C communication successfully setup.\n";
 
-    printf("enc_fd: %i\n", enc_fd);
+    printf("enc_fd: %i\n", enc_fd);   	
 
     FILE * fp;
 
     fp = fopen ("data.txt", "w");
     //bdsyscsvlabels
-    fprintf(fp, "%s\n", "i,t_ms,loop_count,sum_junct,D,adj_sat,if_then,line_sense");
-
     //fprintf(fp, "%s %s %s %d", "We", "are", "in", 2012);
 
     wiringPiSetup();
@@ -261,13 +246,6 @@ int main (int argc, char **argv)
 
 
   //bdsyssetupcode
-  G_cart.set_input_blocks(&if_then, &if_then);
-  if_then.set_inputs(&gt_block, &adj_sat, &zero_if_false);
-  adj_sat.set_input_block1(&D);
-  D.set_input_block1(&sum_junct);
-  sum_junct.set_inputs(&U_des_encoder_zero, &pend_enc);
-  gt_block.set_input_blocks(&loop_count, &loop_turn_on);
-
 
 
   //menu
@@ -275,7 +253,7 @@ int main (int argc, char **argv)
   printf("in menu, calibrated = %i\n", calibrated);
 
   char mychar;
-
+  	
   if (calibrated == 0){
     printf("press any character to calibrate\n");
 
@@ -291,8 +269,8 @@ int main (int argc, char **argv)
       printf("calibration failed, exiting");
       return -1;
   }
-  signal(SIGALRM, alarmWakeup);
-  ualarm(2000, 2000);//500
+  signal(SIGALRM, alarmWakeup);   
+  ualarm(2000, 2000);//500 
 
   t0 = micros();
 
@@ -321,28 +299,14 @@ int main (int argc, char **argv)
      }
      t_ms = t/1000.0;
      t_sec = t_ms/1000.0;
-
+ 
 
      //bdsysloopcode
-     zero_if_false.find_output();
-     U_des_encoder_zero.find_output();
-     loop_count.find_output(t_sec);
-     loop_turn_on.find_output();
-     G_cart.find_output();
-     sum_junct.find_output(t_sec);
-     gt_block.find_output();
-     D.find_output(t_sec);
-     adj_sat.find_output(t_sec);
-     if_then.find_output();
-     G_cart.send_commands(i);
-
-
-
+     
+     	
      //bdsysprintcode
-     fprintf(fp, "%i,%0.2f,%i,%i,%i,%i,%i,%i\n",i,t_ms,loop_count.read_output(),sum_junct.read_output(),D.read_output(),adj_sat.read_output(),if_then.read_output(),line_sense.read_output());
-
-
-
+         
+     
      digitalWrite(loop_sw_pin, 0);
   }
 
@@ -350,12 +314,12 @@ int main (int argc, char **argv)
   total_dt = tf - t0;
   loop_time_ms = total_dt/1000.0;
   printf("loop time (ms) = %0.2f\n", loop_time_ms);
-
-
+      
+  
   G_cart.stop_motors();
   delay(100);
   G_cart.stop_motors();
-
+ 
   close(mega_fd);
   close(enc_fd);
   fclose(fp);
