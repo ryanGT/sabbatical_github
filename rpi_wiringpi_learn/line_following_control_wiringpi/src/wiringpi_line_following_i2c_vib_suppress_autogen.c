@@ -31,7 +31,7 @@ float t_ms, t_sec;
 uint16_t dt, dt_send, dt_receive;
 uint32_t send_total=0;
 float ave_send;
-const int N=2000;
+const int N=1000;
 int i_echo[N];
 int two_byte_response[N];
 int enc_fd, mega_fd;
@@ -180,7 +180,7 @@ PD_control_block D = PD_control_block(3, 0.1);
 summing_junction sum_junct = summing_junction();
 int_constant_block U_des_encoder_zero = int_constant_block(0);
 loop_count_block loop_count = loop_count_block();
-int_constant_block loop_turn_on = int_constant_block(300);
+int_constant_block loop_turn_on = int_constant_block(500);
 greater_than_block gt_block = greater_than_block();
 
 
@@ -243,7 +243,7 @@ int main (int argc, char **argv)
 
     fp = fopen ("data.txt", "w");
     //bdsyscsvlabels
-    fprintf(fp, "%s\n", "i,t_ms,loop_count,sum_junct,D,adj_sat,if_then,line_sense");
+    fprintf(fp, "%s\n", "i,t_ms,loop_count,sum_junct,D,adj_sat,if_then,pend_enc");
 
     //fprintf(fp, "%s %s %s %d", "We", "are", "in", 2012);
 
@@ -339,7 +339,7 @@ int main (int argc, char **argv)
 
 
      //bdsysprintcode
-     fprintf(fp, "%i,%0.2f,%i,%i,%i,%i,%i,%i\n",i,t_ms,loop_count.read_output(),sum_junct.read_output(),D.read_output(),adj_sat.read_output(),if_then.read_output(),line_sense.read_output());
+     fprintf(fp, "%i,%0.2f,%i,%i,%i,%i,%i,%i\n",i,t_ms,loop_count.read_output(),sum_junct.read_output(),D.read_output(),adj_sat.read_output(),if_then.read_output(),pend_enc.read_output());
 
 
 
