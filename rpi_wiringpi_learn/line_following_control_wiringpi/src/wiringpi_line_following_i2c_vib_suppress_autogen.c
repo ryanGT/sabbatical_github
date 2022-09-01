@@ -176,7 +176,7 @@ plant_with_i2c_double_actuator_and_two_sensors G_cart = plant_with_i2c_double_ac
 if_block if_then = if_block();
 sat2_adjustable_block adj_sat = sat2_adjustable_block(400, -400);
 int_constant_block zero_if_false = int_constant_block(0);
-PD_control_block D = PD_control_block(3, 0.1);
+PD_control_block D = PD_control_block(5, 0.1);
 summing_junction sum_junct = summing_junction();
 int_constant_block U_des_encoder_zero = int_constant_block(0);
 loop_count_block loop_count = loop_count_block();
@@ -243,7 +243,7 @@ int main (int argc, char **argv)
 
     fp = fopen ("data.txt", "w");
     //bdsyscsvlabels
-    fprintf(fp, "%s\n", "i,t_ms,loop_count,sum_junct,D,adj_sat,if_then,pend_enc");
+    fprintf(fp, "%s\n", "i,t_ms,loop_count,sum_junct,D,adj_sat,gt_block,if_then,pend_enc");
 
     //fprintf(fp, "%s %s %s %d", "We", "are", "in", 2012);
 
@@ -339,7 +339,7 @@ int main (int argc, char **argv)
 
 
      //bdsysprintcode
-     fprintf(fp, "%i,%0.2f,%i,%i,%i,%i,%i,%i\n",i,t_ms,loop_count.read_output(),sum_junct.read_output(),D.read_output(),adj_sat.read_output(),if_then.read_output(),pend_enc.read_output());
+     fprintf(fp, "%i,%0.2f,%i,%i,%i,%i,%i,%i,%i\n",i,t_ms,loop_count.read_output(),sum_junct.read_output(),D.read_output(),adj_sat.read_output(),gt_block.read_output(),if_then.read_output(),pend_enc.read_output());
 
 
 
